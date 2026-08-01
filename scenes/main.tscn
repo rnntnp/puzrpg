@@ -1,0 +1,170 @@
+[gd_scene format=3 uid="uid://67v0ma41cql"]
+
+[ext_resource type="Script" uid="uid://qu1wuofvy7va" path="res://scripts/battle.gd" id="1_0wfyh"]
+[ext_resource type="PackedScene" path="res://scenes/fighter.tscn" id="2_sugp2"]
+[ext_resource type="Resource" path="res://resources/characters/blue_fighter.tres" id="3_blue"]
+[ext_resource type="Resource" path="res://resources/characters/red_fighter.tres" id="4_red"]
+
+[sub_resource type="StyleBoxFlat" id="HealthBackground"]
+bg_color = Color(0.153, 0.212, 0.298, 1)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+
+[sub_resource type="StyleBoxFlat" id="LeftHealthFill"]
+bg_color = Color(0.282, 0.663, 1, 1)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+
+[sub_resource type="StyleBoxFlat" id="RightHealthFill"]
+bg_color = Color(1, 0.396, 0.467, 1)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+
+[sub_resource type="StyleBoxFlat" id="ButtonNormal"]
+bg_color = Color(0.204, 0.471, 0.965, 1)
+corner_radius_top_left = 24
+corner_radius_top_right = 24
+corner_radius_bottom_right = 24
+corner_radius_bottom_left = 24
+
+[sub_resource type="StyleBoxFlat" id="ButtonPressed"]
+bg_color = Color(0.145, 0.373, 0.788, 1)
+corner_radius_top_left = 24
+corner_radius_top_right = 24
+corner_radius_bottom_right = 24
+corner_radius_bottom_left = 24
+
+[node name="Battle" type="Node2D" unique_id=1923846280]
+script = ExtResource("1_0wfyh")
+
+[node name="Background" type="ColorRect" parent="." unique_id=1820338749]
+offset_right = 720.0
+offset_bottom = 1280.0
+mouse_filter = 2
+color = Color(0.063, 0.094, 0.153, 1)
+
+[node name="UI" type="Control" parent="." unique_id=583139281]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Title" type="Label" parent="UI" unique_id=203421526]
+layout_mode = 0
+offset_top = 70.0
+offset_right = 720.0
+offset_bottom = 130.0
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 38
+text = "AUTO BATTLE"
+horizontal_alignment = 1
+
+[node name="StatusLabel" type="Label" parent="UI" unique_id=1749335895]
+layout_mode = 0
+offset_top = 145.0
+offset_right = 720.0
+offset_bottom = 193.0
+theme_override_colors/font_color = Color(1, 0.82, 0.4, 1)
+theme_override_font_sizes/font_size = 28
+text = "준비"
+horizontal_alignment = 1
+
+[node name="LeftHealthLabel" type="Label" parent="UI" unique_id=1404535032]
+layout_mode = 0
+offset_left = 55.0
+offset_top = 196.0
+offset_right = 335.0
+offset_bottom = 236.0
+theme_override_font_sizes/font_size = 22
+text = "BLUE"
+
+[node name="RightHealthLabel" type="Label" parent="UI" unique_id=1052533828]
+layout_mode = 0
+offset_left = 385.0
+offset_top = 196.0
+offset_right = 665.0
+offset_bottom = 236.0
+theme_override_font_sizes/font_size = 22
+text = "RED"
+horizontal_alignment = 2
+
+[node name="LeftHealthBar" type="ProgressBar" parent="UI" unique_id=760698025]
+layout_mode = 0
+offset_left = 55.0
+offset_top = 240.0
+offset_right = 335.0
+offset_bottom = 270.0
+theme_override_styles/background = SubResource("HealthBackground")
+theme_override_styles/fill = SubResource("LeftHealthFill")
+show_percentage = false
+
+[node name="RightHealthBar" type="ProgressBar" parent="UI" unique_id=1849683120]
+layout_mode = 0
+offset_left = 385.0
+offset_top = 240.0
+offset_right = 665.0
+offset_bottom = 270.0
+theme_override_styles/background = SubResource("HealthBackground")
+theme_override_styles/fill = SubResource("RightHealthFill")
+show_percentage = false
+
+[node name="LeftFighter" parent="UI" unique_id=122709403 instance=ExtResource("2_sugp2")]
+position = Vector2(195, 570)
+character_data = ExtResource("3_blue")
+
+[node name="RightFighter" parent="UI" unique_id=1609744767 instance=ExtResource("2_sugp2")]
+position = Vector2(525, 570)
+scale = Vector2(-1, 1)
+character_data = ExtResource("4_red")
+
+[node name="Versus" type="Label" parent="UI" unique_id=744618299]
+layout_mode = 0
+offset_left = 310.0
+offset_top = 530.0
+offset_right = 410.0
+offset_bottom = 590.0
+theme_override_colors/font_color = Color(0.502, 0.565, 0.659, 1)
+theme_override_font_sizes/font_size = 42
+text = "VS"
+horizontal_alignment = 1
+
+[node name="LeftStats" type="Label" parent="UI" unique_id=119771206]
+layout_mode = 0
+offset_left = 75.0
+offset_top = 730.0
+offset_right = 315.0
+offset_bottom = 810.0
+theme_override_colors/font_color = Color(0.725, 0.784, 0.863, 1)
+theme_override_font_sizes/font_size = 22
+horizontal_alignment = 1
+
+[node name="RightStats" type="Label" parent="UI" unique_id=2136418318]
+layout_mode = 0
+offset_left = 405.0
+offset_top = 730.0
+offset_right = 645.0
+offset_bottom = 810.0
+theme_override_colors/font_color = Color(0.725, 0.784, 0.863, 1)
+theme_override_font_sizes/font_size = 22
+horizontal_alignment = 1
+
+[node name="StartButton" type="Button" parent="UI" unique_id=1233992414]
+layout_mode = 0
+offset_left = 130.0
+offset_top = 920.0
+offset_right = 590.0
+offset_bottom = 1030.0
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 30
+theme_override_styles/normal = SubResource("ButtonNormal")
+theme_override_styles/pressed = SubResource("ButtonPressed")
+theme_override_styles/hover = SubResource("ButtonNormal")
+text = "전투 시작"

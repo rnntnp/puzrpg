@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="LevelData" load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://scripts/level_data.gd" id="1_level"]
+[ext_resource type="Resource" path="res://resources/characters/blue_fighter.tres" id="2_player"]
+[ext_resource type="Resource" path="res://resources/characters/red_fighter.tres" id="3_enemy"]
+[ext_resource type="Resource" path="res://resources/characters/red_elite.tres" id="4_elite"]
+[ext_resource type="Script" path="res://scripts/character_data.gd" id="5_character_type"]
+
+[resource]
+script = ExtResource("1_level")
+level_name = "2. 붉은 관문"
+image_placeholder = "RED GATE\nLEVEL IMAGE"
+player_character = ExtResource("2_player")
+enemies = Array[ExtResource("5_character_type")]([ExtResource("3_enemy"), ExtResource("4_elite")])

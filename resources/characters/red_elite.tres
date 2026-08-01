@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="CharacterData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/character_data.gd" id="1_data"]
+
+[resource]
+script = ExtResource("1_data")
+display_name = "RED ELITE"
+display_color = Color(0.69, 0.24, 0.74, 1)
+max_health = 140
+attack_power = 16
+attack_cooldown = 1.0

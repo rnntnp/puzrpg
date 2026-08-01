@@ -27,6 +27,13 @@ func _ready() -> void:
 	reset()
 
 
+func set_character_data(data: CharacterDataClass, refill_health := true) -> void:
+	character_data = data
+	color = character_data.display_color
+	if refill_health:
+		reset()
+
+
 func reset() -> void:
 	current_health = max_health
 	cooldown_remaining = attack_cooldown

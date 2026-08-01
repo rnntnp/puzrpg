@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="LevelData" load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scripts/level_data.gd" id="1_level"]
+[ext_resource type="Resource" path="res://resources/characters/blue_fighter.tres" id="2_player"]
+[ext_resource type="Resource" path="res://resources/characters/red_fighter.tres" id="3_enemy"]
+[ext_resource type="Script" path="res://scripts/character_data.gd" id="4_character_type"]
+
+[resource]
+script = ExtResource("1_level")
+level_name = "1. 훈련장"
+image_placeholder = "TRAINING GROUND\nLEVEL IMAGE"
+player_character = ExtResource("2_player")
+enemies = Array[ExtResource("4_character_type")]([ExtResource("3_enemy")])
+next_level_path = "res://resources/levels/level_02.tres"

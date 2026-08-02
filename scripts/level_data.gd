@@ -11,5 +11,9 @@ const CharacterDataClass = preload("res://scripts/character_data.gd")
 @export var player_character: CharacterDataClass
 @export var enemies: Array[CharacterDataClass] = []
 
+@export_category("드롭 앤 머지 설정")
+@export_range(1.0, 30.0, 0.5) var ball_drop_time_limit: float = 5.0
+@export_range(1, 11, 1) var max_ball_level: int = 11
+
 @export_category("진행")
 @export_file("*.tres") var next_level_path: String

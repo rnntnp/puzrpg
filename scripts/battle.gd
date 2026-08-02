@@ -14,7 +14,7 @@ const LevelDataClass = preload("res://scripts/level_data.gd")
 @onready var title_label: Label = $UI/Title
 @onready var status_label: Label = $UI/StatusLabel
 @onready var enemy_progress_label: Label = $UI/EnemyProgress
-@onready var start_button: Button = $UI/StartButton
+@onready var merge_game = $MergeGame
 
 var level_data: LevelDataClass
 var current_enemy_index := 0
@@ -27,16 +27,16 @@ func _ready() -> void:
 	right_fighter.health_changed.connect(_on_right_health_changed)
 	left_fighter.defeated.connect(_on_fighter_defeated)
 	right_fighter.defeated.connect(_on_fighter_defeated)
-	start_button.pressed.connect(_on_start_button_pressed)
+	merge_game.game_over.connect(_on_merge_game_over)
+	merge_game.merge_scored.connect(_on_merge_scored)
 	_load_level()
+	_start_battle()
 
 
 func _process(delta: float) -> void:
 	if not battle_running:
 		return
-	if left_fighter.advance_cooldown(delta):
-		left_fighter.attack(right_fighter)
-	if battle_running and right_fighter.advance_cooldown(delta):
+	if right_fighter.advance_cooldown(delta):
 		right_fighter.attack(left_fighter)
 
 
@@ -44,17 +44,15 @@ func _load_level() -> void:
 	level_data = GameSession.get_current_level()
 	if level_data == null or level_data.player_character == null or level_data.enemies.is_empty():
 		push_error("레벨 전투 구성이 올바르지 않습니다.")
-		start_button.disabled = true
 		return
 	title_label.text = level_data.level_name
 	current_enemy_index = 0
 	level_finished = false
 	left_fighter.set_character_data(level_data.player_character)
 	_load_enemy(current_enemy_index)
-	status_label.text = "준비"
+	merge_game.configure(level_data.ball_drop_time_limit, level_data.max_ball_level)
+	status_label.text = "전투 준비"
 	status_label.modulate = Color("#ffd166")
-	start_button.text = "전투 시작"
-	start_button.disabled = false
 	_update_stats()
 
 
@@ -66,20 +64,9 @@ func _load_enemy(index: int) -> void:
 
 func _start_battle() -> void:
 	battle_running = true
-	left_fighter.cooldown_remaining = left_fighter.attack_cooldown
 	right_fighter.cooldown_remaining = right_fighter.attack_cooldown
 	status_label.text = "전투 중"
 	status_label.modulate = Color.WHITE
-	start_button.disabled = true
-	start_button.text = "전투 중..."
-
-
-func _on_start_button_pressed() -> void:
-	if level_finished:
-		return
-	if not left_fighter.is_alive():
-		_load_level()
-	_start_battle()
 
 
 func _on_left_health_changed(health: int, maximum: int) -> void:
@@ -95,16 +82,24 @@ func _on_right_health_changed(health: int, maximum: int) -> void:
 
 
 func _update_stats() -> void:
-	left_stats.text = "%s\n공격력 %d\n쿨타임 %.1f초" % [left_fighter.display_name, left_fighter.attack_power, left_fighter.attack_cooldown]
-	right_stats.text = "%s\n공격력 %d\n쿨타임 %.1f초" % [right_fighter.display_name, right_fighter.attack_power, right_fighter.attack_cooldown]
+	left_stats.text = "%s  머지 점수 공격" % left_fighter.display_name
+	right_stats.text = "%s  공격 %d" % [right_fighter.display_name, right_fighter.attack_power]
+
+func _on_merge_scored(points: int) -> void:
+	call_deferred("_apply_merge_damage", points)
+
+func _apply_merge_damage(points: int) -> void:
+	if not battle_running or not left_fighter.is_alive() or not right_fighter.is_alive():
+		return
+	left_fighter.attack_with_damage(right_fighter, points)
 
 
 func _on_fighter_defeated(fighter: Fighter) -> void:
 	battle_running = false
+	merge_game.set_input_enabled(false)
+	status_label.text = "적 처치!" if fighter == right_fighter else "전투 패배"
+	await fighter.play_defeat_animation()
 	if fighter == left_fighter:
-		status_label.text = "패배"
-		status_label.modulate = Color("#ff6577")
-		start_button.disabled = true
 		GameSession.set_battle_result(false, "%s 도전 실패" % level_data.level_name)
 		get_tree().change_scene_to_file("res://scenes/battle_result.tscn")
 		return
@@ -114,13 +109,18 @@ func _on_fighter_defeated(fighter: Fighter) -> void:
 		status_label.text = "다음 적 등장!"
 		await get_tree().create_timer(0.7).timeout
 		_load_enemy(current_enemy_index)
+		merge_game.set_input_enabled(true)
 		_start_battle()
 		return
 
 	level_finished = true
-	status_label.text = "레벨 승리!"
-	status_label.modulate = Color("#ffd166")
-	enemy_progress_label.text = "모든 적 처치"
+	status_label.text = "모든 적 처치!"
+	await get_tree().create_timer(0.4).timeout
 	GameSession.set_battle_result(true, "%s 완료" % level_data.level_name)
 	GameSession.advance_to_next_level()
+	get_tree().change_scene_to_file("res://scenes/battle_result.tscn")
+
+func _on_merge_game_over() -> void:
+	battle_running = false
+	GameSession.set_battle_result(false, "%s · 머지 보드 게임오버" % level_data.level_name)
 	get_tree().change_scene_to_file("res://scenes/battle_result.tscn")

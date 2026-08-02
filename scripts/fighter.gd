@@ -10,6 +10,7 @@ signal defeated(fighter: Fighter)
 
 var current_health: int
 var cooldown_remaining := 0.0
+var base_scale: Vector2
 
 var max_health: int:
 	get: return character_data.max_health
@@ -22,6 +23,7 @@ var display_name: String:
 
 
 func _ready() -> void:
+	base_scale = scale
 	assert(character_data != null, "%s에 CharacterData가 지정되지 않았습니다." % name)
 	color = character_data.display_color
 	reset()
@@ -37,6 +39,8 @@ func set_character_data(data: CharacterDataClass, refill_health := true) -> void
 func reset() -> void:
 	current_health = max_health
 	cooldown_remaining = attack_cooldown
+	visible = true
+	scale = base_scale
 	modulate = Color.WHITE
 	health_changed.emit(current_health, max_health)
 
@@ -52,9 +56,12 @@ func advance_cooldown(delta: float) -> bool:
 
 
 func attack(target: Fighter) -> void:
+	attack_with_damage(target, attack_power)
+
+func attack_with_damage(target: Fighter, damage: int) -> void:
 	if not is_alive() or not target.is_alive():
 		return
-	target.take_damage(attack_power)
+	target.take_damage(damage)
 	play_attack_animation(target)
 
 
@@ -63,10 +70,10 @@ func take_damage(amount: int) -> void:
 		return
 	current_health = max(0, current_health - max(0, amount))
 	health_changed.emit(current_health, max_health)
-	play_hit_animation()
 	if current_health == 0:
-		modulate = Color("#556070")
 		defeated.emit(self)
+	else:
+		play_hit_animation()
 
 
 func is_alive() -> bool:
@@ -85,3 +92,11 @@ func play_hit_animation() -> void:
 	var tween := create_tween()
 	tween.tween_property(self, "modulate", Color("#ffdfdf"), 0.04)
 	tween.tween_property(self, "modulate", Color.WHITE, 0.16)
+
+func play_defeat_animation() -> void:
+	var defeated_scale := Vector2(base_scale.x * 1.15, 0.05)
+	var tween := create_tween().set_parallel(true)
+	tween.tween_property(self, "scale", defeated_scale, 0.65).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_IN)
+	tween.tween_property(self, "modulate", Color(1.0, 0.35, 0.35, 0.0), 0.65)
+	await tween.finished
+	visible = false

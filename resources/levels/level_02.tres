@@ -12,3 +12,5 @@ level_name = "2. 붉은 관문"
 image_placeholder = "RED GATE\nLEVEL IMAGE"
 player_character = ExtResource("2_player")
 enemies = Array[ExtResource("5_character_type")]([ExtResource("3_enemy"), ExtResource("4_elite")])
+ball_drop_time_limit = 4.0
+max_ball_level = 11

@@ -6,5 +6,5 @@
 script = ExtResource("1_data")
 display_name = "RED"
 display_color = Color(1, 0.396, 0.467, 1)
-attack_power = 11
+attack_power = 0
 attack_cooldown = 0.8

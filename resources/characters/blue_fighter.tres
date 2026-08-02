@@ -6,4 +6,4 @@
 script = ExtResource("1_data")
 display_name = "BLUE"
 display_color = Color(0.282, 0.663, 1, 1)
-attack_power = 20
+attack_power = 0

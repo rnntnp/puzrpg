@@ -11,4 +11,6 @@ level_name = "1. 훈련장"
 image_placeholder = "TRAINING GROUND\nLEVEL IMAGE"
 player_character = ExtResource("2_player")
 enemies = Array[ExtResource("4_character_type")]([ExtResource("3_enemy")])
+ball_drop_time_limit = 5.0
+max_ball_level = 11
 next_level_path = "res://resources/levels/level_02.tres"

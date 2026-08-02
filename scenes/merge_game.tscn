@@ -1,5 +1,6 @@
-[gd_scene load_steps=5 format=3]
+[gd_scene load_steps=6 format=3]
 [ext_resource type="Script" path="res://scripts/merge_game.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/merge_autoplay_bot.gd" id="2"]
 [sub_resource type="RectangleShape2D" id="wall"]
 size = Vector2(20, 850)
 [sub_resource type="RectangleShape2D" id="floor"]
@@ -67,6 +68,8 @@ default_color = Color(1, 1, 1, 0.42)
 antialiased = true
 [node name="Balls" type="Node2D" parent="."]
 [node name="PreviewHolder" type="Node2D" parent="."]
+[node name="MergeAutoplayBot" type="Node" parent="."]
+script = ExtResource("2")
 [node name="LeftWall" type="StaticBody2D" parent="."]
 position = Vector2(10, 425)
 [node name="CollisionShape2D" type="CollisionShape2D" parent="LeftWall"]

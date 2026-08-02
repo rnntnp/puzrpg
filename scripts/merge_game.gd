@@ -17,6 +17,7 @@ const OVERFLOW_DURATION := 0.8
 @onready var guide_line: Line2D = $GuideLine
 @onready var score_label: Label = $ScoreLabel
 @onready var timer_label: Label = $DropTimerLabel
+@onready var autoplay_bot = $MergeAutoplayBot
 var current_level := 0
 var next_level := 0
 var score := 0
@@ -31,21 +32,40 @@ var is_game_over := false
 var input_locked := false
 var drop_time_limit := 5.0
 var drop_time_remaining := 5.0
+var auto_drop_enabled := true
 var max_level_index := ABSOLUTE_MAX_LEVEL
 
 func _ready() -> void:
+	autoplay_bot.set_enabled(OS.is_debug_build() and GameSession.developer_autoplay_enabled)
 	_reset_ball_queue()
 
+func can_accept_autoplay_drop() -> bool:
+	return can_drop and not input_locked and not is_game_over
+
+func autoplay_drop_at(x_position: float) -> void:
+	if can_accept_autoplay_drop():
+		aim_x = clampf(x_position, 38.0, 682.0)
+		_update_preview_position()
+		_drop_ball(aim_x)
+
+func get_active_balls() -> Array:
+	return balls.get_children()
+
+func get_current_ball_level() -> int:
+	return current_level
+
 func configure(time_limit: float, max_ball_level: int) -> void:
-	drop_time_limit = maxf(1.0, time_limit)
+	auto_drop_enabled = time_limit >= 0.0
+	drop_time_limit = maxf(0.0, time_limit)
 	drop_time_remaining = drop_time_limit
+	timer_label.visible = auto_drop_enabled
 	max_level_index = clampi(max_ball_level - 1, 0, ABSOLUTE_MAX_LEVEL)
 	_reset_ball_queue()
 
 func _process(delta: float) -> void:
 	if is_game_over:
 		return
-	if can_drop and not input_locked:
+	if auto_drop_enabled and can_drop and not input_locked:
 		drop_time_remaining = maxf(0.0, drop_time_remaining - delta)
 		timer_label.text = "자동 낙하 %.1f초" % drop_time_remaining
 		if drop_time_remaining <= 0.0:
@@ -94,6 +114,9 @@ func _update_aim(screen_position: Vector2) -> void:
 	if is_instance_valid(preview_ball):
 		margin = maxf(margin, preview_ball.get_radius() + 12.0)
 	aim_x = clampf(local.x, margin, 720.0 - margin)
+	_update_preview_position()
+
+func _update_preview_position() -> void:
 	guide_line.points = PackedVector2Array([Vector2(aim_x, 86.0), Vector2(aim_x, 825.0)])
 	if is_instance_valid(preview_ball):
 		preview_ball.position = Vector2(aim_x, 60.0)
@@ -108,7 +131,8 @@ func _drop_ball(x: float) -> void:
 	ball_dropped.emit()
 	_advance_ball_queue()
 	await get_tree().create_timer(0.35).timeout
-	drop_time_remaining = drop_time_limit
+	if auto_drop_enabled:
+		drop_time_remaining = drop_time_limit
 	can_drop = true
 
 func _spawn_ball(at: Vector2, level: int):
@@ -130,6 +154,7 @@ func _reset_ball_queue() -> void:
 	current_level = _random_drop_level()
 	next_level = _random_drop_level()
 	drop_time_remaining = drop_time_limit
+	timer_label.visible = auto_drop_enabled
 	_refresh_preview()
 
 func _random_drop_level() -> int:

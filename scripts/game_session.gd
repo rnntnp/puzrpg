@@ -6,6 +6,7 @@ const LevelDataClass = preload("res://scripts/level_data.gd")
 var current_level_path := DEFAULT_LEVEL_PATH
 var last_battle_won := false
 var last_result_title := ""
+var developer_autoplay_enabled := false
 
 
 func set_battle_result(won: bool, title: String) -> void:

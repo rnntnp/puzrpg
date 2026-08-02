@@ -147,3 +147,13 @@ theme_override_styles/normal = SubResource("ButtonNormal")
 theme_override_styles/hover = SubResource("ButtonHover")
 theme_override_styles/pressed = SubResource("ButtonPressed")
 text = "게임 시작"
+
+[node name="AutoplayButton" type="Button" parent="Content"]
+layout_mode = 0
+offset_left = 190.0
+offset_top = 1035.0
+offset_right = 530.0
+offset_bottom = 1105.0
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 18
+text = "개발 자동 플레이: OFF"

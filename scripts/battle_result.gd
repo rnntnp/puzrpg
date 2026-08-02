@@ -13,8 +13,17 @@ func _ready() -> void:
 	result_label.modulate = Color("#ffd34e") if GameSession.last_battle_won else Color("#ff6577")
 	detail_label.text = GameSession.last_result_title
 	level_select_button.pressed.connect(_on_level_select_button_pressed)
+	if GameSession.developer_autoplay_enabled:
+		level_select_button.disabled = true
+		level_select_button.text = "자동 진행 중..."
+		_auto_continue()
 
 
 func _on_level_select_button_pressed() -> void:
 	level_select_button.disabled = true
 	get_tree().change_scene_to_file(level_select_scene_path)
+
+func _auto_continue() -> void:
+	await get_tree().create_timer(1.0).timeout
+	if is_inside_tree() and GameSession.developer_autoplay_enabled:
+		get_tree().change_scene_to_file(level_select_scene_path)

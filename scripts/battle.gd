@@ -20,6 +20,7 @@ var level_data: LevelDataClass
 var current_enemy_index := 0
 var battle_running := false
 var level_finished := false
+var enemy_drop_count := 0
 
 
 func _ready() -> void:
@@ -29,15 +30,9 @@ func _ready() -> void:
 	right_fighter.defeated.connect(_on_fighter_defeated)
 	merge_game.game_over.connect(_on_merge_game_over)
 	merge_game.merge_scored.connect(_on_merge_scored)
+	merge_game.ball_dropped.connect(_on_ball_dropped)
 	_load_level()
 	_start_battle()
-
-
-func _process(delta: float) -> void:
-	if not battle_running:
-		return
-	if right_fighter.advance_cooldown(delta):
-		right_fighter.attack(left_fighter)
 
 
 func _load_level() -> void:
@@ -58,13 +53,13 @@ func _load_level() -> void:
 
 func _load_enemy(index: int) -> void:
 	right_fighter.set_character_data(level_data.enemies[index])
+	enemy_drop_count = 0
 	enemy_progress_label.text = "적 %d / %d" % [index + 1, level_data.enemies.size()]
 	_update_stats()
 
 
 func _start_battle() -> void:
 	battle_running = true
-	right_fighter.cooldown_remaining = right_fighter.attack_cooldown
 	status_label.text = "전투 중"
 	status_label.modulate = Color.WHITE
 
@@ -83,7 +78,16 @@ func _on_right_health_changed(health: int, maximum: int) -> void:
 
 func _update_stats() -> void:
 	left_stats.text = "%s  머지 점수 공격" % left_fighter.display_name
-	right_stats.text = "%s  공격 %d" % [right_fighter.display_name, right_fighter.attack_power]
+	right_stats.text = "%s  공 %d개마다 공격" % [right_fighter.display_name, right_fighter.enemy_attack_drop_interval]
+
+func _on_ball_dropped() -> void:
+	if not battle_running or not right_fighter.is_alive() or not left_fighter.is_alive():
+		return
+	enemy_drop_count += 1
+	if enemy_drop_count < right_fighter.enemy_attack_drop_interval:
+		return
+	enemy_drop_count = 0
+	right_fighter.attack(left_fighter)
 
 func _on_merge_scored(points: int) -> void:
 	call_deferred("_apply_merge_damage", points)

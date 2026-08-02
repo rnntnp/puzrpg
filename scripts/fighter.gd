@@ -9,17 +9,16 @@ signal defeated(fighter: Fighter)
 @export var character_data: CharacterDataClass
 
 var current_health: int
-var cooldown_remaining := 0.0
 var base_scale: Vector2
 
 var max_health: int:
 	get: return character_data.max_health
 var attack_power: int:
 	get: return character_data.attack_power
-var attack_cooldown: float:
-	get: return character_data.attack_cooldown
 var display_name: String:
 	get: return character_data.display_name
+var enemy_attack_drop_interval: int:
+	get: return character_data.enemy_attack_drop_interval
 
 
 func _ready() -> void:
@@ -38,21 +37,10 @@ func set_character_data(data: CharacterDataClass, refill_health := true) -> void
 
 func reset() -> void:
 	current_health = max_health
-	cooldown_remaining = attack_cooldown
 	visible = true
 	scale = base_scale
 	modulate = Color.WHITE
 	health_changed.emit(current_health, max_health)
-
-
-func advance_cooldown(delta: float) -> bool:
-	if not is_alive():
-		return false
-	cooldown_remaining -= delta
-	if cooldown_remaining > 0.0:
-		return false
-	cooldown_remaining += attack_cooldown
-	return true
 
 
 func attack(target: Fighter) -> void:

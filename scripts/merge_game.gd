@@ -3,6 +3,7 @@ extends Node2D
 
 signal game_over
 signal merge_scored(points: int)
+signal ball_dropped
 
 const BallScene = preload("res://scenes/merge_ball.tscn")
 const ABSOLUTE_MAX_LEVEL := 10
@@ -104,6 +105,7 @@ func _drop_ball(x: float) -> void:
 	is_aiming = false
 	drop_grace_remaining = DROP_GRACE_DURATION
 	_spawn_ball(Vector2(x, 60.0), current_level)
+	ball_dropped.emit()
 	_advance_ball_queue()
 	await get_tree().create_timer(0.35).timeout
 	drop_time_remaining = drop_time_limit

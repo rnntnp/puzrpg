@@ -29,7 +29,7 @@ func _ready() -> void:
 	left_fighter.defeated.connect(_on_fighter_defeated)
 	right_fighter.defeated.connect(_on_fighter_defeated)
 	merge_game.game_over.connect(_on_merge_game_over)
-	merge_game.merge_scored.connect(_on_merge_scored)
+	merge_game.combo_resolved.connect(_on_combo_resolved)
 	merge_game.ball_dropped.connect(_on_ball_dropped)
 	_load_level()
 	_start_battle()
@@ -89,13 +89,10 @@ func _on_ball_dropped() -> void:
 	enemy_drop_count = 0
 	right_fighter.attack(left_fighter)
 
-func _on_merge_scored(points: int) -> void:
-	call_deferred("_apply_merge_damage", points)
-
-func _apply_merge_damage(points: int) -> void:
+func _on_combo_resolved(damage: int, _combo_count: int, _base_points: int) -> void:
 	if not battle_running or not left_fighter.is_alive() or not right_fighter.is_alive():
 		return
-	left_fighter.attack_with_damage(right_fighter, points)
+	left_fighter.attack_with_damage(right_fighter, damage)
 
 
 func _on_fighter_defeated(fighter: Fighter) -> void:

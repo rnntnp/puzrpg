@@ -2,7 +2,7 @@ class_name MergeGame
 extends Node2D
 
 signal game_over
-signal merge_scored(points: int)
+signal combo_resolved(damage: int, combo_count: int, base_points: int)
 signal ball_dropped
 
 const BallScene = preload("res://scenes/merge_ball.tscn")
@@ -10,6 +10,7 @@ const ABSOLUTE_MAX_LEVEL := 10
 const DANGER_LINE_Y := 150.0
 const DROP_GRACE_DURATION := 1.2
 const OVERFLOW_DURATION := 0.8
+const COMBO_SETTLE_MSEC := 500
 
 @onready var balls: Node2D = $Balls
 @onready var preview_holder: Node2D = $PreviewHolder
@@ -17,6 +18,7 @@ const OVERFLOW_DURATION := 0.8
 @onready var guide_line: Line2D = $GuideLine
 @onready var score_label: Label = $ScoreLabel
 @onready var timer_label: Label = $DropTimerLabel
+@onready var combo_label: Label = $ComboLabel
 @onready var autoplay_bot = $MergeAutoplayBot
 var current_level := 0
 var next_level := 0
@@ -34,6 +36,11 @@ var drop_time_limit := 5.0
 var drop_time_remaining := 5.0
 var auto_drop_enabled := true
 var max_level_index := ABSOLUTE_MAX_LEVEL
+var drop_sequence_active := false
+var combo_count := 0
+var combo_points := 0
+var last_merge_msec := 0
+var combo_effect_tween: Tween
 
 func _ready() -> void:
 	autoplay_bot.set_enabled(OS.is_debug_build() and GameSession.developer_autoplay_enabled)
@@ -126,14 +133,30 @@ func _drop_ball(x: float) -> void:
 		return
 	can_drop = false
 	is_aiming = false
+	drop_sequence_active = true
+	combo_count = 0
+	combo_points = 0
+	last_merge_msec = Time.get_ticks_msec()
 	drop_grace_remaining = DROP_GRACE_DURATION
 	_spawn_ball(Vector2(x, 60.0), current_level)
 	ball_dropped.emit()
 	_advance_ball_queue()
-	await get_tree().create_timer(0.35).timeout
+	_finish_drop_sequence()
+
+func _finish_drop_sequence() -> void:
+	await get_tree().create_timer(0.25).timeout
+	while is_inside_tree() and Time.get_ticks_msec() - last_merge_msec < COMBO_SETTLE_MSEC:
+		await get_tree().process_frame
+	if not is_inside_tree():
+		return
+	drop_sequence_active = false
+	if combo_count > 0:
+		var final_damage := _calculate_combo_damage()
+		combo_resolved.emit(final_damage, combo_count, combo_points)
 	if auto_drop_enabled:
 		drop_time_remaining = drop_time_limit
-	can_drop = true
+	if not input_locked and not is_game_over:
+		can_drop = true
 
 func _spawn_ball(at: Vector2, level: int):
 	if not is_inside_tree() or not is_instance_valid(balls) or balls.is_queued_for_deletion():
@@ -188,7 +211,12 @@ func _on_merge_requested(first, second) -> void:
 	var earned_points := level * 10
 	score += earned_points
 	score_label.text = "점수 %d" % score
-	merge_scored.emit(earned_points)
+	if drop_sequence_active:
+		combo_count += 1
+		combo_points += earned_points
+		last_merge_msec = Time.get_ticks_msec()
+		if combo_count >= 2:
+			_show_combo_effect(combo_count, _calculate_combo_damage())
 	call_deferred("_spawn_ball", at, level)
 	drop_grace_remaining = maxf(drop_grace_remaining, 0.5)
 
@@ -214,3 +242,26 @@ func set_input_enabled(enabled: bool) -> void:
 	guide_line.visible = enabled and not is_game_over
 	preview_holder.visible = enabled and not is_game_over
 	next_preview_holder.visible = enabled and not is_game_over
+	if enabled and not drop_sequence_active and not is_game_over:
+		can_drop = true
+		drop_time_remaining = drop_time_limit
+
+func _calculate_combo_damage() -> int:
+	var multiplier := 1.0 + 0.5 * float(combo_count - 1)
+	return roundi(float(combo_points) * multiplier)
+
+func _show_combo_effect(count: int, damage: int) -> void:
+	if combo_effect_tween != null and combo_effect_tween.is_valid():
+		combo_effect_tween.kill()
+	combo_label.text = "COMBO x%d\nDAMAGE %d" % [count, damage]
+	combo_label.visible = true
+	combo_label.scale = Vector2(0.6, 0.6)
+	combo_label.modulate = Color(1, 1, 1, 0)
+	combo_effect_tween = create_tween()
+	combo_effect_tween.set_parallel(true)
+	combo_effect_tween.tween_property(combo_label, "scale", Vector2.ONE, 0.22).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	combo_effect_tween.tween_property(combo_label, "modulate", Color.WHITE, 0.15)
+	combo_effect_tween.set_parallel(false)
+	combo_effect_tween.tween_interval(0.35)
+	combo_effect_tween.tween_property(combo_label, "modulate:a", 0.0, 0.22)
+	combo_effect_tween.tween_callback(func(): combo_label.visible = false)

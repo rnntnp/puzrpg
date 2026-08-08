@@ -2,6 +2,8 @@ class_name Battle
 extends Node2D
 
 const LevelDataClass = preload("res://scripts/level_data.gd")
+const GameplayDebugSnapshotClass = preload("res://scripts/gameplay_debug_snapshot.gd")
+const EnemyAttackEffect: StatusEffectData = preload("res://resources/effects/enemy_attack_countdown.tres")
 
 @onready var left_fighter: Fighter = $UI/LeftFighter
 @onready var right_fighter: Fighter = $UI/RightFighter
@@ -14,6 +16,8 @@ const LevelDataClass = preload("res://scripts/level_data.gd")
 @onready var title_label: Label = $UI/Title
 @onready var status_label: Label = $UI/StatusLabel
 @onready var enemy_progress_label: Label = $UI/EnemyProgress
+@onready var left_status_effects: StatusEffectBar = $UI/LeftStatusEffects
+@onready var right_status_effects: StatusEffectBar = $UI/RightStatusEffects
 @onready var merge_game = $MergeGame
 
 var level_data: LevelDataClass
@@ -21,6 +25,10 @@ var current_enemy_index := 0
 var battle_running := false
 var level_finished := false
 var enemy_drop_count := 0
+
+
+func get_debug_snapshot() -> Dictionary:
+	return GameplayDebugSnapshotClass.capture(self)
 
 
 func _ready() -> void:
@@ -45,7 +53,14 @@ func _load_level() -> void:
 	level_finished = false
 	left_fighter.set_character_data(level_data.player_character)
 	_load_enemy(current_enemy_index)
-	merge_game.configure(level_data.ball_drop_time_limit, level_data.max_ball_level)
+	merge_game.configure(
+		level_data.ball_drop_time_limit,
+		level_data.max_ball_level,
+		level_data.ball_physics_speed,
+		level_data.merge_push_force,
+		level_data.merge_hit_stop_time_scale,
+		level_data.merge_hit_stop_duration
+	)
 	status_label.text = "전투 준비"
 	status_label.modulate = Color("#ffd166")
 	_update_stats()
@@ -55,6 +70,7 @@ func _load_enemy(index: int) -> void:
 	right_fighter.set_character_data(level_data.enemies[index])
 	enemy_drop_count = 0
 	enemy_progress_label.text = "적 %d / %d" % [index + 1, level_data.enemies.size()]
+	_update_enemy_attack_indicator()
 	_update_stats()
 
 
@@ -85,9 +101,16 @@ func _on_ball_dropped() -> void:
 		return
 	enemy_drop_count += 1
 	if enemy_drop_count < right_fighter.enemy_attack_drop_interval:
+		_update_enemy_attack_indicator()
 		return
 	enemy_drop_count = 0
+	_update_enemy_attack_indicator()
 	right_fighter.attack(left_fighter)
+
+
+func _update_enemy_attack_indicator() -> void:
+	var remaining_turns := right_fighter.enemy_attack_drop_interval - enemy_drop_count
+	right_status_effects.set_effect(EnemyAttackEffect, remaining_turns)
 
 func _on_merge_attack_requested(damage: int, _combo_count: int, _base_points: int) -> void:
 	if not battle_running or not left_fighter.is_alive() or not right_fighter.is_alive():

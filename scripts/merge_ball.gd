@@ -3,27 +3,29 @@ extends RigidBody2D
 
 signal merge_requested(first: MergeBall, second: MergeBall)
 
-const COLORS := [
-	Color("#55b8ff"), Color("#67dc83"), Color("#ffe066"),
-	Color("#ff9f43"), Color("#ff6577"), Color("#b56cff"),
-	Color("#57d6c7"), Color("#f28bd4"), Color("#eeeeee"),
-	Color("#ff8a3d"), Color("#ffd700")
-]
-const RADII := [22.0, 28.0, 35.0, 43.0, 52.0, 62.0, 73.0, 84.0, 96.0, 108.0, 122.0]
+const BallCatalogClass = preload("res://scripts/ball_catalog.gd")
 
+@onready var sprite: Sprite2D = $Sprite2D
 @onready var collision_shape: CollisionShape2D = $CollisionShape2D
 var merge_level := 0
 var merge_locked := false
+var ball_data: Resource
 
 func _ready() -> void:
 	body_entered.connect(_on_body_entered)
 
-func setup(level: int) -> void:
-	merge_level = clampi(level, 0, COLORS.size() - 1)
-	var circle := CircleShape2D.new()
-	circle.radius = RADII[merge_level]
-	collision_shape.shape = circle
-	mass = maxf(1.0, RADII[merge_level] / 20.0)
+func setup(level: int, physics_speed: float = 1.0) -> void:
+	merge_level = clampi(level, 0, BallCatalogClass.get_max_level_index())
+	ball_data = BallCatalogClass.get_ball(merge_level)
+	collision_shape.shape = ball_data.collision_shape
+	sprite.texture = ball_data.sprite
+	sprite.modulate = ball_data.sprite_modulate
+	var texture_size := sprite.texture.get_size() if sprite.texture != null else Vector2.ONE
+	var diameter: float = ball_data.get_radius() * 2.0
+	sprite.scale = Vector2(diameter / texture_size.x, diameter / texture_size.y)
+	mass = maxf(1.0, ball_data.get_radius() / 20.0)
+	# 자유 낙하 시간은 중력의 제곱근에 반비례하므로 배속의 제곱을 적용한다.
+	gravity_scale = physics_speed * physics_speed
 	queue_redraw()
 
 func lock_for_merge() -> void:
@@ -33,11 +35,14 @@ func lock_for_merge() -> void:
 	set_deferred("freeze", true)
 
 func get_radius() -> float:
-	return RADII[merge_level]
+	return ball_data.get_radius() if ball_data != null else 0.0
+
+
+func get_merge_score() -> int:
+	return ball_data.merge_score if ball_data != null else 0
 
 func _draw() -> void:
-	var radius: float = RADII[merge_level]
-	draw_circle(Vector2.ZERO, radius, COLORS[merge_level])
+	var radius := get_radius()
 	draw_arc(Vector2.ZERO, radius - 3.0, 0.0, TAU, 40, Color("#162033"), 5.0, true)
 
 func _on_body_entered(body: Node) -> void:

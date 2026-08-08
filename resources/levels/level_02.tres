@@ -14,3 +14,7 @@ LEVEL IMAGE"
 player_character = ExtResource("2_player")
 enemies = Array[ExtResource("5_character_type")]([ExtResource("3_enemy"), ExtResource("4_elite")])
 ball_drop_time_limit = -1.0
+ball_physics_speed = 1.6
+merge_push_force = 90.0
+merge_hit_stop_time_scale = 0.25
+merge_hit_stop_duration = 0.12

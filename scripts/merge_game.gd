@@ -6,13 +6,14 @@ signal merge_attack_requested(damage: int, combo_count: int, base_points: int)
 signal ball_dropped
 
 const BallScene = preload("res://scenes/merge_ball.tscn")
-const ABSOLUTE_MAX_LEVEL := 10
+const BallCatalogClass = preload("res://scripts/ball_catalog.gd")
 const DANGER_LINE_Y := 150.0
 const DROP_GRACE_DURATION := 1.2
 const OVERFLOW_DURATION := 0.8
 const COMBO_SETTLE_MSEC := 500
 const COMBO_MAX_WAIT_MSEC := 4000
 const MERGE_ATTACK_DELAY := 0.25
+const MERGE_PUSH_RADIUS := 260.0
 
 @onready var balls: Node2D = $Balls
 @onready var preview_holder: Node2D = $PreviewHolder
@@ -22,6 +23,7 @@ const MERGE_ATTACK_DELAY := 0.25
 @onready var timer_label: Label = $DropTimerLabel
 @onready var combo_label: Label = $ComboLabel
 @onready var autoplay_bot = $MergeAutoplayBot
+@onready var merge_hit_stop = $MergeHitStop
 var current_level := 0
 var next_level := 0
 var score := 0
@@ -37,7 +39,9 @@ var input_locked := false
 var drop_time_limit := 5.0
 var drop_time_remaining := 5.0
 var auto_drop_enabled := true
-var max_level_index := ABSOLUTE_MAX_LEVEL
+var max_level_index: int = BallCatalogClass.get_max_level_index()
+var physics_speed_multiplier := 1.0
+var merge_push_force := 90.0
 var drop_sequence_active := false
 var combo_count := 0
 var combo_points := 0
@@ -63,12 +67,22 @@ func get_active_balls() -> Array:
 func get_current_ball_level() -> int:
 	return current_level
 
-func configure(time_limit: float, max_ball_level: int) -> void:
+func configure(
+	time_limit: float,
+	max_ball_level: int,
+	physics_speed: float = 1.0,
+	push_force: float = 90.0,
+	hit_stop_time_scale: float = 0.25,
+	hit_stop_duration: float = 0.12
+) -> void:
 	auto_drop_enabled = time_limit >= 0.0
 	drop_time_limit = maxf(0.0, time_limit)
 	drop_time_remaining = drop_time_limit
 	timer_label.visible = auto_drop_enabled
-	max_level_index = clampi(max_ball_level - 1, 0, ABSOLUTE_MAX_LEVEL)
+	max_level_index = clampi(max_ball_level - 1, 0, BallCatalogClass.get_max_level_index())
+	physics_speed_multiplier = clampf(physics_speed, 0.5, 3.0)
+	merge_push_force = maxf(0.0, push_force)
+	merge_hit_stop.configure(hit_stop_time_scale, hit_stop_duration)
 	_reset_ball_queue()
 
 func _process(delta: float) -> void:
@@ -134,6 +148,7 @@ func _drop_ball(x: float) -> void:
 	if input_locked or is_game_over:
 		return
 	can_drop = false
+	_update_drop_preview_visibility()
 	is_aiming = false
 	drop_sequence_active = true
 	combo_count = 0
@@ -162,6 +177,7 @@ func _finish_drop_sequence() -> void:
 		drop_time_remaining = drop_time_limit
 	if not input_locked and not is_game_over:
 		can_drop = true
+	_update_drop_preview_visibility()
 
 func _spawn_ball(at: Vector2, level: int):
 	if not is_inside_tree() or not is_instance_valid(balls) or balls.is_queued_for_deletion():
@@ -169,7 +185,7 @@ func _spawn_ball(at: Vector2, level: int):
 	var ball = BallScene.instantiate()
 	balls.add_child(ball)
 	ball.position = at
-	ball.setup(level)
+	ball.setup(level, physics_speed_multiplier)
 	ball.merge_requested.connect(_on_merge_requested)
 	return ball
 
@@ -196,24 +212,26 @@ func _refresh_preview() -> void:
 	preview_ball = BallScene.instantiate()
 	preview_holder.add_child(preview_ball)
 	preview_ball.position = Vector2(aim_x, 60.0)
-	preview_ball.setup(current_level)
+	preview_ball.setup(current_level, physics_speed_multiplier)
 	preview_ball.lock_for_merge()
 	next_preview_ball = BallScene.instantiate()
 	next_preview_holder.add_child(next_preview_ball)
 	next_preview_ball.scale = Vector2(0.55, 0.55)
-	next_preview_ball.setup(next_level)
+	next_preview_ball.setup(next_level, physics_speed_multiplier)
 	next_preview_ball.lock_for_merge()
 
 func _on_merge_requested(first, second) -> void:
 	if first.merge_locked or second.merge_locked or first.merge_level >= max_level_index:
 		return
+	merge_hit_stop.play()
 	var at: Vector2 = (first.position + second.position) * 0.5
 	var level: int = first.merge_level + 1
 	first.lock_for_merge()
 	second.lock_for_merge()
 	first.queue_free()
 	second.queue_free()
-	var earned_points := level * 10
+	var merged_ball_data: Resource = BallCatalogClass.get_ball(level)
+	var earned_points: int = merged_ball_data.merge_score
 	score += earned_points
 	score_label.text = "점수 %d" % score
 	var attack_combo_count := 1
@@ -230,8 +248,31 @@ func _on_merge_requested(first, second) -> void:
 		level, level, level + 1, earned_points,
 		str(drop_sequence_active), combo_count, combo_points
 	])
-	call_deferred("_spawn_ball", at, level)
+	call_deferred("_spawn_merged_ball", at, level)
 	drop_grace_remaining = maxf(drop_grace_remaining, 0.5)
+
+
+func _spawn_merged_ball(at: Vector2, level: int) -> void:
+	var merged_ball = _spawn_ball(at, level)
+	if not is_instance_valid(merged_ball) or merge_push_force <= 0.0:
+		return
+	_apply_merge_push(at, merged_ball)
+
+
+func _apply_merge_push(origin: Vector2, merged_ball: MergeBall) -> void:
+	for child in balls.get_children():
+		if not child is MergeBall or child == merged_ball:
+			continue
+		var ball := child as MergeBall
+		if ball.merge_locked or ball.is_queued_for_deletion():
+			continue
+		var offset := ball.position - origin
+		var distance := offset.length()
+		if distance <= 0.01 or distance >= MERGE_PUSH_RADIUS:
+			continue
+		var falloff := 1.0 - distance / MERGE_PUSH_RADIUS
+		var impulse := offset.normalized() * merge_push_force * falloff * ball.mass
+		ball.apply_central_impulse(impulse)
 
 func _has_ball_over_danger_line() -> bool:
 	for child in balls.get_children():
@@ -252,20 +293,23 @@ func _has_moving_balls() -> bool:
 func _trigger_game_over() -> void:
 	is_game_over = true
 	can_drop = false
-	guide_line.visible = false
-	preview_holder.visible = false
+	_update_drop_preview_visibility()
 	next_preview_holder.visible = false
 	game_over.emit()
 
 func set_input_enabled(enabled: bool) -> void:
 	input_locked = not enabled
 	is_aiming = false
-	guide_line.visible = enabled and not is_game_over
-	preview_holder.visible = enabled and not is_game_over
 	next_preview_holder.visible = enabled and not is_game_over
 	if enabled and not drop_sequence_active and not is_game_over:
 		can_drop = true
 		drop_time_remaining = drop_time_limit
+	_update_drop_preview_visibility()
+
+func _update_drop_preview_visibility() -> void:
+	var should_show := can_drop and not input_locked and not is_game_over
+	guide_line.visible = should_show
+	preview_holder.visible = should_show
 
 func _calculate_merge_damage(base_points: int, count: int) -> int:
 	var multiplier := 1.0 + 0.5 * float(count - 1)

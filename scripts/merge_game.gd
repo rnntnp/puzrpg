@@ -2,7 +2,13 @@ class_name MergeGame
 extends Node2D
 
 signal game_over
-signal merge_attack_requested(damage: int, combo_count: int, base_points: int)
+signal merge_attack_requested(
+	damage: int,
+	combo_count: int,
+	base_points: int,
+	origin: Vector2,
+	ball_level: int
+)
 signal ball_dropped
 
 const BallScene = preload("res://scenes/merge_ball.tscn")
@@ -43,6 +49,7 @@ var max_level_index: int = BallCatalogClass.get_max_level_index()
 var physics_speed_multiplier := 1.0
 var merge_push_force := 90.0
 var drop_sequence_active := false
+var drop_sequence_id := 0
 var combo_count := 0
 var combo_points := 0
 var last_merge_msec := 0
@@ -151,16 +158,18 @@ func _drop_ball(x: float) -> void:
 	_update_drop_preview_visibility()
 	is_aiming = false
 	drop_sequence_active = true
+	drop_sequence_id += 1
+	var current_sequence_id := drop_sequence_id
 	combo_count = 0
 	combo_points = 0
 	last_merge_msec = Time.get_ticks_msec()
 	drop_grace_remaining = DROP_GRACE_DURATION
-	_spawn_ball(Vector2(x, 60.0), current_level)
+	_spawn_ball(Vector2(x, 60.0), current_level, current_sequence_id)
 	ball_dropped.emit()
 	_advance_ball_queue()
-	_finish_drop_sequence()
+	_finish_drop_sequence(current_sequence_id)
 
-func _finish_drop_sequence() -> void:
+func _finish_drop_sequence(sequence_id: int) -> void:
 	var sequence_started_msec := Time.get_ticks_msec()
 	await get_tree().physics_frame
 	while is_inside_tree():
@@ -172,6 +181,8 @@ func _finish_drop_sequence() -> void:
 		await get_tree().physics_frame
 	if not is_inside_tree():
 		return
+	if sequence_id != drop_sequence_id:
+		return
 	drop_sequence_active = false
 	if auto_drop_enabled:
 		drop_time_remaining = drop_time_limit
@@ -179,7 +190,7 @@ func _finish_drop_sequence() -> void:
 		can_drop = true
 	_update_drop_preview_visibility()
 
-func _spawn_ball(at: Vector2, level: int):
+func _spawn_ball(at: Vector2, level: int, contact_sequence_id: int = -1):
 	if not is_inside_tree() or not is_instance_valid(balls) or balls.is_queued_for_deletion():
 		return null
 	var ball = BallScene.instantiate()
@@ -187,7 +198,18 @@ func _spawn_ball(at: Vector2, level: int):
 	ball.position = at
 	ball.setup(level, physics_speed_multiplier)
 	ball.merge_requested.connect(_on_merge_requested)
+	if contact_sequence_id >= 0:
+		ball.first_contact.connect(_on_dropped_ball_first_contact.bind(contact_sequence_id), CONNECT_ONE_SHOT)
 	return ball
+
+
+func _on_dropped_ball_first_contact(_ball: MergeBall, sequence_id: int) -> void:
+	if sequence_id != drop_sequence_id or input_locked or is_game_over:
+		return
+	can_drop = true
+	if auto_drop_enabled:
+		drop_time_remaining = drop_time_limit
+	_update_drop_preview_visibility()
 
 func _advance_ball_queue() -> void:
 	current_level = next_level
@@ -243,7 +265,7 @@ func _on_merge_requested(first, second) -> void:
 	var merge_damage := _calculate_merge_damage(earned_points, attack_combo_count)
 	if attack_combo_count >= 2:
 		_show_combo_effect(attack_combo_count, merge_damage)
-	_emit_merge_attack_after_delay(merge_damage, attack_combo_count, earned_points)
+	_emit_merge_attack_after_delay(merge_damage, attack_combo_count, earned_points, at, level)
 	print("[MERGE] %d단계 + %d단계 -> %d단계 | 획득=%d | 사이클=%s | 콤보=%d | 누적=%d" % [
 		level, level, level + 1, earned_points,
 		str(drop_sequence_active), combo_count, combo_points
@@ -315,12 +337,18 @@ func _calculate_merge_damage(base_points: int, count: int) -> int:
 	var multiplier := 1.0 + 0.5 * float(count - 1)
 	return roundi(float(base_points) * multiplier)
 
-func _emit_merge_attack_after_delay(damage: int, count: int, base_points: int) -> void:
+func _emit_merge_attack_after_delay(
+	damage: int,
+	count: int,
+	base_points: int,
+	origin: Vector2,
+	ball_level: int
+) -> void:
 	await get_tree().create_timer(MERGE_ATTACK_DELAY).timeout
 	if not is_inside_tree():
 		return
 	print("[MERGE ATTACK REQUEST] 콤보=%d | 기본=%d | 피해=%d" % [count, base_points, damage])
-	merge_attack_requested.emit(damage, count, base_points)
+	merge_attack_requested.emit(damage, count, base_points, to_global(origin), ball_level)
 
 func _show_combo_effect(count: int, damage: int) -> void:
 	if combo_effect_tween != null and combo_effect_tween.is_valid():

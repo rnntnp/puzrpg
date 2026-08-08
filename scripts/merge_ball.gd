@@ -2,6 +2,7 @@ class_name MergeBall
 extends RigidBody2D
 
 signal merge_requested(first: MergeBall, second: MergeBall)
+signal first_contact(ball: MergeBall)
 
 const BallCatalogClass = preload("res://scripts/ball_catalog.gd")
 
@@ -10,6 +11,7 @@ const BallCatalogClass = preload("res://scripts/ball_catalog.gd")
 var merge_level := 0
 var merge_locked := false
 var ball_data: Resource
+var _has_contacted := false
 
 func _ready() -> void:
 	body_entered.connect(_on_body_entered)
@@ -46,6 +48,9 @@ func _draw() -> void:
 	draw_arc(Vector2.ZERO, radius - 3.0, 0.0, TAU, 40, Color("#162033"), 5.0, true)
 
 func _on_body_entered(body: Node) -> void:
+	if not _has_contacted:
+		_has_contacted = true
+		first_contact.emit(self)
 	if merge_locked or not body is MergeBall:
 		return
 	var other := body as MergeBall

@@ -4,6 +4,8 @@ extends Node2D
 const LevelDataClass = preload("res://scripts/level_data.gd")
 const GameplayDebugSnapshotClass = preload("res://scripts/gameplay_debug_snapshot.gd")
 const EnemyAttackEffect: StatusEffectData = preload("res://resources/effects/enemy_attack_countdown.tres")
+const MergeAttackEffectScene = preload("res://scenes/merge_attack_effect.tscn")
+const BallCatalogClass = preload("res://scripts/ball_catalog.gd")
 
 @onready var left_fighter: Fighter = $UI/LeftFighter
 @onready var right_fighter: Fighter = $UI/RightFighter
@@ -112,14 +114,29 @@ func _update_enemy_attack_indicator() -> void:
 	var remaining_turns := right_fighter.enemy_attack_drop_interval - enemy_drop_count
 	right_status_effects.set_effect(EnemyAttackEffect, remaining_turns)
 
-func _on_merge_attack_requested(damage: int, _combo_count: int, _base_points: int) -> void:
+func _on_merge_attack_requested(
+	damage: int,
+	_combo_count: int,
+	_base_points: int,
+	origin: Vector2,
+	ball_level: int
+) -> void:
 	if not battle_running or not left_fighter.is_alive() or not right_fighter.is_alive():
 		print("[MERGE ATTACK SKIPPED] battle=%s | player_alive=%s | enemy_alive=%s" % [
 			str(battle_running), str(left_fighter.is_alive()), str(right_fighter.is_alive())
 		])
 		return
+	var effect = MergeAttackEffectScene.instantiate()
+	add_child(effect)
+	effect.hit.connect(_on_merge_projectile_hit)
+	effect.play(origin, right_fighter.global_position, BallCatalogClass.get_ball(ball_level), damage)
+
+
+func _on_merge_projectile_hit(damage: int) -> void:
+	if not battle_running or not right_fighter.is_alive():
+		return
 	print("[MERGE ATTACK] damage=%d" % damage)
-	left_fighter.attack_with_damage(right_fighter, damage)
+	right_fighter.take_damage(damage)
 
 
 func _on_fighter_defeated(fighter: Fighter) -> void:

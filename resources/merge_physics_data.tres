@@ -1,0 +1,8 @@
+[gd_resource type="Resource" script_class="MergePhysicsData" format=3 uid="uid://c3ik0sjmjhs7a"]
+
+[ext_resource type="Script" uid="uid://c5vwf124x1awb" path="res://scripts/merge_physics_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+floor_friction = 1.0
+ball_angular_damp = 7.0

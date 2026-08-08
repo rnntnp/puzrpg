@@ -15,6 +15,7 @@ signal merge_completed(merged_ball: MergeBall)
 
 const BallScene = preload("res://scenes/merge_ball.tscn")
 const BallCatalogClass = preload("res://scripts/ball_catalog.gd")
+const MergePhysicsDataClass = preload("res://scripts/merge_physics_data.gd")
 const BOARD_INNER_LEFT := 96.0
 const BOARD_INNER_RIGHT := 624.0
 const BOARD_INNER_BOTTOM := 846.0
@@ -36,6 +37,10 @@ const MERGE_PUSH_RADIUS := 260.0
 @onready var combo_label: Label = $ComboLabel
 @onready var autoplay_bot = $MergeAutoplayBot
 @onready var merge_hit_stop = $MergeHitStop
+@onready var left_wall: StaticBody2D = $LeftWall
+@onready var right_wall: StaticBody2D = $RightWall
+@onready var floor_body: StaticBody2D = $Floor
+@export var physics_data: MergePhysicsDataClass
 var current_level := 0
 var next_level := 0
 var score := 0
@@ -66,8 +71,23 @@ var next_merge_resolution_msec := 0
 var dropped_ball_has_landed := false
 
 func _ready() -> void:
+	_apply_physics_data()
 	autoplay_bot.set_enabled(OS.is_debug_build() and GameSession.developer_autoplay_enabled)
 	_reset_ball_queue()
+
+
+func _apply_physics_data() -> void:
+	if physics_data == null:
+		return
+	var wall_material := PhysicsMaterial.new()
+	wall_material.friction = physics_data.wall_friction
+	wall_material.bounce = physics_data.wall_bounce
+	left_wall.physics_material_override = wall_material
+	right_wall.physics_material_override = wall_material
+	var floor_material := PhysicsMaterial.new()
+	floor_material.friction = physics_data.floor_friction
+	floor_material.bounce = physics_data.floor_bounce
+	floor_body.physics_material_override = floor_material
 
 func can_accept_autoplay_drop() -> bool:
 	return can_drop and not input_locked and not is_game_over
@@ -242,6 +262,9 @@ func _spawn_ball(at: Vector2, level: int, contact_sequence_id: int = -1):
 	ball.continuous_cd = RigidBody2D.CCD_MODE_DISABLED
 	balls.add_child(ball)
 	ball.setup(level, physics_speed_multiplier)
+	if physics_data != null:
+		ball.linear_damp = physics_data.ball_linear_damp
+		ball.angular_damp = physics_data.ball_angular_damp
 	_enable_ball_ccd_after_spawn(ball)
 	var global_left := to_global(Vector2(BOARD_INNER_LEFT, 0.0)).x
 	var global_right := to_global(Vector2(BOARD_INNER_RIGHT, 0.0)).x

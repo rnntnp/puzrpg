@@ -5,7 +5,6 @@ signal merge_requested(first: MergeBall, second: MergeBall)
 signal first_contact(ball: MergeBall)
 
 const BallCatalogClass = preload("res://scripts/ball_catalog.gd")
-
 @onready var sprite: Sprite2D = $Sprite2D
 @onready var collision_shape: CollisionShape2D = $CollisionShape2D
 @onready var ice_durability_label: Label = $IceDurabilityLabel
@@ -17,6 +16,10 @@ var ingestion_marked := false
 var is_ice_frozen := false
 var ice_durability := 0
 var ice_targeted := false
+var horizontal_bounds_enabled := false
+var horizontal_bound_left := 0.0
+var horizontal_bound_right := 720.0
+var floor_bound_bottom := 850.0
 
 func _ready() -> void:
 	body_entered.connect(_on_body_entered)
@@ -35,6 +38,37 @@ func setup(level: int, physics_speed: float = 1.0) -> void:
 	# 자유 낙하 시간은 중력의 제곱근에 반비례하므로 배속의 제곱을 적용한다.
 	gravity_scale = physics_speed * physics_speed
 	queue_redraw()
+
+
+func set_play_area_bounds(left: float, right: float, bottom: float) -> void:
+	horizontal_bound_left = left
+	horizontal_bound_right = right
+	floor_bound_bottom = bottom
+	horizontal_bounds_enabled = right > left
+
+
+func _integrate_forces(state: PhysicsDirectBodyState2D) -> void:
+	if not horizontal_bounds_enabled or merge_locked:
+		return
+	var radius := get_radius()
+	var transform := state.transform
+	var velocity := state.linear_velocity
+	var minimum_x := horizontal_bound_left + radius
+	var maximum_x := horizontal_bound_right - radius
+	# 큰 충격으로 한 물리 프레임 안에 벽을 통과해도 공 전체를 박스 내부에 유지한다.
+	if transform.origin.x < minimum_x:
+		transform.origin.x = minimum_x
+		velocity.x = maxf(0.0, velocity.x)
+	elif transform.origin.x > maximum_x:
+		transform.origin.x = maximum_x
+		velocity.x = minf(0.0, velocity.x)
+	# 정상적인 벽 접촉은 StaticBody2D에 맡기고, 실제 관통 때만 복구한다.
+	var maximum_y := floor_bound_bottom - radius
+	if transform.origin.y > maximum_y:
+		transform.origin.y = maximum_y
+		velocity.y = minf(0.0, velocity.y)
+	state.transform = transform
+	state.linear_velocity = velocity
 
 func lock_for_merge() -> void:
 	merge_locked = true
@@ -123,7 +157,9 @@ func _draw() -> void:
 		draw_arc(Vector2.ZERO, radius + 5.0, 0.0, TAU, 40, Color("#9eeaff"), 6.0, true)
 
 func _on_body_entered(body: Node) -> void:
-	if not _has_contacted:
+	# 옆 벽 접촉은 다음 공 활성화 조건이 아니다.
+	var is_drop_landing_contact := body is MergeBall or body.name == &"Floor"
+	if not _has_contacted and is_drop_landing_contact:
 		_has_contacted = true
 		first_contact.emit(self)
 	_try_request_merge(body)

@@ -191,15 +191,17 @@ horizontal_alignment = 1
 
 [node name="BallEvolutionStrip" parent="UI" instance=ExtResource("7")]
 layout_mode = 0
-offset_top = 378.0
-offset_right = 720.0
-offset_bottom = 418.0
+offset_left = 8.0
+offset_top = 430.0
+offset_right = 84.0
+offset_bottom = 1270.0
 
 [node name="Divider" type="ColorRect" parent="UI" unique_id=2055641159]
 layout_mode = 0
-offset_top = 418.0
-offset_right = 720.0
-offset_bottom = 426.0
+offset_left = 88.0
+offset_top = 430.0
+offset_right = 92.0
+offset_bottom = 1280.0
 mouse_filter = 2
 color = Color(0.2, 0.29, 0.43, 1)
 

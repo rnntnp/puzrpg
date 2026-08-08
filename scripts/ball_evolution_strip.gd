@@ -3,7 +3,7 @@ extends Panel
 
 const BallCatalogClass = preload("res://scripts/ball_catalog.gd")
 
-@onready var sequence: HBoxContainer = $Sequence
+@onready var sequence: VBoxContainer = $Sequence
 
 
 func _ready() -> void:
@@ -22,7 +22,7 @@ func _build_sequence() -> void:
 
 func _create_ball_icon(data: Resource) -> TextureRect:
 	var icon := TextureRect.new()
-	icon.custom_minimum_size = Vector2(28, 28)
+	icon.custom_minimum_size = Vector2(26, 26)
 	icon.texture = data.sprite
 	icon.modulate = data.sprite_modulate
 	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
@@ -34,11 +34,11 @@ func _create_ball_icon(data: Resource) -> TextureRect:
 
 func _create_arrow() -> Label:
 	var arrow := Label.new()
-	arrow.custom_minimum_size = Vector2(18, 28)
-	arrow.text = "›"
+	arrow.custom_minimum_size = Vector2(26, 20)
+	arrow.text = "⌄"
 	arrow.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	arrow.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	arrow.add_theme_color_override("font_color", Color("#8090a8"))
-	arrow.add_theme_font_size_override("font_size", 18)
+	arrow.add_theme_font_size_override("font_size", 14)
 	arrow.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	return arrow

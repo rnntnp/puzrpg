@@ -15,7 +15,11 @@ signal merge_completed(merged_ball: MergeBall)
 
 const BallScene = preload("res://scenes/merge_ball.tscn")
 const BallCatalogClass = preload("res://scripts/ball_catalog.gd")
-const DANGER_LINE_Y := 150.0
+const BOARD_INNER_LEFT := 96.0
+const BOARD_INNER_RIGHT := 624.0
+const BOARD_INNER_BOTTOM := 846.0
+const DROP_POSITION_Y := 140.0
+const DANGER_LINE_Y := 230.0
 const DROP_GRACE_DURATION := 1.2
 const OVERFLOW_DURATION := 0.8
 const COMBO_SETTLE_MSEC := 500
@@ -59,6 +63,7 @@ var last_merge_msec := 0
 var combo_effect_tween: Tween
 var queued_levels: Array[int] = []
 var next_merge_resolution_msec := 0
+var dropped_ball_has_landed := false
 
 func _ready() -> void:
 	autoplay_bot.set_enabled(OS.is_debug_build() and GameSession.developer_autoplay_enabled)
@@ -69,7 +74,7 @@ func can_accept_autoplay_drop() -> bool:
 
 func autoplay_drop_at(x_position: float) -> void:
 	if can_accept_autoplay_drop():
-		aim_x = clampf(x_position, 38.0, 682.0)
+		aim_x = _clamp_aim_x(x_position)
 		_update_preview_position()
 		_drop_ball(aim_x)
 
@@ -173,16 +178,20 @@ func _handle_pointer_button(screen_position: Vector2, pressed: bool) -> void:
 
 func _update_aim(screen_position: Vector2) -> void:
 	var local := to_local(screen_position)
-	var margin := 38.0
-	if is_instance_valid(preview_ball):
-		margin = maxf(margin, preview_ball.get_radius() + 12.0)
-	aim_x = clampf(local.x, margin, 720.0 - margin)
+	aim_x = _clamp_aim_x(local.x)
 	_update_preview_position()
 
-func _update_preview_position() -> void:
-	guide_line.points = PackedVector2Array([Vector2(aim_x, 86.0), Vector2(aim_x, 825.0)])
+
+func _clamp_aim_x(x_position: float) -> float:
+	var radius := 26.0
 	if is_instance_valid(preview_ball):
-		preview_ball.position = Vector2(aim_x, 60.0)
+		radius = preview_ball.get_radius()
+	return clampf(x_position, BOARD_INNER_LEFT + radius, BOARD_INNER_RIGHT - radius)
+
+func _update_preview_position() -> void:
+	guide_line.points = PackedVector2Array([Vector2(aim_x, DROP_POSITION_Y), Vector2(aim_x, 825.0)])
+	if is_instance_valid(preview_ball):
+		preview_ball.position = Vector2(aim_x, DROP_POSITION_Y)
 
 func _drop_ball(x: float) -> void:
 	if input_locked or is_game_over:
@@ -191,6 +200,7 @@ func _drop_ball(x: float) -> void:
 	_update_drop_preview_visibility()
 	is_aiming = false
 	drop_sequence_active = true
+	dropped_ball_has_landed = false
 	drop_sequence_id += 1
 	var current_sequence_id := drop_sequence_id
 	combo_count = 0
@@ -198,7 +208,7 @@ func _drop_ball(x: float) -> void:
 	last_merge_msec = Time.get_ticks_msec()
 	next_merge_resolution_msec = last_merge_msec
 	drop_grace_remaining = DROP_GRACE_DURATION
-	_spawn_ball(Vector2(x, 60.0), current_level, current_sequence_id)
+	_spawn_ball(Vector2(x, DROP_POSITION_Y), current_level, current_sequence_id)
 	ball_dropped.emit()
 	_advance_ball_queue()
 	_finish_drop_sequence(current_sequence_id)
@@ -220,27 +230,41 @@ func _finish_drop_sequence(sequence_id: int) -> void:
 	drop_sequence_active = false
 	if auto_drop_enabled:
 		drop_time_remaining = drop_time_limit
-	if not input_locked and not is_game_over:
-		can_drop = true
 	_update_drop_preview_visibility()
 
 func _spawn_ball(at: Vector2, level: int, contact_sequence_id: int = -1):
 	if not is_inside_tree() or not is_instance_valid(balls) or balls.is_queued_for_deletion():
 		return null
 	var ball = BallScene.instantiate()
-	balls.add_child(ball)
 	ball.position = at
+	# CCD가 기본 위치 (0, 0)에서 생성 위치까지의 이동을 벽 관통으로 오인하지 않도록
+	# 씬 트리에 추가하기 전에 초기 위치를 지정한다.
+	ball.continuous_cd = RigidBody2D.CCD_MODE_DISABLED
+	balls.add_child(ball)
 	ball.setup(level, physics_speed_multiplier)
+	_enable_ball_ccd_after_spawn(ball)
+	var global_left := to_global(Vector2(BOARD_INNER_LEFT, 0.0)).x
+	var global_right := to_global(Vector2(BOARD_INNER_RIGHT, 0.0)).x
+	var global_bottom := to_global(Vector2(0.0, BOARD_INNER_BOTTOM)).y
+	ball.set_play_area_bounds(global_left, global_right, global_bottom)
 	ball.merge_requested.connect(_on_merge_requested)
 	if contact_sequence_id >= 0:
 		ball.first_contact.connect(_on_dropped_ball_first_contact.bind(contact_sequence_id), CONNECT_ONE_SHOT)
 	return ball
 
 
+func _enable_ball_ccd_after_spawn(ball: RigidBody2D) -> void:
+	await get_tree().physics_frame
+	if is_instance_valid(ball) and not ball.merge_locked:
+		ball.continuous_cd = RigidBody2D.CCD_MODE_CAST_SHAPE
+
+
 func _on_dropped_ball_first_contact(_ball: MergeBall, sequence_id: int) -> void:
-	if sequence_id != drop_sequence_id or input_locked or is_game_over:
+	if sequence_id != drop_sequence_id or is_game_over:
 		return
-	can_drop = true
+	dropped_ball_has_landed = true
+	if not input_locked:
+		can_drop = true
 	if auto_drop_enabled:
 		drop_time_remaining = drop_time_limit
 	_update_drop_preview_visibility()
@@ -267,7 +291,7 @@ func _refresh_preview() -> void:
 		next_preview_ball.queue_free()
 	preview_ball = BallScene.instantiate()
 	preview_holder.add_child(preview_ball)
-	preview_ball.position = Vector2(aim_x, 60.0)
+	preview_ball.position = Vector2(aim_x, DROP_POSITION_Y)
 	preview_ball.setup(current_level, physics_speed_multiplier)
 	preview_ball.lock_for_merge()
 	next_preview_ball = BallScene.instantiate()
@@ -375,7 +399,7 @@ func set_input_enabled(enabled: bool) -> void:
 	input_locked = not enabled
 	is_aiming = false
 	next_preview_holder.visible = enabled and not is_game_over
-	if enabled and not drop_sequence_active and not is_game_over:
+	if enabled and (dropped_ball_has_landed or not drop_sequence_active) and not is_game_over:
 		can_drop = true
 		drop_time_remaining = drop_time_limit
 	_update_drop_preview_visibility()

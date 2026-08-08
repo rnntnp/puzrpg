@@ -64,6 +64,13 @@ func take_damage(amount: int) -> void:
 		play_hit_animation()
 
 
+func heal(amount: int) -> void:
+	if not is_alive() or amount <= 0:
+		return
+	current_health = mini(max_health, current_health + amount)
+	health_changed.emit(current_health, max_health)
+
+
 func is_alive() -> bool:
 	return current_health > 0
 

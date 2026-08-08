@@ -10,6 +10,8 @@ signal merge_attack_requested(
 	ball_level: int
 )
 signal ball_dropped
+signal ingestion_target_replaced(ball: MergeBall)
+signal merge_completed(merged_ball: MergeBall)
 
 const BallScene = preload("res://scenes/merge_ball.tscn")
 const BallCatalogClass = preload("res://scripts/ball_catalog.gd")
@@ -48,12 +50,15 @@ var auto_drop_enabled := true
 var max_level_index: int = BallCatalogClass.get_max_level_index()
 var physics_speed_multiplier := 1.0
 var merge_push_force := 90.0
+var chain_merge_delay := 0.1
 var drop_sequence_active := false
 var drop_sequence_id := 0
 var combo_count := 0
 var combo_points := 0
 var last_merge_msec := 0
 var combo_effect_tween: Tween
+var queued_levels: Array[int] = []
+var next_merge_resolution_msec := 0
 
 func _ready() -> void:
 	autoplay_bot.set_enabled(OS.is_debug_build() and GameSession.developer_autoplay_enabled)
@@ -74,13 +79,40 @@ func get_active_balls() -> Array:
 func get_current_ball_level() -> int:
 	return current_level
 
+
+func wait_until_board_settled(max_wait_seconds := 4.0) -> void:
+	var started := Time.get_ticks_msec()
+	while is_inside_tree():
+		var quiet := Time.get_ticks_msec() - last_merge_msec >= COMBO_SETTLE_MSEC
+		if quiet and not _has_moving_balls():
+			return
+		if Time.get_ticks_msec() - started >= roundi(max_wait_seconds * 1000.0):
+			return
+		await get_tree().physics_frame
+
+
+func consume_ball(ball: MergeBall) -> void:
+	if not is_instance_valid(ball) or ball.merge_locked:
+		return
+	ball.set_ingestion_marked(false)
+	ball.lock_for_merge()
+	ball.queue_free()
+
+
+func insert_ball_after_current(level: int) -> void:
+	var previous_next := next_level
+	next_level = clampi(level, 0, max_level_index)
+	queued_levels.push_front(previous_next)
+	_refresh_preview()
+
 func configure(
 	time_limit: float,
 	max_ball_level: int,
 	physics_speed: float = 1.0,
 	push_force: float = 90.0,
 	hit_stop_time_scale: float = 0.25,
-	hit_stop_duration: float = 0.12
+	hit_stop_duration: float = 0.12,
+	chain_delay: float = 0.1
 ) -> void:
 	auto_drop_enabled = time_limit >= 0.0
 	drop_time_limit = maxf(0.0, time_limit)
@@ -90,6 +122,7 @@ func configure(
 	physics_speed_multiplier = clampf(physics_speed, 0.5, 3.0)
 	merge_push_force = maxf(0.0, push_force)
 	merge_hit_stop.configure(hit_stop_time_scale, hit_stop_duration)
+	chain_merge_delay = maxf(0.0, chain_delay)
 	_reset_ball_queue()
 
 func _process(delta: float) -> void:
@@ -163,6 +196,7 @@ func _drop_ball(x: float) -> void:
 	combo_count = 0
 	combo_points = 0
 	last_merge_msec = Time.get_ticks_msec()
+	next_merge_resolution_msec = last_merge_msec
 	drop_grace_remaining = DROP_GRACE_DURATION
 	_spawn_ball(Vector2(x, 60.0), current_level, current_sequence_id)
 	ball_dropped.emit()
@@ -213,7 +247,7 @@ func _on_dropped_ball_first_contact(_ball: MergeBall, sequence_id: int) -> void:
 
 func _advance_ball_queue() -> void:
 	current_level = next_level
-	next_level = _random_drop_level()
+	next_level = queued_levels.pop_front() if not queued_levels.is_empty() else _random_drop_level()
 	_refresh_preview()
 
 func _reset_ball_queue() -> void:
@@ -245,11 +279,24 @@ func _refresh_preview() -> void:
 func _on_merge_requested(first, second) -> void:
 	if first.merge_locked or second.merge_locked or first.merge_level >= max_level_index:
 		return
-	merge_hit_stop.play()
 	var at: Vector2 = (first.position + second.position) * 0.5
 	var level: int = first.merge_level + 1
+	var carries_ingestion_target: bool = first.ingestion_marked or second.ingestion_marked
 	first.lock_for_merge()
 	second.lock_for_merge()
+	# 연쇄 접촉은 순서를 예약해 하나씩 보여준 뒤 합성한다. 실제 시간 기준이라 FPS와 무관하다.
+	if drop_sequence_active and chain_merge_delay > 0.0:
+		var now_msec := Time.get_ticks_msec()
+		var scheduled_msec := now_msec
+		if combo_count > 0:
+			scheduled_msec = maxi(now_msec, next_merge_resolution_msec)
+		next_merge_resolution_msec = scheduled_msec + roundi(chain_merge_delay * 1000.0)
+		var wait_seconds := float(scheduled_msec - now_msec) / 1000.0
+		if wait_seconds > 0.0:
+			await get_tree().create_timer(wait_seconds, true, false, true).timeout
+		if not is_inside_tree() or not is_instance_valid(first) or not is_instance_valid(second):
+			return
+	merge_hit_stop.play()
 	first.queue_free()
 	second.queue_free()
 	var merged_ball_data: Resource = BallCatalogClass.get_ball(level)
@@ -270,12 +317,17 @@ func _on_merge_requested(first, second) -> void:
 		level, level, level + 1, earned_points,
 		str(drop_sequence_active), combo_count, combo_points
 	])
-	call_deferred("_spawn_merged_ball", at, level)
+	call_deferred("_spawn_merged_ball", at, level, carries_ingestion_target)
 	drop_grace_remaining = maxf(drop_grace_remaining, 0.5)
 
 
-func _spawn_merged_ball(at: Vector2, level: int) -> void:
+func _spawn_merged_ball(at: Vector2, level: int, carries_ingestion_target: bool = false) -> void:
 	var merged_ball = _spawn_ball(at, level)
+	if carries_ingestion_target and is_instance_valid(merged_ball):
+		merged_ball.set_ingestion_marked(true)
+		ingestion_target_replaced.emit(merged_ball)
+	if is_instance_valid(merged_ball):
+		merge_completed.emit(merged_ball)
 	if not is_instance_valid(merged_ball) or merge_push_force <= 0.0:
 		return
 	_apply_merge_push(at, merged_ball)

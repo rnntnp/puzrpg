@@ -1,0 +1,261 @@
+class_name MonsterActionController
+extends Node
+
+enum State {
+	NORMAL_ATTACK,
+	INGESTION_TELEGRAPH,
+	INGESTION_RESPONSE,
+}
+
+const EnemyAttackEffect: StatusEffectData = preload("res://resources/effects/enemy_attack_countdown.tres")
+const IngestionEffect: StatusEffectData = preload("res://resources/effects/ingestion_countdown.tres")
+const VulnerableEffect: StatusEffectData = preload("res://resources/effects/ingestion_vulnerable.tres")
+const IceEffect: StatusEffectData = preload("res://resources/effects/ice_countdown.tres")
+const IceSkillDataClass = preload("res://scripts/ice_skill_data.gd")
+const IceSkillControllerClass = preload("res://scripts/ice_skill_controller.gd")
+
+var battle
+var enemy: Fighter
+var player: Fighter
+var merge_game: MergeGame
+var status_effects: StatusEffectBar
+var durability_label: Label
+var skill: IngestionSkillData
+var ice_skill: IceSkillDataClass
+var ice_controller: IceSkillControllerClass
+
+var state := State.NORMAL_ATTACK
+var remaining_turns := 0
+var current_durability := 0
+var swallowed_ball_level := -1
+var target_ball: MergeBall
+var vulnerable_turns := 0
+var _state_version := 0
+
+
+func configure(
+	battle_node,
+	enemy_fighter: Fighter,
+	player_fighter: Fighter,
+	game: MergeGame,
+	effect_bar: StatusEffectBar,
+	durability_ui: Label
+) -> void:
+	battle = battle_node
+	enemy = enemy_fighter
+	player = player_fighter
+	merge_game = game
+	status_effects = effect_bar
+	durability_label = durability_ui
+	skill = enemy.character_data.ingestion_skill as IngestionSkillData
+	ice_skill = enemy.character_data.ice_skill as IceSkillDataClass
+	ice_controller = get_node("IceSkillController") as IceSkillControllerClass
+	ice_controller.configure(merge_game, ice_skill)
+	_state_version += 1
+	_clear_target()
+	swallowed_ball_level = -1
+	vulnerable_turns = 0
+	status_effects.clear_effects()
+	durability_label.visible = false
+	_enter_normal_attack()
+	if not merge_game.ingestion_target_replaced.is_connected(_on_target_replaced):
+		merge_game.ingestion_target_replaced.connect(_on_target_replaced)
+
+
+func on_ball_dropped() -> void:
+	if enemy == null or not enemy.is_alive() or not player.is_alive():
+		return
+	remaining_turns = maxi(0, remaining_turns - 1)
+	_update_ui()
+	if remaining_turns > 0:
+		_schedule_vulnerability_tick()
+		return
+
+	match state:
+		State.NORMAL_ATTACK:
+			if ice_skill != null:
+				_run_ice_turn()
+				return
+			enemy.attack(player)
+			if skill == null:
+				_enter_normal_attack()
+			else:
+				_enter_ingestion_telegraph()
+		State.INGESTION_TELEGRAPH:
+			_execute_ingestion()
+		State.INGESTION_RESPONSE:
+			_schedule_ingestion_success()
+	_schedule_vulnerability_tick()
+
+
+func route_player_damage(damage: int) -> int:
+	if damage <= 0:
+		return 0
+	var hp_damage := damage
+	if state == State.INGESTION_RESPONSE and current_durability > 0:
+		var absorbed := mini(current_durability, hp_damage)
+		current_durability -= absorbed
+		hp_damage -= absorbed
+		_update_ui()
+		print("[INGESTION DURABILITY] damage=%d | remaining=%d" % [absorbed, current_durability])
+		if current_durability <= 0:
+			_interrupt_ingestion()
+	if hp_damage > 0 and vulnerable_turns > 0:
+		hp_damage = roundi(float(hp_damage) * skill.interrupted_damage_multiplier)
+	return hp_damage
+
+
+func on_enemy_defeated() -> void:
+	if swallowed_ball_level >= 0:
+		merge_game.insert_ball_after_current(swallowed_ball_level)
+	_state_version += 1
+	_clear_target()
+	status_effects.clear_effects()
+	durability_label.visible = false
+	if ice_controller != null:
+		ice_controller.clear_all_ice()
+
+
+func _enter_normal_attack() -> void:
+	state = State.NORMAL_ATTACK
+	remaining_turns = enemy.enemy_attack_drop_interval
+	current_durability = 0
+	status_effects.remove_effect(IngestionEffect.effect_id)
+	status_effects.remove_effect(IceEffect.effect_id)
+	status_effects.set_effect(IceEffect if ice_skill != null else EnemyAttackEffect, remaining_turns)
+	durability_label.visible = false
+
+
+func _enter_ingestion_telegraph() -> void:
+	state = State.INGESTION_TELEGRAPH
+	remaining_turns = skill.telegraph_turns
+	status_effects.remove_effect(EnemyAttackEffect.effect_id)
+	status_effects.set_effect(IngestionEffect, remaining_turns)
+	_select_target()
+	battle.status_label.text = "회복 포식 예고"
+	battle.status_label.modulate = Color("#d79cff")
+
+
+func _execute_ingestion() -> void:
+	if not is_instance_valid(target_ball):
+		_select_target()
+	if not is_instance_valid(target_ball):
+		print("[INGESTION] target unavailable; retrying telegraph")
+		_enter_ingestion_telegraph()
+		return
+	swallowed_ball_level = target_ball.merge_level
+	merge_game.consume_ball(target_ball)
+	target_ball = null
+	state = State.INGESTION_RESPONSE
+	remaining_turns = skill.response_turns
+	current_durability = skill.durability
+	status_effects.set_effect(IngestionEffect, remaining_turns)
+	durability_label.visible = true
+	battle.status_label.text = "포식 저지! 내구도를 파괴하세요"
+	_update_ui()
+	print("[INGESTION START] level=%d | durability=%d | turns=%d" % [
+		swallowed_ball_level + 1, current_durability, remaining_turns
+	])
+
+
+func _interrupt_ingestion() -> void:
+	_state_version += 1
+	if swallowed_ball_level >= 0:
+		merge_game.insert_ball_after_current(swallowed_ball_level)
+		swallowed_ball_level = -1
+	vulnerable_turns = skill.interrupted_debuff_turns
+	status_effects.set_effect(VulnerableEffect, vulnerable_turns)
+	battle.status_label.text = "포식 저지 성공!"
+	battle.status_label.modulate = Color("#ffe066")
+	print("[INGESTION INTERRUPTED] vulnerable_turns=%d" % vulnerable_turns)
+	_enter_normal_attack()
+	status_effects.set_effect(VulnerableEffect, vulnerable_turns)
+
+
+func _schedule_ingestion_success() -> void:
+	var version := _state_version
+	await get_tree().create_timer(0.8, true, false, true).timeout
+	if version != _state_version or state != State.INGESTION_RESPONSE or current_durability <= 0:
+		return
+	_state_version += 1
+	enemy.heal(skill.heal_amount)
+	swallowed_ball_level = -1
+	battle.status_label.text = "포식 성공 · HP %d 회복" % skill.heal_amount
+	battle.status_label.modulate = Color("#67dc83")
+	print("[INGESTION SUCCEEDED] heal=%d" % skill.heal_amount)
+	_enter_normal_attack()
+
+
+func _schedule_vulnerability_tick() -> void:
+	if vulnerable_turns <= 0:
+		return
+	var version := _state_version
+	await get_tree().create_timer(0.9, true, false, true).timeout
+	if version != _state_version or vulnerable_turns <= 0:
+		return
+	vulnerable_turns -= 1
+	if vulnerable_turns <= 0:
+		status_effects.remove_effect(VulnerableEffect.effect_id)
+	else:
+		status_effects.set_effect(VulnerableEffect, vulnerable_turns)
+
+
+func _select_target() -> void:
+	_clear_target()
+	var candidates: Array[MergeBall] = []
+	for child in merge_game.get_active_balls():
+		if child is MergeBall and not child.merge_locked and not child.is_queued_for_deletion():
+			candidates.append(child)
+	if candidates.is_empty():
+		return
+	candidates.sort_custom(func(a: MergeBall, b: MergeBall) -> bool:
+		return a.merge_level > b.merge_level
+	)
+	target_ball = candidates.front()
+	target_ball.set_ingestion_marked(true)
+	print("[INGESTION TARGET] level=%d" % (target_ball.merge_level + 1))
+
+
+func _clear_target() -> void:
+	if is_instance_valid(target_ball):
+		target_ball.set_ingestion_marked(false)
+	target_ball = null
+
+
+func _on_target_replaced(ball: MergeBall) -> void:
+	if state != State.INGESTION_TELEGRAPH:
+		return
+	target_ball = ball
+	print("[INGESTION TARGET TRANSFER] level=%d" % (ball.merge_level + 1))
+
+
+func _update_ui() -> void:
+	match state:
+		State.NORMAL_ATTACK:
+			status_effects.set_effect(IceEffect if ice_skill != null else EnemyAttackEffect, remaining_turns)
+		State.INGESTION_TELEGRAPH, State.INGESTION_RESPONSE:
+			status_effects.set_effect(IngestionEffect, remaining_turns)
+	if state == State.INGESTION_RESPONSE:
+		durability_label.text = "포식 내구도 %d / %d" % [current_durability, skill.durability]
+
+
+func _run_ice_turn() -> void:
+	_state_version += 1
+	merge_game.set_input_enabled(false)
+	battle.status_label.text = "몬스터 턴 · 보드 정리 중"
+	battle.status_label.modulate = Color("#9eeaff")
+	await merge_game.wait_until_board_settled()
+	if not is_instance_valid(enemy) or not enemy.is_alive() or not player.is_alive():
+		return
+	enemy.attack(player)
+	if not player.is_alive():
+		return
+	battle.status_label.text = "빙결 공격!"
+	var frozen_count: int = await ice_controller.execute()
+	if frozen_count == 0:
+		battle.status_label.text = "빙결 대상 없음"
+	_enter_normal_attack()
+	if enemy.is_alive() and player.is_alive():
+		merge_game.set_input_enabled(true)
+		battle.status_label.text = "전투 중"
+		battle.status_label.modulate = Color.WHITE

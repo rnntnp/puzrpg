@@ -20,6 +20,8 @@ const BallCatalogClass = preload("res://scripts/ball_catalog.gd")
 @onready var enemy_progress_label: Label = $UI/EnemyProgress
 @onready var left_status_effects: StatusEffectBar = $UI/LeftStatusEffects
 @onready var right_status_effects: StatusEffectBar = $UI/RightStatusEffects
+@onready var skill_durability_label: Label = $UI/SkillDurabilityLabel
+@onready var monster_action_controller = $MonsterActionController
 @onready var merge_game = $MergeGame
 
 var level_data: LevelDataClass
@@ -61,7 +63,8 @@ func _load_level() -> void:
 		level_data.ball_physics_speed,
 		level_data.merge_push_force,
 		level_data.merge_hit_stop_time_scale,
-		level_data.merge_hit_stop_duration
+		level_data.merge_hit_stop_duration,
+		level_data.chain_merge_delay
 	)
 	status_label.text = "전투 준비"
 	status_label.modulate = Color("#ffd166")
@@ -72,7 +75,10 @@ func _load_enemy(index: int) -> void:
 	right_fighter.set_character_data(level_data.enemies[index])
 	enemy_drop_count = 0
 	enemy_progress_label.text = "적 %d / %d" % [index + 1, level_data.enemies.size()]
-	_update_enemy_attack_indicator()
+	monster_action_controller.configure(
+		self, right_fighter, left_fighter, merge_game,
+		right_status_effects, skill_durability_label
+	)
 	_update_stats()
 
 
@@ -101,18 +107,7 @@ func _update_stats() -> void:
 func _on_ball_dropped() -> void:
 	if not battle_running or not right_fighter.is_alive() or not left_fighter.is_alive():
 		return
-	enemy_drop_count += 1
-	if enemy_drop_count < right_fighter.enemy_attack_drop_interval:
-		_update_enemy_attack_indicator()
-		return
-	enemy_drop_count = 0
-	_update_enemy_attack_indicator()
-	right_fighter.attack(left_fighter)
-
-
-func _update_enemy_attack_indicator() -> void:
-	var remaining_turns := right_fighter.enemy_attack_drop_interval - enemy_drop_count
-	right_status_effects.set_effect(EnemyAttackEffect, remaining_turns)
+	monster_action_controller.on_ball_dropped()
 
 func _on_merge_attack_requested(
 	damage: int,
@@ -135,6 +130,9 @@ func _on_merge_attack_requested(
 func _on_merge_projectile_hit(damage: int) -> void:
 	if not battle_running or not right_fighter.is_alive():
 		return
+	damage = monster_action_controller.route_player_damage(damage)
+	if damage <= 0:
+		return
 	print("[MERGE ATTACK] damage=%d" % damage)
 	right_fighter.take_damage(damage)
 
@@ -148,6 +146,7 @@ func _on_fighter_defeated(fighter: Fighter) -> void:
 		GameSession.set_battle_result(false, "%s 도전 실패" % level_data.level_name)
 		get_tree().change_scene_to_file("res://scenes/battle_result.tscn")
 		return
+	monster_action_controller.on_enemy_defeated()
 
 	current_enemy_index += 1
 	if current_enemy_index < level_data.enemies.size():

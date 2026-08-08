@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="IngestionSkillData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/ingestion_skill_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+telegraph_turns = 1
+durability = 7
+response_turns = 3
+heal_amount = 25
+interrupted_damage_multiplier = 1.3
+interrupted_debuff_turns = 2

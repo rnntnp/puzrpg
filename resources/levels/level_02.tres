@@ -2,8 +2,7 @@
 
 [ext_resource type="Script" uid="uid://egcuwxnrdhmr" path="res://scripts/level_data.gd" id="1_level"]
 [ext_resource type="Resource" uid="uid://dd8t0hxokj424" path="res://resources/characters/blue_fighter.tres" id="2_player"]
-[ext_resource type="Resource" uid="uid://bwjblomuukh5q" path="res://resources/characters/red_fighter.tres" id="3_enemy"]
-[ext_resource type="Resource" uid="uid://c3gallhsb8mqh" path="res://resources/characters/red_elite.tres" id="4_elite"]
+[ext_resource type="Resource" path="res://resources/characters/recovery_ingester.tres" id="3_enemy"]
 [ext_resource type="Script" uid="uid://duu5mev8uwp8d" path="res://scripts/character_data.gd" id="5_character_type"]
 
 [resource]
@@ -12,9 +11,11 @@ level_name = "2. 붉은 관문"
 image_placeholder = "RED GATE
 LEVEL IMAGE"
 player_character = ExtResource("2_player")
-enemies = Array[ExtResource("5_character_type")]([ExtResource("3_enemy"), ExtResource("4_elite")])
+enemies = Array[ExtResource("5_character_type")]([ExtResource("3_enemy")])
 ball_drop_time_limit = -1.0
 ball_physics_speed = 1.6
 merge_push_force = 90.0
-merge_hit_stop_time_scale = 0.25
-merge_hit_stop_duration = 0.12
+merge_hit_stop_time_scale = 0.18
+merge_hit_stop_duration = 0.2
+chain_merge_delay = 0.1
+next_level_path = "res://resources/levels/level_03.tres"

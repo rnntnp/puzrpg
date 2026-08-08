@@ -23,6 +23,8 @@ const CharacterDataClass = preload("res://scripts/character_data.gd")
 @export_range(0.05, 1.0, 0.05) var merge_hit_stop_time_scale: float = 0.25
 ## 슬로모션이 유지되는 실제 시간(초).
 @export_range(0.0, 0.5, 0.01) var merge_hit_stop_duration: float = 0.12
+## 연쇄 합성으로 생성된 공이 다음 합성을 시작하기 전의 실제 시간(초).
+@export_range(0.0, 0.8, 0.01) var chain_merge_delay: float = 0.1
 
 @export_category("진행")
 @export_file("*.tres") var next_level_path: String

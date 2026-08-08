@@ -2,7 +2,7 @@ class_name MergeGame
 extends Node2D
 
 signal game_over
-signal combo_resolved(damage: int, combo_count: int, base_points: int)
+signal merge_attack_requested(damage: int, combo_count: int, base_points: int)
 signal ball_dropped
 
 const BallScene = preload("res://scenes/merge_ball.tscn")
@@ -11,6 +11,8 @@ const DANGER_LINE_Y := 150.0
 const DROP_GRACE_DURATION := 1.2
 const OVERFLOW_DURATION := 0.8
 const COMBO_SETTLE_MSEC := 500
+const COMBO_MAX_WAIT_MSEC := 4000
+const MERGE_ATTACK_DELAY := 0.25
 
 @onready var balls: Node2D = $Balls
 @onready var preview_holder: Node2D = $PreviewHolder
@@ -144,15 +146,18 @@ func _drop_ball(x: float) -> void:
 	_finish_drop_sequence()
 
 func _finish_drop_sequence() -> void:
-	await get_tree().create_timer(0.25).timeout
-	while is_inside_tree() and Time.get_ticks_msec() - last_merge_msec < COMBO_SETTLE_MSEC:
-		await get_tree().process_frame
+	var sequence_started_msec := Time.get_ticks_msec()
+	await get_tree().physics_frame
+	while is_inside_tree():
+		var now := Time.get_ticks_msec()
+		var merge_is_quiet := now - last_merge_msec >= COMBO_SETTLE_MSEC
+		var exceeded_max_wait := now - sequence_started_msec >= COMBO_MAX_WAIT_MSEC
+		if (merge_is_quiet and not _has_moving_balls()) or exceeded_max_wait:
+			break
+		await get_tree().physics_frame
 	if not is_inside_tree():
 		return
 	drop_sequence_active = false
-	if combo_count > 0:
-		var final_damage := _calculate_combo_damage()
-		combo_resolved.emit(final_damage, combo_count, combo_points)
 	if auto_drop_enabled:
 		drop_time_remaining = drop_time_limit
 	if not input_locked and not is_game_over:
@@ -211,12 +216,20 @@ func _on_merge_requested(first, second) -> void:
 	var earned_points := level * 10
 	score += earned_points
 	score_label.text = "점수 %d" % score
+	var attack_combo_count := 1
 	if drop_sequence_active:
 		combo_count += 1
 		combo_points += earned_points
 		last_merge_msec = Time.get_ticks_msec()
-		if combo_count >= 2:
-			_show_combo_effect(combo_count, _calculate_combo_damage())
+		attack_combo_count = combo_count
+	var merge_damage := _calculate_merge_damage(earned_points, attack_combo_count)
+	if attack_combo_count >= 2:
+		_show_combo_effect(attack_combo_count, merge_damage)
+	_emit_merge_attack_after_delay(merge_damage, attack_combo_count, earned_points)
+	print("[MERGE] %d단계 + %d단계 -> %d단계 | 획득=%d | 사이클=%s | 콤보=%d | 누적=%d" % [
+		level, level, level + 1, earned_points,
+		str(drop_sequence_active), combo_count, combo_points
+	])
 	call_deferred("_spawn_ball", at, level)
 	drop_grace_remaining = maxf(drop_grace_remaining, 0.5)
 
@@ -225,6 +238,14 @@ func _has_ball_over_danger_line() -> bool:
 		if child.merge_locked:
 			continue
 		if child.position.y - child.get_radius() < DANGER_LINE_Y:
+			return true
+	return false
+
+func _has_moving_balls() -> bool:
+	for child in balls.get_children():
+		if child.merge_locked:
+			continue
+		if not child.sleeping and (child.linear_velocity.length() > 8.0 or absf(child.angular_velocity) > 0.2):
 			return true
 	return false
 
@@ -246,9 +267,16 @@ func set_input_enabled(enabled: bool) -> void:
 		can_drop = true
 		drop_time_remaining = drop_time_limit
 
-func _calculate_combo_damage() -> int:
-	var multiplier := 1.0 + 0.5 * float(combo_count - 1)
-	return roundi(float(combo_points) * multiplier)
+func _calculate_merge_damage(base_points: int, count: int) -> int:
+	var multiplier := 1.0 + 0.5 * float(count - 1)
+	return roundi(float(base_points) * multiplier)
+
+func _emit_merge_attack_after_delay(damage: int, count: int, base_points: int) -> void:
+	await get_tree().create_timer(MERGE_ATTACK_DELAY).timeout
+	if not is_inside_tree():
+		return
+	print("[MERGE ATTACK REQUEST] 콤보=%d | 기본=%d | 피해=%d" % [count, base_points, damage])
+	merge_attack_requested.emit(damage, count, base_points)
 
 func _show_combo_effect(count: int, damage: int) -> void:
 	if combo_effect_tween != null and combo_effect_tween.is_valid():

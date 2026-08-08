@@ -12,8 +12,8 @@ config_version=5
 
 config/name="puzrpg"
 run/main_scene="res://scenes/loading.tscn"
-run/max_fps=60
 config/features=PackedStringArray("4.7", "Mobile")
+run/max_fps=60
 config/icon="res://icon.svg"
 
 [autoload]

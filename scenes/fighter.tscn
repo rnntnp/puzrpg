@@ -6,3 +6,5 @@
 polygon = PackedVector2Array(-55, -75, 20, -75, 55, -35, 55, 70, -55, 70)
 color = Color(0.282, 0.663, 1, 1)
 script = ExtResource("1_fighter")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]

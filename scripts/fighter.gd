@@ -7,6 +7,7 @@ signal health_changed(current_health: int, max_health: int)
 signal defeated(fighter: Fighter)
 
 @export var character_data: CharacterDataClass
+@onready var character_sprite: Sprite2D = $Sprite2D
 
 var current_health: int
 var base_scale: Vector2
@@ -24,15 +25,36 @@ var enemy_attack_drop_interval: int:
 func _ready() -> void:
 	base_scale = scale
 	assert(character_data != null, "%s에 CharacterData가 지정되지 않았습니다." % name)
-	color = character_data.display_color
+	_apply_character_visual()
 	reset()
 
 
 func set_character_data(data: CharacterDataClass, refill_health := true) -> void:
 	character_data = data
-	color = character_data.display_color
+	_apply_character_visual()
 	if refill_health:
 		reset()
+
+
+func _apply_character_visual() -> void:
+	if character_data == null:
+		return
+	color = character_data.display_color
+	character_sprite.texture = character_data.sprite
+	character_sprite.modulate = character_data.display_color * character_data.sprite_modulate
+	character_sprite.visible = character_sprite.texture != null
+	if character_sprite.texture != null:
+		var texture_size := character_sprite.texture.get_size()
+		if texture_size.x > 0.0 and texture_size.y > 0.0:
+			character_sprite.scale = Vector2(
+				character_data.sprite_size.x / texture_size.x,
+				character_data.sprite_size.y / texture_size.y
+			)
+	# Polygon2D는 스프라이트가 없는 데이터의 예비 표시로만 사용한다.
+	polygon = PackedVector2Array() if character_sprite.visible else PackedVector2Array([
+		Vector2(-55, -75), Vector2(20, -75), Vector2(55, -35),
+		Vector2(55, 70), Vector2(-55, 70)
+	])
 
 
 func reset() -> void:

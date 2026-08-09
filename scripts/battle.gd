@@ -123,6 +123,7 @@ func _on_merge_attack_requested(
 		return
 	var effect = MergeAttackEffectScene.instantiate()
 	add_child(effect)
+	left_fighter.play_cast_animation()
 	effect.hit.connect(_on_merge_projectile_hit)
 	effect.play(origin, right_fighter.global_position, BallCatalogClass.get_ball(ball_level), damage)
 

@@ -11,6 +11,7 @@ signal defeated(fighter: Fighter)
 
 var current_health: int
 var base_scale: Vector2
+var _visual_tween: Tween
 
 var max_health: int:
 	get: return character_data.max_health
@@ -106,9 +107,47 @@ func play_attack_animation(target: Fighter) -> void:
 
 
 func play_hit_animation() -> void:
-	var tween := create_tween()
-	tween.tween_property(self, "modulate", Color("#ffdfdf"), 0.04)
-	tween.tween_property(self, "modulate", Color.WHITE, 0.16)
+	_stop_visual_tween()
+	var start_position := position
+	var away_from_center := -1.0 if global_position.x < 360.0 else 1.0
+	_visual_tween = create_tween()
+	_visual_tween.set_parallel(true)
+	_visual_tween.tween_property(self, "position", start_position + Vector2(18.0 * away_from_center, -3.0), 0.055).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	_visual_tween.tween_property(self, "modulate", Color("#ffd0dc"), 0.055)
+	_visual_tween.set_parallel(false)
+	_visual_tween.tween_property(self, "position", start_position, 0.16).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	_visual_tween.parallel().tween_property(self, "modulate", Color.WHITE, 0.13)
+
+
+func play_cast_animation() -> void:
+	if character_data == null or character_data.cast_sprite == null or not is_alive():
+		return
+	_stop_visual_tween()
+	character_sprite.texture = character_data.cast_sprite
+	var resting_scale := character_sprite.scale
+	character_sprite.scale = resting_scale * 0.94
+	_visual_tween = create_tween()
+	_visual_tween.tween_property(character_sprite, "scale", resting_scale * 1.05, 0.09).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	_visual_tween.tween_interval(0.16)
+	_visual_tween.tween_property(character_sprite, "scale", resting_scale, 0.1)
+	_visual_tween.tween_callback(func():
+		if character_data != null:
+			character_sprite.texture = character_data.sprite
+	)
+
+
+func _stop_visual_tween() -> void:
+	if _visual_tween != null and _visual_tween.is_valid():
+		_visual_tween.kill()
+	modulate = Color.WHITE
+	if character_data != null and character_sprite != null:
+		character_sprite.texture = character_data.sprite
+		var texture_size := character_sprite.texture.get_size() if character_sprite.texture != null else Vector2.ONE
+		if texture_size.x > 0.0 and texture_size.y > 0.0:
+			character_sprite.scale = Vector2(
+				character_data.sprite_size.x / texture_size.x,
+				character_data.sprite_size.y / texture_size.y
+			)
 
 func play_defeat_animation() -> void:
 	var defeated_scale := Vector2(base_scale.x * 1.15, 0.05)

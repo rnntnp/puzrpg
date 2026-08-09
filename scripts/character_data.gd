@@ -7,8 +7,9 @@ extends Resource
 
 @export_category("캐릭터 표시")
 @export var sprite: Texture2D
+@export var cast_sprite: Texture2D
 @export var sprite_modulate: Color = Color.WHITE
-@export var sprite_size: Vector2 = Vector2(110.0, 145.0)
+@export var sprite_size: Vector2 = Vector2(190.0, 190.0)
 
 @export_category("전투 능력치")
 @export_range(1, 99999, 1) var max_health: int = 100

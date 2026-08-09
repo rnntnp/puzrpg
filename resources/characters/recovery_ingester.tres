@@ -2,13 +2,14 @@
 
 [ext_resource type="Script" path="res://scripts/character_data.gd" id="1"]
 [ext_resource type="Resource" path="res://resources/skills/recovery_ingestion.tres" id="2"]
-[ext_resource type="Texture2D" path="res://assets/balls/circle_placeholder.svg" id="3_sprite"]
+[ext_resource type="Texture2D" path="res://assets/characters/generated/enemy_warlock.png" id="3_sprite"]
 
 [resource]
 script = ExtResource("1")
 display_name = "회복 포식자"
-display_color = Color(0.56, 0.3, 0.72, 1)
+display_color = Color(1, 1, 1, 1)
 sprite = ExtResource("3_sprite")
+sprite_size = Vector2(190, 190)
 max_health = 120
 attack_power = 15
 enemy_attack_drop_interval = 3

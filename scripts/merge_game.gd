@@ -14,6 +14,7 @@ signal ingestion_target_replaced(ball: MergeBall)
 signal merge_completed(merged_ball: MergeBall)
 
 const BallScene = preload("res://scenes/merge_ball.tscn")
+const MergeBurstEffectScene = preload("res://scenes/merge_burst_effect.tscn")
 const BallCatalogClass = preload("res://scripts/ball_catalog.gd")
 const MergePhysicsDataClass = preload("res://scripts/merge_physics_data.gd")
 const BOARD_INNER_LEFT := 96.0
@@ -347,6 +348,7 @@ func _on_merge_requested(first, second) -> void:
 	first.queue_free()
 	second.queue_free()
 	var merged_ball_data: Resource = BallCatalogClass.get_ball(level)
+	_spawn_merge_burst(at, merged_ball_data.sprite_modulate)
 	var earned_points: int = merged_ball_data.merge_score
 	score += earned_points
 	score_label.text = "점수 %d" % score
@@ -366,6 +368,12 @@ func _on_merge_requested(first, second) -> void:
 	])
 	call_deferred("_spawn_merged_ball", at, level, carries_ingestion_target)
 	drop_grace_remaining = maxf(drop_grace_remaining, 0.5)
+
+
+func _spawn_merge_burst(at: Vector2, color: Color) -> void:
+	var burst = MergeBurstEffectScene.instantiate()
+	add_child(burst)
+	burst.play(at, color)
 
 
 func _spawn_merged_ball(at: Vector2, level: int, carries_ingestion_target: bool = false) -> void:

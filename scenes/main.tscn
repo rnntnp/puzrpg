@@ -12,21 +12,38 @@
 [ext_resource type="Texture2D" uid="uid://c3vhyr1ewy74w" path="res://assets/backgrounds/cave_battle_background_inpainted.png" id="10_background"]
 
 [sub_resource type="StyleBoxFlat" id="bar_bg"]
-bg_color = Color(0.15, 0.21, 0.3, 1)
-corner_radius_top_left = 8
-corner_radius_top_right = 8
-corner_radius_bottom_right = 8
-corner_radius_bottom_left = 8
+bg_color = Color(0.035, 0.025, 0.09, 0.96)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(0.71, 0.55, 0.22, 1)
+corner_radius_top_left = 11
+corner_radius_top_right = 11
+corner_radius_bottom_right = 11
+corner_radius_bottom_left = 11
+shadow_color = Color(0, 0, 0, 0.55)
+shadow_size = 5
 
 [sub_resource type="StyleBoxFlat" id="blue"]
-bg_color = Color(0.28, 0.66, 1, 1)
+bg_color = Color(0.14, 0.89, 0.69, 1)
+border_width_left = 4
+border_width_top = 4
+border_width_right = 4
+border_width_bottom = 4
+border_color = Color(0.45, 1, 0.8, 1)
 corner_radius_top_left = 8
 corner_radius_top_right = 8
 corner_radius_bottom_right = 8
 corner_radius_bottom_left = 8
 
 [sub_resource type="StyleBoxFlat" id="red"]
-bg_color = Color(1, 0.4, 0.47, 1)
+bg_color = Color(0.72, 0.16, 0.91, 1)
+border_width_left = 4
+border_width_top = 4
+border_width_right = 4
+border_width_bottom = 4
+border_color = Color(0.94, 0.42, 1, 1)
 corner_radius_top_left = 8
 corner_radius_top_right = 8
 corner_radius_bottom_right = 8
@@ -116,7 +133,7 @@ layout_mode = 0
 offset_left = 40.0
 offset_top = 136.0
 offset_right = 330.0
-offset_bottom = 157.0
+offset_bottom = 162.0
 theme_override_styles/background = SubResource("bar_bg")
 theme_override_styles/fill = SubResource("blue")
 show_percentage = false
@@ -126,7 +143,7 @@ layout_mode = 0
 offset_left = 390.0
 offset_top = 136.0
 offset_right = 680.0
-offset_bottom = 157.0
+offset_bottom = 162.0
 theme_override_styles/background = SubResource("bar_bg")
 theme_override_styles/fill = SubResource("red")
 show_percentage = false
@@ -165,7 +182,7 @@ character_data = ExtResource("3")
 
 [node name="RightFighter" parent="UI" unique_id=805224498 instance=ExtResource("2")]
 position = Vector2(525, 255)
-scale = Vector2(-0.75, 0.75)
+scale = Vector2(0.75, 0.75)
 character_data = ExtResource("4")
 
 [node name="Versus" type="Label" parent="UI" unique_id=875060772]

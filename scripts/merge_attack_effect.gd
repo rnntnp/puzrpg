@@ -18,6 +18,7 @@ func play(from_global: Vector2, to_global: Vector2, data: Resource, damage: int)
 	global_position = from_global
 	_target_position = to_global - from_global
 	projectile.texture = data.sprite
+	projectile.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 	projectile.modulate = data.sprite_modulate
 	var texture_size: Vector2 = projectile.texture.get_size() if projectile.texture != null else Vector2.ONE
 	projectile.scale = Vector2(44.0 / texture_size.x, 44.0 / texture_size.y)

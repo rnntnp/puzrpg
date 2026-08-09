@@ -12,6 +12,7 @@ enum BallShape {
 @export_category("표시")
 @export var sprite: Texture2D
 @export var sprite_modulate: Color = Color.WHITE
+@export var show_placeholder_outline: bool = true
 
 @export_category("물리")
 @export var collision_shape: Shape2D

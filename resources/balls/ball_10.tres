@@ -1,7 +1,7 @@
 [gd_resource type="Resource" script_class="BallData" format=3 uid="uid://c1625m0uaec83"]
 
 [ext_resource type="Script" uid="uid://cpjm025ca6ujc" path="res://scripts/ball_data.gd" id="1"]
-[ext_resource type="Texture2D" uid="uid://ofxknv30arlj" path="res://assets/balls/circle_placeholder.svg" id="2"]
+[ext_resource type="Texture2D" uid="uid://bsm6o6xh84jl5" path="res://assets/balls/generated/ball_10_vermilion.png" id="2"]
 
 [sub_resource type="CircleShape2D" id="Circle"]
 radius = 108.0
@@ -10,6 +10,6 @@ radius = 108.0
 script = ExtResource("1")
 level = 10
 sprite = ExtResource("2")
-sprite_modulate = Color(1, 0.541, 0.239, 1)
+show_placeholder_outline = false
 collision_shape = SubResource("Circle")
 merge_score = 90

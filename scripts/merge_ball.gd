@@ -142,7 +142,8 @@ func break_ice(play_effect := true) -> void:
 
 func _draw() -> void:
 	var radius := get_radius()
-	draw_arc(Vector2.ZERO, radius - 3.0, 0.0, TAU, 40, Color("#162033"), 5.0, true)
+	if ball_data == null or ball_data.show_placeholder_outline:
+		draw_arc(Vector2.ZERO, radius - 3.0, 0.0, TAU, 40, Color("#162033"), 5.0, true)
 	if ingestion_marked:
 		draw_arc(Vector2.ZERO, radius + 8.0, 0.0, TAU, 40, Color("#c477ff"), 6.0, true)
 		draw_colored_polygon(PackedVector2Array([

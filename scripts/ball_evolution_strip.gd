@@ -24,6 +24,7 @@ func _create_ball_icon(data: Resource) -> TextureRect:
 	var icon := TextureRect.new()
 	icon.custom_minimum_size = Vector2(26, 26)
 	icon.texture = data.sprite
+	icon.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 	icon.modulate = data.sprite_modulate
 	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED

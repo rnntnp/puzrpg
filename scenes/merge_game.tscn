@@ -1,15 +1,16 @@
-[gd_scene load_steps=9 format=3]
+[gd_scene load_steps=10 format=3]
 [ext_resource type="Script" path="res://scripts/merge_game.gd" id="1"]
 [ext_resource type="Script" path="res://scripts/merge_autoplay_bot.gd" id="2"]
 [ext_resource type="Script" path="res://scripts/merge_hit_stop.gd" id="3"]
 [ext_resource type="Script" path="res://scripts/combo_test_scenario.gd" id="4"]
 [ext_resource type="Resource" path="res://resources/merge_physics_data.tres" id="5_physics"]
+[ext_resource type="Texture2D" path="res://assets/backgrounds/drop_board_frame.png" id="6_board"]
 [sub_resource type="RectangleShape2D" id="wall"]
 size = Vector2(12, 850)
 [sub_resource type="RectangleShape2D" id="floor"]
 size = Vector2(536, 4)
 [sub_resource type="StyleBoxFlat" id="panel"]
-bg_color = Color(0.075, 0.11, 0.17, 1)
+bg_color = Color(0.075, 0.11, 0.17, 0.18)
 border_width_left = 4
 border_width_top = 4
 border_width_right = 4
@@ -23,6 +24,13 @@ physics_data = ExtResource("5_physics")
 script = ExtResource("3")
 [node name="ComboTestScenario" type="Node" parent="."]
 script = ExtResource("4")
+[node name="BoardArtwork" type="TextureRect" parent="."]
+offset_left = 92.0
+offset_right = 628.0
+offset_bottom = 850.0
+mouse_filter = 2
+texture = ExtResource("6_board")
+expand_mode = 1
 [node name="Board" type="Panel" parent="."]
 offset_left = 92.0
 offset_right = 628.0

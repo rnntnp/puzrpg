@@ -1,107 +1,95 @@
-[gd_scene load_steps=7 format=3]
+[gd_scene format=3 uid="uid://vkjhcuuhdtya"]
 
-[ext_resource type="Script" path="res://scripts/level_select.gd" id="1_level"]
+[ext_resource type="Script" uid="uid://dv0btxu6ax1fw" path="res://scripts/level_select.gd" id="1_level"]
+[ext_resource type="Shader" uid="uid://ilt7qvesekx8" path="res://shaders/boss_silhouette.gdshader" id="2_silhouette"]
+[ext_resource type="Theme" path="res://resources/themes/level_select_theme.tres" id="3_theme"]
+[ext_resource type="Texture2D" uid="uid://bil7477xgjbuo" path="res://assets/ui/level_select_extracted/header.png" id="5_header"]
+[ext_resource type="FontFile" uid="uid://op5qpjre8dba" path="res://assets/fonts/nanum_square_round/NanumSquareRoundEB.ttf" id="5_rovvv"]
+[ext_resource type="Texture2D" uid="uid://cyp3ox6awb7vi" path="res://assets/ui/level_select_extracted/main_panel.png" id="6_main_card"]
+[ext_resource type="Texture2D" uid="uid://dvtlcl8ib1u01" path="res://icon.svg" id="7_rovvv"]
+[ext_resource type="Texture2D" uid="uid://ch4lje5nh5f0d" path="res://assets/ui/level_select_extracted/stage_title.png" id="7_title"]
+[ext_resource type="Texture2D" uid="uid://c5cp11m7js8sc" path="res://assets/ui/level_select_extracted/nav_arrow_left.png" id="8_nav"]
+[ext_resource type="Texture2D" uid="uid://dfex8ivijhmb8" path="res://assets/ui/level_select_extracted/start_button.png" id="9_start"]
+[ext_resource type="Texture2D" uid="uid://bj3djbwwggj0y" path="res://assets/backgrounds/level_select_underwater.png" id="10_background"]
+[ext_resource type="Texture2D" uid="uid://b66yelr328nox" path="res://assets/ui/level_select_extracted/info_card.png" id="11_info_card"]
+[ext_resource type="Texture2D" uid="uid://b2ndpb7p85wju" path="res://assets/ui/level_select_extracted/page_pill.png" id="12_page"]
+[ext_resource type="Texture2D" uid="uid://8pmde2sp0voe" path="res://assets/ui/level_select_extracted/reward_panel.png" id="13_reward"]
+[ext_resource type="Material" path="res://resources/materials/level_preview_mask_material.tres" id="14_preview_mask"]
+[ext_resource type="Texture2D" uid="uid://b317atc5dkiql" path="res://assets/ui/level_select_icons/recommended_ball.png" id="15_ball_info"]
+[ext_resource type="Texture2D" uid="uid://j08g6fp5qsiq" path="res://assets/ui/level_select_icons/enemy_turn.png" id="16_enemy_turn"]
+[ext_resource type="Texture2D" uid="uid://diw8e6ahibw5w" path="res://assets/effects/generated/status_attack.png" id="17_gimmick"]
+[ext_resource type="Texture2D" uid="uid://cywjxqlq2ge01" path="res://assets/ui/level_select_icons/reward_chest.png" id="18_reward_chest"]
 
 [sub_resource type="StyleBoxFlat" id="ImagePanel"]
-bg_color = Color(0.18, 0.25, 0.34, 1)
-border_width_left = 8
-border_width_top = 8
-border_width_right = 8
-border_width_bottom = 8
+bg_color = Color(1, 1, 1, 0)
 border_color = Color(0.055, 0.075, 0.11, 1)
 corner_radius_top_left = 28
 corner_radius_top_right = 28
 corner_radius_bottom_right = 28
 corner_radius_bottom_left = 28
 
-[sub_resource type="StyleBoxFlat" id="ButtonNormal"]
-bg_color = Color(1, 0.78, 0.08, 1)
-border_width_left = 6
-border_width_top = 6
-border_width_right = 6
-border_width_bottom = 6
-border_color = Color(0.12, 0.1, 0.08, 1)
-corner_radius_top_left = 18
-corner_radius_top_right = 18
-corner_radius_bottom_right = 18
-corner_radius_bottom_left = 18
+[sub_resource type="ShaderMaterial" id="SilhouetteMaterial"]
+shader = ExtResource("2_silhouette")
+shader_parameter/shadow_top = Color(0.09, 0.015, 0.14, 1)
+shader_parameter/shadow_bottom = Color(0.005, 0.003, 0.015, 1)
+shader_parameter/rim_color = Color(0.55, 0.12, 0.85, 1)
+shader_parameter/rim_strength = 0.38
 
-[sub_resource type="StyleBoxFlat" id="ButtonHover"]
-bg_color = Color(1, 0.86, 0.18, 1)
-border_width_left = 6
-border_width_top = 6
-border_width_right = 6
-border_width_bottom = 6
-border_color = Color(0.12, 0.1, 0.08, 1)
-corner_radius_top_left = 18
-corner_radius_top_right = 18
-corner_radius_bottom_right = 18
-corner_radius_bottom_left = 18
-
-[sub_resource type="StyleBoxFlat" id="ButtonPressed"]
-bg_color = Color(0.9, 0.57, 0.04, 1)
-border_width_left = 6
-border_width_top = 8
-border_width_right = 6
-border_width_bottom = 4
-border_color = Color(0.12, 0.1, 0.08, 1)
-corner_radius_top_left = 18
-corner_radius_top_right = 18
-corner_radius_bottom_right = 18
-corner_radius_bottom_left = 18
-
-[sub_resource type="StyleBoxFlat" id="ArrowButton"]
-bg_color = Color(0.08, 0.11, 0.17, 0.72)
-border_width_left = 3
-border_width_top = 3
-border_width_right = 3
-border_width_bottom = 3
-border_color = Color(1, 1, 1, 0.7)
-corner_radius_top_left = 24
-corner_radius_top_right = 24
-corner_radius_bottom_right = 24
-corner_radius_bottom_left = 24
-
-[node name="LevelSelect" type="Control"]
+[node name="LevelSelect" type="Control" unique_id=1123775418]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+theme = ExtResource("3_theme")
 script = ExtResource("1_level")
 
-[node name="Background" type="ColorRect" parent="."]
+[node name="Background" type="TextureRect" parent="." unique_id=591591248]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-color = Color(1, 0.43, 0.035, 1)
 mouse_filter = 2
+texture = ExtResource("10_background")
+expand_mode = 1
+stretch_mode = 6
 
-[node name="TopBar" type="ColorRect" parent="."]
+[node name="TopBar" type="ColorRect" parent="." unique_id=159055241]
 layout_mode = 1
 anchors_preset = 10
 anchor_right = 1.0
 offset_bottom = 120.0
 grow_horizontal = 2
-color = Color(0.1, 0.14, 0.22, 1)
 mouse_filter = 2
+color = Color(0.1, 0.14, 0.22, 0)
 
-[node name="TopBarTitle" type="Label" parent="."]
+[node name="HeaderFrame" type="TextureRect" parent="." unique_id=1910389212]
 layout_mode = 0
-offset_left = 32.0
-offset_top = 30.0
-offset_right = 688.0
-offset_bottom = 90.0
-theme_override_colors/font_color = Color(1, 1, 1, 1)
-theme_override_font_sizes/font_size = 28
-text = "LEVEL SELECT"
+offset_left = 42.0
+offset_top = 18.0
+offset_right = 678.0
+offset_bottom = 184.0
+mouse_filter = 2
+texture = ExtResource("5_header")
+expand_mode = 1
+
+[node name="TopBarTitle" type="Label" parent="." unique_id=1890184946]
+layout_mode = 0
+offset_left = 86.0
+offset_top = 70.0
+offset_right = 630.0
+offset_bottom = 154.0
+theme_override_colors/font_color = Color(0.08, 0.16, 0.24, 1)
+theme_override_fonts/font = ExtResource("5_rovvv")
+theme_override_font_sizes/font_size = 57
+text = "레벨 선택"
+horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="Content" type="Control" parent="."]
+[node name="Content" type="Control" parent="." unique_id=419433344]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -110,42 +98,92 @@ offset_top = 120.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="LevelName" type="Label" parent="Content"]
+[node name="MainPanelFrame" type="TextureRect" parent="Content" unique_id=682239811]
 layout_mode = 0
-offset_top = 105.0
-offset_right = 720.0
-offset_bottom = 185.0
-theme_override_colors/font_color = Color(1, 1, 1, 1)
-theme_override_colors/font_shadow_color = Color(0.08, 0.06, 0.04, 0.8)
-theme_override_constants/shadow_offset_x = 4
-theme_override_constants/shadow_offset_y = 5
-theme_override_font_sizes/font_size = 48
-text = "1. 훈련장"
-horizontal_alignment = 1
-vertical_alignment = 1
+offset_left = 24.0
+offset_top = 64.0
+offset_right = 696.0
+offset_bottom = 978.0
+mouse_filter = 2
+texture = ExtResource("6_main_card")
+expand_mode = 1
 
-[node name="LevelImage" type="Panel" parent="Content"]
+[node name="LevelImage" type="Panel" parent="Content" unique_id=1478702818]
 layout_mode = 0
-offset_left = 95.0
-offset_top = 265.0
-offset_right = 625.0
-offset_bottom = 735.0
+offset_left = 78.0
+offset_top = 242.0
+offset_right = 642.0
+offset_bottom = 662.0
 theme_override_styles/panel = SubResource("ImagePanel")
 
-[node name="PlaceholderText" type="Label" parent="Content/LevelImage"]
+[node name="CommonFrame" type="TextureRect" parent="Content/LevelImage" unique_id=1191364191]
+visible = false
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+offset_left = -34.0
+offset_top = -28.0
+offset_right = 34.0
+offset_bottom = 36.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_colors/font_color = Color(0.72, 0.8, 0.89, 1)
-theme_override_font_sizes/font_size = 32
-text = "LEVEL IMAGE\nPLACEHOLDER"
+mouse_filter = 2
+texture = ExtResource("6_main_card")
+expand_mode = 1
+
+[node name="PreviewBackground" type="TextureRect" parent="Content/LevelImage" unique_id=464118953]
+texture_filter = 2
+material = ExtResource("14_preview_mask")
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 37.0
+offset_top = -53.0
+offset_right = -45.0
+offset_bottom = 10.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("7_rovvv")
+expand_mode = 1
+stretch_mode = 6
+
+[node name="PlaceholderText" type="Label" parent="Content/LevelImage" unique_id=1566314986]
+z_index = 2
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = 380.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(0.72, 0.8, 0.89, 0.72)
+theme_override_font_sizes/font_size = 20
+text = "LEVEL IMAGE
+PLACEHOLDER"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="LockOverlay" type="ColorRect" parent="Content/LevelImage"]
+[node name="BossSilhouette" type="TextureRect" parent="Content/LevelImage" unique_id=60147261]
+texture_filter = 2
+material = SubResource("SilhouetteMaterial")
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 54.0
+offset_top = 36.0
+offset_right = -54.0
+offset_bottom = -52.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="LockOverlay" type="ColorRect" parent="Content/LevelImage" unique_id=275126490]
 visible = false
 layout_mode = 1
 anchors_preset = 15
@@ -156,7 +194,7 @@ grow_vertical = 2
 mouse_filter = 2
 color = Color(0.035, 0.05, 0.08, 0.78)
 
-[node name="LockLabel" type="Label" parent="Content/LevelImage/LockOverlay"]
+[node name="LockLabel" type="Label" parent="Content/LevelImage/LockOverlay" unique_id=170145439]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -165,91 +203,364 @@ grow_horizontal = 2
 grow_vertical = 2
 theme_override_colors/font_color = Color(0.82, 0.86, 0.92, 1)
 theme_override_font_sizes/font_size = 27
-text = "LOCKED\n이전 스테이지를 클리어하세요"
+text = "LOCKED
+이전 스테이지를 클리어하세요"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="StartButton" type="Button" parent="Content"]
+[node name="StageTitleFrame" type="TextureRect" parent="Content" unique_id=1615142417]
 layout_mode = 0
-offset_left = 140.0
-offset_top = 865.0
-offset_right = 580.0
-offset_bottom = 1015.0
-theme_override_colors/font_color = Color(0.08, 0.07, 0.05, 1)
-theme_override_colors/font_hover_color = Color(0.08, 0.07, 0.05, 1)
-theme_override_colors/font_pressed_color = Color(0.08, 0.07, 0.05, 1)
-theme_override_font_sizes/font_size = 40
-theme_override_styles/normal = SubResource("ButtonNormal")
-theme_override_styles/hover = SubResource("ButtonHover")
-theme_override_styles/pressed = SubResource("ButtonPressed")
-text = "게임 시작"
+offset_left = 58.0
+offset_top = 68.0
+offset_right = 662.0
+offset_bottom = 208.0
+mouse_filter = 2
+texture = ExtResource("7_title")
+expand_mode = 1
 
-[node name="AutoplayButton" type="Button" parent="Content"]
+[node name="LevelName" type="Label" parent="Content" unique_id=732506202]
+layout_mode = 0
+offset_top = 116.0
+offset_right = 720.0
+offset_bottom = 196.0
+theme_override_colors/font_color = Color(0.045, 0.13, 0.29, 1)
+theme_override_fonts/font = ExtResource("5_rovvv")
+theme_override_font_sizes/font_size = 44
+text = "1. 훈련장"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="InfoCardLeft" type="TextureRect" parent="Content" unique_id=1055374800]
+layout_mode = 0
+offset_left = 125.0
+offset_top = 664.0
+offset_right = 274.0
+offset_bottom = 864.0
+mouse_filter = 2
+texture = ExtResource("11_info_card")
+expand_mode = 1
+
+[node name="Title" type="Label" parent="Content/InfoCardLeft" unique_id=1421378644]
+layout_mode = 0
+offset_left = 8.0
+offset_top = 37.0
+offset_right = 141.0
+offset_bottom = 63.0
+theme_override_colors/font_color = Color(0.045, 0.13, 0.29, 1)
+theme_override_fonts/font = ExtResource("5_rovvv")
+theme_override_font_sizes/font_size = 17
+text = "권장 공 레벨"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Icon" type="TextureRect" parent="Content/InfoCardLeft" unique_id=626212803]
+layout_mode = 0
+offset_left = 43.0
+offset_top = 62.0
+offset_right = 106.0
+offset_bottom = 129.0
+mouse_filter = 2
+texture = ExtResource("15_ball_info")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Value" type="Label" parent="Content/InfoCardLeft" unique_id=477953796]
+layout_mode = 0
+offset_left = 8.0
+offset_top = 131.0
+offset_right = 141.0
+offset_bottom = 165.0
+theme_override_colors/font_color = Color(0.07, 0.3, 0.67, 1)
+theme_override_fonts/font = ExtResource("5_rovvv")
+theme_override_font_sizes/font_size = 23
+text = "Lv. 5"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="InfoCardLeft2" type="TextureRect" parent="Content" unique_id=51119009]
+layout_mode = 0
+offset_left = 283.0
+offset_top = 662.0
+offset_right = 432.0
+offset_bottom = 862.0
+mouse_filter = 2
+texture = ExtResource("11_info_card")
+expand_mode = 1
+
+[node name="Title" type="Label" parent="Content/InfoCardLeft2" unique_id=316378128]
+layout_mode = 0
+offset_left = 8.0
+offset_top = 37.0
+offset_right = 141.0
+offset_bottom = 63.0
+theme_override_colors/font_color = Color(0.045, 0.13, 0.29, 1)
+theme_override_fonts/font = ExtResource("5_rovvv")
+theme_override_font_sizes/font_size = 17
+text = "적 공격 주기"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Icon" type="TextureRect" parent="Content/InfoCardLeft2" unique_id=907219262]
+layout_mode = 0
+offset_left = 43.0
+offset_top = 62.0
+offset_right = 106.0
+offset_bottom = 129.0
+mouse_filter = 2
+texture = ExtResource("16_enemy_turn")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Value" type="Label" parent="Content/InfoCardLeft2" unique_id=1609474926]
+layout_mode = 0
+offset_left = 8.0
+offset_top = 131.0
+offset_right = 141.0
+offset_bottom = 165.0
+theme_override_colors/font_color = Color(0.07, 0.3, 0.67, 1)
+theme_override_fonts/font = ExtResource("5_rovvv")
+theme_override_font_sizes/font_size = 23
+text = "3턴"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="InfoCardLeft3" type="TextureRect" parent="Content" unique_id=701321650]
+layout_mode = 0
+offset_left = 441.0
+offset_top = 662.0
+offset_right = 590.0
+offset_bottom = 862.0
+mouse_filter = 2
+texture = ExtResource("11_info_card")
+expand_mode = 1
+
+[node name="Title" type="Label" parent="Content/InfoCardLeft3" unique_id=1924471421]
+layout_mode = 0
+offset_left = 8.0
+offset_top = 37.0
+offset_right = 141.0
+offset_bottom = 63.0
+theme_override_colors/font_color = Color(0.045, 0.13, 0.29, 1)
+theme_override_fonts/font = ExtResource("5_rovvv")
+theme_override_font_sizes/font_size = 17
+text = "스테이지 기믹"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Icon" type="TextureRect" parent="Content/InfoCardLeft3" unique_id=519024901]
+layout_mode = 0
+offset_left = 43.0
+offset_top = 62.0
+offset_right = 106.0
+offset_bottom = 129.0
+mouse_filter = 2
+texture = ExtResource("17_gimmick")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Value" type="Label" parent="Content/InfoCardLeft3" unique_id=1760508790]
+layout_mode = 0
+offset_left = 5.0
+offset_top = 131.0
+offset_right = 144.0
+offset_bottom = 165.0
+theme_override_colors/font_color = Color(0.07, 0.3, 0.67, 1)
+theme_override_fonts/font = ExtResource("5_rovvv")
+theme_override_font_sizes/font_size = 18
+text = "기본 전투"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="RewardPanel" type="TextureRect" parent="Content" unique_id=1513884693]
+layout_mode = 0
+offset_left = 106.0
+offset_top = 837.0
+offset_right = 615.0
+offset_bottom = 952.0
+mouse_filter = 2
+texture = ExtResource("13_reward")
+expand_mode = 1
+
+[node name="Title" type="Label" parent="Content/RewardPanel" unique_id=1110224639]
+layout_mode = 0
+offset_left = 42.0
+offset_top = 23.0
+offset_right = 230.0
+offset_bottom = 57.0
+theme_override_colors/font_color = Color(0.35, 0.23, 0.18, 1)
+theme_override_fonts/font = ExtResource("5_rovvv")
+theme_override_font_sizes/font_size = 25
+text = "✦ 주요 보상 ✦"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Value" type="Label" parent="Content/RewardPanel" unique_id=1388894196]
+layout_mode = 0
+offset_left = 35.0
+offset_top = 57.0
+offset_right = 250.0
+offset_bottom = 88.0
+theme_override_colors/font_color = Color(0.045, 0.13, 0.29, 1)
+theme_override_fonts/font = ExtResource("5_rovvv")
+theme_override_font_sizes/font_size = 18
+text = "연못 보물상자"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Icon" type="TextureRect" parent="Content/RewardPanel" unique_id=364937203]
+layout_mode = 0
+offset_left = 314.0
+offset_top = -5.0
+offset_right = 470.0
+offset_bottom = 111.0
+mouse_filter = 2
+texture = ExtResource("18_reward_chest")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="StartButton" type="Button" parent="Content" unique_id=851607383]
+layout_mode = 0
+offset_left = 175.0
+offset_top = 1000.0
+offset_right = 545.0
+offset_bottom = 1125.0
+theme_override_colors/font_color = Color(0.045, 0.13, 0.29, 1)
+theme_override_colors/font_pressed_color = Color(0.045, 0.13, 0.29, 1)
+theme_override_colors/font_hover_color = Color(0.045, 0.13, 0.29, 1)
+theme_override_fonts/font = ExtResource("5_rovvv")
+theme_override_font_sizes/font_size = 59
+text = "게임 시작"
+flat = true
+
+[node name="CommonFrame" type="TextureRect" parent="Content/StartButton" unique_id=1247442703]
+show_behind_parent = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -28.0
+offset_top = -8.0
+offset_right = 28.0
+offset_bottom = 8.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("9_start")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="AutoplayButton" type="Button" parent="Content" unique_id=973955470]
 layout_mode = 0
 offset_left = 190.0
-offset_top = 1035.0
+offset_top = 1135.0
 offset_right = 530.0
-offset_bottom = 1105.0
+offset_bottom = 1205.0
 theme_override_colors/font_color = Color(1, 1, 1, 1)
 theme_override_font_sizes/font_size = 18
 text = "개발 자동 플레이: OFF"
 
-[node name="ComboTestButton" type="Button" parent="Content"]
+[node name="ComboTestButton" type="Button" parent="Content" unique_id=715534512]
 layout_mode = 0
 offset_left = 190.0
-offset_top = 1115.0
+offset_top = 1215.0
 offset_right = 530.0
-offset_bottom = 1155.0
+offset_bottom = 1255.0
 theme_override_colors/font_color = Color(1, 1, 1, 1)
 theme_override_font_sizes/font_size = 16
 text = "개발 콤보 테스트"
 
-[node name="PreviousButton" type="Button" parent="."]
+[node name="PreviousButton" type="Button" parent="." unique_id=640457836]
 layout_mode = 0
-offset_left = 14.0
-offset_top = 550.0
-offset_right = 82.0
-offset_bottom = 650.0
+offset_top = 540.0
+offset_right = 100.0
+offset_bottom = 640.0
 theme_override_colors/font_color = Color(1, 1, 1, 1)
 theme_override_colors/font_disabled_color = Color(1, 1, 1, 0.2)
-theme_override_font_sizes/font_size = 48
-theme_override_styles/normal = SubResource("ArrowButton")
-theme_override_styles/hover = SubResource("ArrowButton")
-theme_override_styles/pressed = SubResource("ArrowButton")
-text = "‹"
+theme_override_font_sizes/font_size = 0
+text = "
+"
+flat = true
 
-[node name="NextButton" type="Button" parent="."]
+[node name="CommonFrame" type="TextureRect" parent="PreviousButton" unique_id=641591403]
+show_behind_parent = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -12.0
+offset_top = 19.0
+offset_right = 12.0
+offset_bottom = 11.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("8_nav")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="NextButton" type="Button" parent="." unique_id=1269907091]
 layout_mode = 0
-offset_left = 638.0
-offset_top = 550.0
-offset_right = 706.0
-offset_bottom = 650.0
+offset_left = 620.0
+offset_top = 555.0
+offset_right = 720.0
+offset_bottom = 655.0
 theme_override_colors/font_color = Color(1, 1, 1, 1)
 theme_override_colors/font_disabled_color = Color(1, 1, 1, 0.2)
-theme_override_font_sizes/font_size = 48
-theme_override_styles/normal = SubResource("ArrowButton")
-theme_override_styles/hover = SubResource("ArrowButton")
-theme_override_styles/pressed = SubResource("ArrowButton")
-text = "›"
+theme_override_font_sizes/font_size = 0
+text = "
+"
+flat = true
 
-[node name="PageLabel" type="Label" parent="."]
+[node name="CommonFrame" type="TextureRect" parent="NextButton" unique_id=1766466448]
+show_behind_parent = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -12.0
+offset_top = 4.0
+offset_right = 12.0
+offset_bottom = -4.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("8_nav")
+expand_mode = 1
+stretch_mode = 5
+flip_h = true
+
+[node name="PageFrame" type="TextureRect" parent="." unique_id=72995375]
+layout_mode = 0
+offset_left = 250.0
+offset_top = 738.0
+offset_right = 470.0
+offset_bottom = 806.0
+mouse_filter = 2
+texture = ExtResource("12_page")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="PageLabel" type="Label" parent="." unique_id=1316009687]
 layout_mode = 0
 offset_left = 270.0
-offset_top = 870.0
+offset_top = 750.0
 offset_right = 450.0
-offset_bottom = 908.0
+offset_bottom = 792.0
 theme_override_colors/font_color = Color(1, 1, 1, 0.9)
-theme_override_font_sizes/font_size = 20
+theme_override_fonts/font = ExtResource("5_rovvv")
+theme_override_font_sizes/font_size = 29
 text = "1 / 3"
 horizontal_alignment = 1
+vertical_alignment = 1
 
-[node name="SwipeHint" type="Label" parent="."]
+[node name="SwipeHint" type="Label" parent="." unique_id=1091007002]
+visible = false
 layout_mode = 0
 offset_left = 180.0
-offset_top = 930.0
+offset_top = 824.0
 offset_right = 540.0
-offset_bottom = 978.0
+offset_bottom = 844.0
 theme_override_colors/font_color = Color(1, 1, 1, 0.82)
-theme_override_font_sizes/font_size = 18
+theme_override_font_sizes/font_size = 14
 text = "‹  좌우로 스와이프  ›"
 horizontal_alignment = 1

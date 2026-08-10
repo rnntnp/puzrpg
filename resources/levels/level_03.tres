@@ -1,20 +1,26 @@
-[gd_resource type="Resource" script_class="LevelData" load_steps=4 format=3]
+[gd_resource type="Resource" script_class="LevelData" format=3 uid="uid://c2x3mv6lfdndd"]
 
-[ext_resource type="Script" path="res://scripts/level_data.gd" id="1"]
-[ext_resource type="Resource" path="res://resources/characters/blue_fighter.tres" id="2"]
-[ext_resource type="Resource" path="res://resources/characters/ice_monster.tres" id="3"]
-[ext_resource type="Script" path="res://scripts/character_data.gd" id="4"]
+[ext_resource type="Script" uid="uid://egcuwxnrdhmr" path="res://scripts/level_data.gd" id="1"]
+[ext_resource type="Resource" uid="uid://dd8t0hxokj424" path="res://resources/characters/blue_fighter.tres" id="2"]
+[ext_resource type="Resource" path="res://resources/characters/recovery_ingester.tres" id="3"]
+[ext_resource type="Script" uid="uid://duu5mev8uwp8d" path="res://scripts/character_data.gd" id="4"]
+[ext_resource type="Texture2D" uid="uid://c3vhyr1ewy74w" path="res://assets/backgrounds/cave_battle_background_inpainted.png" id="5"]
+[ext_resource type="Texture2D" uid="uid://cwbgknqvc1oe8" path="res://assets/level_previews/level_03_preview.png" id="6"]
+[ext_resource type="Texture2D" uid="uid://dy4hcy7jmubx2" path="res://assets/effects/generated/status_ingestion.png" id="7_gimmick"]
 
 [resource]
 script = ExtResource("1")
-level_name = "3. 얼어붙은 관문"
-image_placeholder = "ICE FIELD\nLEVEL IMAGE"
+level_name = "3. 수정 동굴"
+image_placeholder = "ICE FIELD
+LEVEL IMAGE"
+battle_background = ExtResource("5")
+level_select_preview = ExtResource("6")
+recommended_ball_level = 7
+stage_gimmick_icon = ExtResource("7_gimmick")
+stage_gimmick_name = "포식 · 회복"
+reward_name = "수정 보물상자"
 player_character = ExtResource("2")
 enemies = Array[ExtResource("4")]([ExtResource("3")])
 ball_drop_time_limit = -1.0
-max_ball_level = 11
-ball_physics_speed = 1.6
-merge_push_force = 90.0
 merge_hit_stop_time_scale = 0.18
 merge_hit_stop_duration = 0.2
-chain_merge_delay = 0.1

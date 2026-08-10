@@ -1,7 +1,7 @@
 [gd_resource type="Resource" script_class="BallData" format=3 uid="uid://coyk6r1d0claf"]
 
 [ext_resource type="Script" uid="uid://cpjm025ca6ujc" path="res://scripts/ball_data.gd" id="1"]
-[ext_resource type="Texture2D" uid="uid://ofxknv30arlj" path="res://assets/balls/circle_placeholder.svg" id="2"]
+[ext_resource type="Texture2D" uid="uid://vgfbfcifd202" path="res://assets/balls/generated/ball_01_blue.png" id="2"]
 
 [sub_resource type="CircleShape2D" id="Circle"]
 radius = 22.0
@@ -9,6 +9,8 @@ radius = 22.0
 [resource]
 script = ExtResource("1")
 sprite = ExtResource("2")
-sprite_modulate = Color(0.333, 0.722, 1, 1)
+show_placeholder_outline = false
+glow_color = Color(0.18, 0.74, 1, 1)
+glow_strength = 0.5
 collision_shape = SubResource("Circle")
 merge_score = 0

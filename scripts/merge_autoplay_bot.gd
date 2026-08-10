@@ -59,18 +59,25 @@ func _has_blocker_above(candidate, active_balls: Array) -> bool:
 
 
 func _find_lowest_stack_position(active_balls: Array) -> float:
-	var best_x := 360.0
+	var bounds: Rect2 = merge_game.get_board_inner_bounds()
+	var center_x := bounds.get_center().x
+	var horizontal_margin := 30.0
+	var start_x := bounds.position.x + horizontal_margin
+	var end_x := bounds.end.x - horizontal_margin
+	var best_x := center_x
 	var lowest_surface := -INF
-	for x in range(60, 661, 50):
-		var surface := 830.0
+	var x := start_x
+	while x <= end_x:
+		var surface := bounds.end.y - 16.0
 		for ball in active_balls:
 			if ball.merge_locked:
 				continue
 			if absf(ball.position.x - x) < ball.get_radius() + 28.0:
 				surface = minf(surface, ball.position.y - ball.get_radius())
-		var center_bonus := -absf(float(x) - 360.0) * 0.02
+		var center_bonus := -absf(x - center_x) * 0.02
 		var score := surface + center_bonus
 		if score > lowest_surface:
 			lowest_surface = score
-			best_x = float(x)
+			best_x = x
+		x += 50.0
 	return best_x

@@ -50,7 +50,9 @@ func configure(
 	skill = enemy.character_data.ingestion_skill as IngestionSkillData
 	ice_skill = enemy.character_data.ice_skill as IceSkillDataClass
 	ice_controller = get_node("IceSkillController") as IceSkillControllerClass
-	ice_controller.configure(merge_game, ice_skill)
+	ice_controller.configure(merge_game, ice_skill, enemy)
+	enemy.clear_visual_override()
+	enemy.hide_ingestion_glow()
 	_state_version += 1
 	_clear_target()
 	swallowed_ball_level = -1
@@ -106,6 +108,8 @@ func route_player_damage(damage: int) -> int:
 
 
 func on_enemy_defeated() -> void:
+	enemy.clear_visual_override()
+	enemy.hide_ingestion_glow()
 	if swallowed_ball_level >= 0:
 		merge_game.insert_ball_after_current(swallowed_ball_level)
 	_state_version += 1
@@ -117,19 +121,25 @@ func on_enemy_defeated() -> void:
 
 
 func _enter_normal_attack() -> void:
+	enemy.clear_visual_override()
+	enemy.hide_ingestion_glow()
 	state = State.NORMAL_ATTACK
 	remaining_turns = enemy.enemy_attack_drop_interval
 	current_durability = 0
 	status_effects.remove_effect(IngestionEffect.effect_id)
 	status_effects.remove_effect(IceEffect.effect_id)
-	status_effects.set_effect(IceEffect if ice_skill != null else EnemyAttackEffect, remaining_turns)
+	status_effects.set_effect(EnemyAttackEffect, remaining_turns)
+	if ice_skill != null:
+		status_effects.set_effect(IceEffect, remaining_turns)
 	durability_label.visible = false
 
 
 func _enter_ingestion_telegraph() -> void:
 	state = State.INGESTION_TELEGRAPH
+	enemy.set_visual_override(enemy.character_data.ingestion_telegraph_sprite)
 	remaining_turns = skill.telegraph_turns
 	status_effects.remove_effect(EnemyAttackEffect.effect_id)
+	status_effects.remove_effect(IceEffect.effect_id)
 	status_effects.set_effect(IngestionEffect, remaining_turns)
 	_select_target()
 	battle.status_label.text = "회복 포식 예고"
@@ -143,9 +153,19 @@ func _execute_ingestion() -> void:
 		print("[INGESTION] target unavailable; retrying telegraph")
 		_enter_ingestion_telegraph()
 		return
-	swallowed_ball_level = target_ball.merge_level
-	merge_game.consume_ball(target_ball)
+	var consumed_ball := target_ball
+	swallowed_ball_level = consumed_ball.merge_level
+	var swallowed_color: Color = consumed_ball.ball_data.glow_color
 	target_ball = null
+	merge_game.set_input_enabled(false)
+	var consumed := await merge_game.animate_ball_consumption(
+		consumed_ball,
+		enemy.get_ingestion_mouth_global_position()
+	)
+	if not consumed or not is_instance_valid(enemy) or not enemy.is_alive():
+		return
+	enemy.set_visual_override(enemy.character_data.ingestion_swallowed_sprite)
+	enemy.show_ingestion_glow(swallowed_color)
 	state = State.INGESTION_RESPONSE
 	remaining_turns = skill.response_turns
 	current_durability = skill.durability
@@ -153,6 +173,7 @@ func _execute_ingestion() -> void:
 	durability_label.visible = true
 	battle.status_label.text = "포식 저지! 내구도를 파괴하세요"
 	_update_ui()
+	merge_game.set_input_enabled(true)
 	print("[INGESTION START] level=%d | durability=%d | turns=%d" % [
 		swallowed_ball_level + 1, current_durability, remaining_turns
 	])
@@ -232,7 +253,9 @@ func _on_target_replaced(ball: MergeBall) -> void:
 func _update_ui() -> void:
 	match state:
 		State.NORMAL_ATTACK:
-			status_effects.set_effect(IceEffect if ice_skill != null else EnemyAttackEffect, remaining_turns)
+			status_effects.set_effect(EnemyAttackEffect, remaining_turns)
+			if ice_skill != null:
+				status_effects.set_effect(IceEffect, remaining_turns)
 		State.INGESTION_TELEGRAPH, State.INGESTION_RESPONSE:
 			status_effects.set_effect(IngestionEffect, remaining_turns)
 	if state == State.INGESTION_RESPONSE:

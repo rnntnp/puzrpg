@@ -1,27 +1,18 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene format=3 uid="uid://brsr3exyrx8lh"]
 
-[ext_resource type="Script" path="res://scripts/status_effect_indicator.gd" id="1"]
+[ext_resource type="Script" uid="uid://dmejwks6ojqhx" path="res://scripts/status_effect_indicator.gd" id="1"]
+[ext_resource type="Texture2D" uid="uid://cpnn3w6binv6w" path="res://assets/ui/pond/status_container_reference_translucent.png" id="2_background"]
+[ext_resource type="FontFile" uid="uid://op5qpjre8dba" path="res://assets/fonts/nanum_square_round/NanumSquareRoundEB.ttf" id="3_jx1p6"]
 
-[sub_resource type="StyleBoxFlat" id="Panel"]
-bg_color = Color(0.10, 0.15, 0.23, 0.94)
-border_width_left = 2
-border_width_top = 2
-border_width_right = 2
-border_width_bottom = 2
-border_color = Color(0.32, 0.42, 0.58, 1)
-corner_radius_top_left = 8
-corner_radius_top_right = 8
-corner_radius_bottom_right = 8
-corner_radius_bottom_left = 8
-
-[node name="StatusEffectIndicator" type="Control"]
-custom_minimum_size = Vector2(52, 48)
+[node name="StatusEffectIndicator" type="Control" unique_id=18635545]
+custom_minimum_size = Vector2(54, 56)
 layout_mode = 3
 anchors_preset = 0
 mouse_filter = 1
 script = ExtResource("1")
 
-[node name="Background" type="Panel" parent="."]
+[node name="Background" type="TextureRect" parent="." unique_id=1172535750]
+texture_filter = 4
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -29,30 +20,32 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-theme_override_styles/panel = SubResource("Panel")
+texture = ExtResource("2_background")
+expand_mode = 1
 
-[node name="Icon" type="TextureRect" parent="."]
+[node name="Icon" type="TextureRect" parent="." unique_id=1030998641]
+texture_filter = 2
 layout_mode = 0
-offset_left = 5.0
-offset_top = 5.0
-offset_right = 39.0
-offset_bottom = 39.0
+offset_left = 7.0
+offset_top = 8.0
+offset_right = 41.0
+offset_bottom = 42.0
 mouse_filter = 2
 expand_mode = 1
 stretch_mode = 5
 
-[node name="TurnLabel" type="Label" parent="."]
+[node name="TurnLabel" type="Label" parent="." unique_id=237601355]
 layout_mode = 0
-offset_left = 31.0
-offset_top = 24.0
-offset_right = 50.0
-offset_bottom = 47.0
-mouse_filter = 2
-theme_override_colors/font_color = Color(1, 0.86, 0.35, 1)
-theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.9)
-theme_override_constants/shadow_offset_x = 2
-theme_override_constants/shadow_offset_y = 2
+offset_left = 36.0
+offset_top = 32.0
+offset_right = 53.0
+offset_bottom = 53.0
+theme_override_colors/font_color = Color(1, 0.91, 0.48, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.72)
+theme_override_constants/shadow_offset_x = 1
+theme_override_constants/shadow_offset_y = 1
+theme_override_fonts/font = ExtResource("3_jx1p6")
 theme_override_font_sizes/font_size = 18
 text = "0"
-horizontal_alignment = 2
-vertical_alignment = 2
+horizontal_alignment = 1
+vertical_alignment = 1

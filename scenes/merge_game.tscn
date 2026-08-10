@@ -1,50 +1,42 @@
-[gd_scene load_steps=10 format=3]
-[ext_resource type="Script" path="res://scripts/merge_game.gd" id="1"]
-[ext_resource type="Script" path="res://scripts/merge_autoplay_bot.gd" id="2"]
-[ext_resource type="Script" path="res://scripts/merge_hit_stop.gd" id="3"]
-[ext_resource type="Script" path="res://scripts/combo_test_scenario.gd" id="4"]
-[ext_resource type="Resource" path="res://resources/merge_physics_data.tres" id="5_physics"]
-[ext_resource type="Texture2D" path="res://assets/backgrounds/drop_board_frame.png" id="6_board"]
-[sub_resource type="RectangleShape2D" id="wall"]
-size = Vector2(12, 850)
-[sub_resource type="RectangleShape2D" id="floor"]
-size = Vector2(536, 4)
-[sub_resource type="StyleBoxFlat" id="panel"]
-bg_color = Color(0.075, 0.11, 0.17, 0.18)
-border_width_left = 4
-border_width_top = 4
-border_width_right = 4
-border_width_bottom = 4
-border_color = Color(0.2, 0.29, 0.43, 1)
+[gd_scene format=3 uid="uid://csdbilaagryk1"]
 
-[node name="MergeGame" type="Node2D"]
+[ext_resource type="Script" uid="uid://c2lejiraymap7" path="res://scripts/merge_game.gd" id="1"]
+[ext_resource type="Script" uid="uid://bcwn4mm8myte0" path="res://scripts/merge_autoplay_bot.gd" id="2"]
+[ext_resource type="Script" uid="uid://bophiem3isusd" path="res://scripts/merge_hit_stop.gd" id="3"]
+[ext_resource type="Script" uid="uid://bmry4fgrxlopp" path="res://scripts/combo_test_scenario.gd" id="4"]
+[ext_resource type="Resource" uid="uid://c3ik0sjmjhs7a" path="res://resources/merge_physics_data.tres" id="5_physics"]
+[ext_resource type="Texture2D" uid="uid://crn16upp52jrb" path="res://assets/ui/pond/drop_board_reference_translucent.png" id="6_board"]
+[ext_resource type="Script" uid="uid://8qiwn1gfogtj" path="res://scripts/danger_line.gd" id="7_danger_line"]
+[ext_resource type="PackedScene" path="res://scenes/next_preview_panel.tscn" id="8_next_panel"]
+
+[sub_resource type="RectangleShape2D" id="wall"]
+size = Vector2(6, 869.5)
+
+[sub_resource type="RectangleShape2D" id="floor"]
+size = Vector2(596, 4)
+
+[node name="MergeGame" type="Node2D" unique_id=2061783318]
 script = ExtResource("1")
 physics_data = ExtResource("5_physics")
-[node name="MergeHitStop" type="Node" parent="."]
+
+[node name="MergeHitStop" type="Node" parent="." unique_id=1497298764]
 script = ExtResource("3")
-[node name="ComboTestScenario" type="Node" parent="."]
+
+[node name="ComboTestScenario" type="Node" parent="." unique_id=1519166100]
 script = ExtResource("4")
-[node name="BoardArtwork" type="TextureRect" parent="."]
-offset_left = 92.0
-offset_right = 628.0
-offset_bottom = 850.0
+
+[node name="BoardArtwork" type="TextureRect" parent="." unique_id=702315937]
+z_index = -10
+offset_left = 43.0
+offset_top = 102.0
+offset_right = 671.0
+offset_bottom = 881.0
 mouse_filter = 2
 texture = ExtResource("6_board")
-expand_mode = 1
-[node name="Board" type="Panel" parent="."]
-offset_left = 92.0
-offset_right = 628.0
-offset_bottom = 850.0
-mouse_filter = 2
-theme_override_styles/panel = SubResource("panel")
-[node name="Instruction" type="Label" parent="."]
-offset_left = 112.0
-offset_top = 10.0
-offset_right = 410.0
-offset_bottom = 48.0
-theme_override_font_sizes/font_size = 18
-text = "터치해서 공 떨어뜨리기"
-[node name="ScoreLabel" type="Label" parent="."]
+expand_mode = 3
+
+[node name="ScoreLabel" type="Label" parent="." unique_id=1180603034]
+visible = false
 offset_left = 440.0
 offset_top = 10.0
 offset_right = 608.0
@@ -53,7 +45,8 @@ theme_override_colors/font_color = Color(1, 0.82, 0.31, 1)
 theme_override_font_sizes/font_size = 20
 text = "점수 0"
 horizontal_alignment = 2
-[node name="DropTimerLabel" type="Label" parent="."]
+
+[node name="DropTimerLabel" type="Label" parent="." unique_id=1799618626]
 offset_left = 405.0
 offset_top = 48.0
 offset_right = 608.0
@@ -62,29 +55,26 @@ theme_override_colors/font_color = Color(1, 0.45, 0.48, 1)
 theme_override_font_sizes/font_size = 16
 text = "자동 낙하 5.0초"
 horizontal_alignment = 2
-[node name="NextTitle" type="Label" parent="."]
-offset_left = 112.0
+
+[node name="NextPanel" parent="." unique_id=1158388454 instance=ExtResource("8_next_panel")]
+layout_mode = 3
+anchors_preset = 0
+offset_left = 100.0
 offset_top = 48.0
-offset_right = 182.0
-offset_bottom = 78.0
-theme_override_colors/font_color = Color(0.65, 0.72, 0.82, 1)
-theme_override_font_sizes/font_size = 15
-text = "NEXT"
-[node name="NextPreviewHolder" type="Node2D" parent="."]
-position = Vector2(202, 63)
-[node name="DropLine" type="ColorRect" parent="."]
-offset_left = 102.0
-offset_top = 228.0
-offset_right = 618.0
-offset_bottom = 232.0
-color = Color(1, 0.25, 0.32, 0.65)
-mouse_filter = 2
-[node name="GuideLine" type="Line2D" parent="."]
+offset_right = 250.0
+offset_bottom = 106.0
+
+[node name="DropLine" type="Node2D" parent="." unique_id=1186322495]
+visible = false
+script = ExtResource("7_danger_line")
+
+[node name="GuideLine" type="Line2D" parent="." unique_id=934882983]
 points = PackedVector2Array(360, 140, 360, 825)
 width = 3.0
 default_color = Color(1, 1, 1, 0.42)
 antialiased = true
-[node name="ComboLabel" type="Label" parent="."]
+
+[node name="ComboLabel" type="Label" parent="." unique_id=1279216087]
 visible = false
 z_index = 20
 offset_left = 210.0
@@ -97,22 +87,35 @@ theme_override_colors/font_shadow_color = Color(0.08, 0.06, 0.04, 0.9)
 theme_override_constants/shadow_offset_x = 4
 theme_override_constants/shadow_offset_y = 5
 theme_override_font_sizes/font_size = 32
-text = "COMBO x2\nDAMAGE 30"
+text = "COMBO x2
+DAMAGE 30"
 horizontal_alignment = 1
 vertical_alignment = 1
-[node name="Balls" type="Node2D" parent="."]
-[node name="PreviewHolder" type="Node2D" parent="."]
-[node name="MergeAutoplayBot" type="Node" parent="."]
+
+[node name="Balls" type="Node2D" parent="." unique_id=379940337]
+
+[node name="PreviewHolder" type="Node2D" parent="." unique_id=1256035902]
+
+[node name="MergeAutoplayBot" type="Node" parent="." unique_id=44205454]
 script = ExtResource("2")
-[node name="LeftWall" type="StaticBody2D" parent="."]
+
+[node name="LeftWall" type="StaticBody2D" parent="." unique_id=713032052]
 position = Vector2(90, 425)
-[node name="CollisionShape2D" type="CollisionShape2D" parent="LeftWall"]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="LeftWall" unique_id=1771649085]
+position = Vector2(0, 6.5)
 shape = SubResource("wall")
-[node name="RightWall" type="StaticBody2D" parent="."]
+
+[node name="RightWall" type="StaticBody2D" parent="." unique_id=199110667]
 position = Vector2(630, 425)
-[node name="CollisionShape2D" type="CollisionShape2D" parent="RightWall"]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="RightWall" unique_id=2099721541]
+position = Vector2(59, 6)
 shape = SubResource("wall")
-[node name="Floor" type="StaticBody2D" parent="."]
+
+[node name="Floor" type="StaticBody2D" parent="." unique_id=1965182260]
 position = Vector2(360, 848)
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Floor"]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Floor" unique_id=61497292]
+position = Vector2(30, 16)
 shape = SubResource("floor")

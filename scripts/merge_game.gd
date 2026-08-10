@@ -14,13 +14,15 @@ signal ingestion_target_replaced(ball: MergeBall)
 signal merge_completed(merged_ball: MergeBall)
 
 const BallScene = preload("res://scenes/merge_ball.tscn")
+const MergeBurstEffectScene = preload("res://scenes/merge_burst_effect.tscn")
 const BallCatalogClass = preload("res://scripts/ball_catalog.gd")
 const MergePhysicsDataClass = preload("res://scripts/merge_physics_data.gd")
-const BOARD_INNER_LEFT := 96.0
-const BOARD_INNER_RIGHT := 624.0
-const BOARD_INNER_BOTTOM := 846.0
-const DROP_POSITION_Y := 140.0
-const DANGER_LINE_Y := 230.0
+const DangerLineClass = preload("res://scripts/danger_line.gd")
+const NextPreviewPanelClass = preload("res://scripts/next_preview_panel.gd")
+const DROP_HEIGHT_RATIO := 0.1655
+const DANGER_LINE_HEIGHT_RATIO := 0.2720
+const DANGER_LINE_REVEAL_FILL_RATIO := 0.8
+const GUIDE_BOTTOM_MARGIN := 21.0
 const DROP_GRACE_DURATION := 1.2
 const OVERFLOW_DURATION := 0.8
 const COMBO_SETTLE_MSEC := 500
@@ -30,8 +32,9 @@ const MERGE_PUSH_RADIUS := 260.0
 
 @onready var balls: Node2D = $Balls
 @onready var preview_holder: Node2D = $PreviewHolder
-@onready var next_preview_holder: Node2D = $NextPreviewHolder
+@onready var next_panel: NextPreviewPanelClass = $NextPanel
 @onready var guide_line: Line2D = $GuideLine
+@onready var danger_line: DangerLineClass = $DropLine
 @onready var score_label: Label = $ScoreLabel
 @onready var timer_label: Label = $DropTimerLabel
 @onready var combo_label: Label = $ComboLabel
@@ -40,6 +43,9 @@ const MERGE_PUSH_RADIUS := 260.0
 @onready var left_wall: StaticBody2D = $LeftWall
 @onready var right_wall: StaticBody2D = $RightWall
 @onready var floor_body: StaticBody2D = $Floor
+@onready var left_wall_shape: CollisionShape2D = $LeftWall/CollisionShape2D
+@onready var right_wall_shape: CollisionShape2D = $RightWall/CollisionShape2D
+@onready var floor_shape: CollisionShape2D = $Floor/CollisionShape2D
 @export var physics_data: MergePhysicsDataClass
 var current_level := 0
 var next_level := 0
@@ -48,7 +54,6 @@ var can_drop := true
 var is_aiming := false
 var aim_x := 360.0
 var preview_ball
-var next_preview_ball
 var drop_grace_remaining := 0.0
 var overflow_time := 0.0
 var is_game_over := false
@@ -69,11 +74,61 @@ var combo_effect_tween: Tween
 var queued_levels: Array[int] = []
 var next_merge_resolution_msec := 0
 var dropped_ball_has_landed := false
+var board_inner_left := 96.0
+var board_inner_right := 624.0
+var board_inner_top := 0.0
+var board_inner_bottom := 846.0
+var drop_position_y := 140.0
+var danger_line_y := 230.0
 
 func _ready() -> void:
+	_sync_board_geometry_from_collisions()
 	_apply_physics_data()
 	autoplay_bot.set_enabled(OS.is_debug_build() and GameSession.developer_autoplay_enabled)
 	_reset_ball_queue()
+
+
+func _sync_board_geometry_from_collisions() -> void:
+	var left_rect := _collision_rect_in_local_space(left_wall_shape)
+	var right_rect := _collision_rect_in_local_space(right_wall_shape)
+	var floor_rect := _collision_rect_in_local_space(floor_shape)
+
+	board_inner_left = left_rect.end.x
+	board_inner_right = right_rect.position.x
+	board_inner_top = maxf(left_rect.position.y, right_rect.position.y)
+	board_inner_bottom = floor_rect.position.y
+
+	if board_inner_right <= board_inner_left or board_inner_bottom <= board_inner_top:
+		push_error("Drop-zone collision shapes do not form a valid play area.")
+		return
+
+	var board_height := board_inner_bottom - board_inner_top
+	drop_position_y = board_inner_top + board_height * DROP_HEIGHT_RATIO
+	danger_line_y = board_inner_top + board_height * DANGER_LINE_HEIGHT_RATIO
+	aim_x = (board_inner_left + board_inner_right) * 0.5
+	danger_line.configure(board_inner_left, board_inner_right, danger_line_y)
+	_update_preview_position()
+
+
+func _collision_rect_in_local_space(collision: CollisionShape2D) -> Rect2:
+	if not collision.shape is RectangleShape2D:
+		push_error("Drop-zone collision shape must be RectangleShape2D: %s" % collision.get_path())
+		return Rect2()
+	var rectangle := collision.shape as RectangleShape2D
+	var half_size := rectangle.size * 0.5
+	var relative_transform := global_transform.affine_inverse() * collision.global_transform
+	var corners := [
+		relative_transform * Vector2(-half_size.x, -half_size.y),
+		relative_transform * Vector2(half_size.x, -half_size.y),
+		relative_transform * Vector2(half_size.x, half_size.y),
+		relative_transform * Vector2(-half_size.x, half_size.y),
+	]
+	var minimum: Vector2 = corners[0]
+	var maximum: Vector2 = corners[0]
+	for corner: Vector2 in corners:
+		minimum = minimum.min(corner)
+		maximum = maximum.max(corner)
+	return Rect2(minimum, maximum - minimum)
 
 
 func _apply_physics_data() -> void:
@@ -105,6 +160,13 @@ func get_current_ball_level() -> int:
 	return current_level
 
 
+func get_board_inner_bounds() -> Rect2:
+	return Rect2(
+		Vector2(board_inner_left, board_inner_top),
+		Vector2(board_inner_right - board_inner_left, board_inner_bottom - board_inner_top)
+	)
+
+
 func wait_until_board_settled(max_wait_seconds := 4.0) -> void:
 	var started := Time.get_ticks_msec()
 	while is_inside_tree():
@@ -122,6 +184,32 @@ func consume_ball(ball: MergeBall) -> void:
 	ball.set_ingestion_marked(false)
 	ball.lock_for_merge()
 	ball.queue_free()
+
+
+func animate_ball_consumption(ball: MergeBall, target_global_position: Vector2, duration := 0.55) -> bool:
+	if not is_instance_valid(ball) or ball.merge_locked:
+		return false
+	ball.set_ingestion_marked(false)
+	ball.lock_for_merge()
+	ball.z_index = 200
+	var start_position := ball.global_position
+	var control_position := (start_position + target_global_position) * 0.5 + Vector2(0.0, -90.0)
+	var start_scale := ball.scale
+	var tween := create_tween()
+	tween.set_parallel(true)
+	tween.tween_method(func(weight: float) -> void:
+		if is_instance_valid(ball):
+			var first_leg := start_position.lerp(control_position, weight)
+			var second_leg := control_position.lerp(target_global_position, weight)
+			ball.global_position = first_leg.lerp(second_leg, weight)
+	, 0.0, 1.0, duration).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN_OUT)
+	tween.tween_property(ball, "scale", start_scale * 0.12, duration).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_IN)
+	tween.tween_property(ball, "rotation", ball.rotation + TAU * 0.8, duration)
+	await tween.finished
+	if not is_instance_valid(ball):
+		return false
+	ball.queue_free()
+	return true
 
 
 func insert_ball_after_current(level: int) -> void:
@@ -151,6 +239,7 @@ func configure(
 	_reset_ball_queue()
 
 func _process(delta: float) -> void:
+	danger_line.visible = _should_show_danger_line()
 	if is_game_over:
 		return
 	if auto_drop_enabled and can_drop and not input_locked:
@@ -184,7 +273,7 @@ func _unhandled_input(event: InputEvent) -> void:
 func _handle_pointer_button(screen_position: Vector2, pressed: bool) -> void:
 	var local := to_local(screen_position)
 	if pressed:
-		if local.y < 0.0 or local.y > 830.0 or not can_drop:
+		if local.y < board_inner_top or local.y > board_inner_bottom or not can_drop:
 			return
 		is_aiming = true
 		_update_aim(screen_position)
@@ -206,12 +295,15 @@ func _clamp_aim_x(x_position: float) -> float:
 	var radius := 26.0
 	if is_instance_valid(preview_ball):
 		radius = preview_ball.get_radius()
-	return clampf(x_position, BOARD_INNER_LEFT + radius, BOARD_INNER_RIGHT - radius)
+	return clampf(x_position, board_inner_left + radius, board_inner_right - radius)
 
 func _update_preview_position() -> void:
-	guide_line.points = PackedVector2Array([Vector2(aim_x, DROP_POSITION_Y), Vector2(aim_x, 825.0)])
+	guide_line.points = PackedVector2Array([
+		Vector2(aim_x, drop_position_y),
+		Vector2(aim_x, board_inner_bottom - GUIDE_BOTTOM_MARGIN),
+	])
 	if is_instance_valid(preview_ball):
-		preview_ball.position = Vector2(aim_x, DROP_POSITION_Y)
+		preview_ball.position = Vector2(aim_x, drop_position_y)
 
 func _drop_ball(x: float) -> void:
 	if input_locked or is_game_over:
@@ -228,7 +320,7 @@ func _drop_ball(x: float) -> void:
 	last_merge_msec = Time.get_ticks_msec()
 	next_merge_resolution_msec = last_merge_msec
 	drop_grace_remaining = DROP_GRACE_DURATION
-	_spawn_ball(Vector2(x, DROP_POSITION_Y), current_level, current_sequence_id)
+	_spawn_ball(Vector2(x, drop_position_y), current_level, current_sequence_id)
 	ball_dropped.emit()
 	_advance_ball_queue()
 	_finish_drop_sequence(current_sequence_id)
@@ -266,9 +358,9 @@ func _spawn_ball(at: Vector2, level: int, contact_sequence_id: int = -1):
 		ball.linear_damp = physics_data.ball_linear_damp
 		ball.angular_damp = physics_data.ball_angular_damp
 	_enable_ball_ccd_after_spawn(ball)
-	var global_left := to_global(Vector2(BOARD_INNER_LEFT, 0.0)).x
-	var global_right := to_global(Vector2(BOARD_INNER_RIGHT, 0.0)).x
-	var global_bottom := to_global(Vector2(0.0, BOARD_INNER_BOTTOM)).y
+	var global_left := to_global(Vector2(board_inner_left, 0.0)).x
+	var global_right := to_global(Vector2(board_inner_right, 0.0)).x
+	var global_bottom := to_global(Vector2(0.0, board_inner_bottom)).y
 	ball.set_play_area_bounds(global_left, global_right, global_bottom)
 	ball.merge_requested.connect(_on_merge_requested)
 	if contact_sequence_id >= 0:
@@ -310,18 +402,12 @@ func _random_drop_level() -> int:
 func _refresh_preview() -> void:
 	if is_instance_valid(preview_ball):
 		preview_ball.queue_free()
-	if is_instance_valid(next_preview_ball):
-		next_preview_ball.queue_free()
 	preview_ball = BallScene.instantiate()
 	preview_holder.add_child(preview_ball)
-	preview_ball.position = Vector2(aim_x, DROP_POSITION_Y)
+	preview_ball.position = Vector2(aim_x, drop_position_y)
 	preview_ball.setup(current_level, physics_speed_multiplier)
 	preview_ball.lock_for_merge()
-	next_preview_ball = BallScene.instantiate()
-	next_preview_holder.add_child(next_preview_ball)
-	next_preview_ball.scale = Vector2(0.55, 0.55)
-	next_preview_ball.setup(next_level, physics_speed_multiplier)
-	next_preview_ball.lock_for_merge()
+	next_panel.set_preview_data(BallCatalogClass.get_ball(next_level))
 
 func _on_merge_requested(first, second) -> void:
 	if first.merge_locked or second.merge_locked or first.merge_level >= max_level_index:
@@ -356,6 +442,7 @@ func _on_merge_requested(first, second) -> void:
 		combo_points += earned_points
 		last_merge_msec = Time.get_ticks_msec()
 		attack_combo_count = combo_count
+	_spawn_merge_burst(at, merged_ball_data, attack_combo_count)
 	var merge_damage := _calculate_merge_damage(earned_points, attack_combo_count)
 	if attack_combo_count >= 2:
 		_show_combo_effect(attack_combo_count, merge_damage)
@@ -366,6 +453,12 @@ func _on_merge_requested(first, second) -> void:
 	])
 	call_deferred("_spawn_merged_ball", at, level, carries_ingestion_target)
 	drop_grace_remaining = maxf(drop_grace_remaining, 0.5)
+
+
+func _spawn_merge_burst(at: Vector2, data: Resource, merge_combo_count: int) -> void:
+	var burst = MergeBurstEffectScene.instantiate()
+	add_child(burst)
+	burst.play(at, data.glow_color, data.get_radius(), merge_combo_count, data.level)
 
 
 func _spawn_merged_ball(at: Vector2, level: int, carries_ingestion_target: bool = false) -> void:
@@ -399,7 +492,22 @@ func _has_ball_over_danger_line() -> bool:
 	for child in balls.get_children():
 		if child.merge_locked:
 			continue
-		if child.position.y - child.get_radius() < DANGER_LINE_Y:
+		if child.position.y - child.get_radius() < danger_line_y:
+			return true
+	return false
+
+
+func _should_show_danger_line() -> bool:
+	if is_game_over:
+		return false
+	var reveal_y := lerpf(board_inner_bottom, danger_line_y, DANGER_LINE_REVEAL_FILL_RATIO)
+	for child in balls.get_children():
+		if not child is MergeBall:
+			continue
+		var ball := child as MergeBall
+		if ball.merge_locked or not ball.has_landed():
+			continue
+		if ball.position.y - ball.get_radius() <= reveal_y:
 			return true
 	return false
 
@@ -415,13 +523,13 @@ func _trigger_game_over() -> void:
 	is_game_over = true
 	can_drop = false
 	_update_drop_preview_visibility()
-	next_preview_holder.visible = false
+	next_panel.visible = false
 	game_over.emit()
 
 func set_input_enabled(enabled: bool) -> void:
 	input_locked = not enabled
 	is_aiming = false
-	next_preview_holder.visible = enabled and not is_game_over
+	next_panel.visible = enabled and not is_game_over
 	if enabled and (dropped_ball_has_landed or not drop_sequence_active) and not is_game_over:
 		can_drop = true
 		drop_time_remaining = drop_time_limit

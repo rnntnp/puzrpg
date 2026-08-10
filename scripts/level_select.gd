@@ -8,6 +8,8 @@ const SWIPE_THRESHOLD := 65.0
 @onready var content: Control = $Content
 @onready var level_name_label: Label = $Content/LevelName
 @onready var placeholder_label: Label = $Content/LevelImage/PlaceholderText
+@onready var level_preview: TextureRect = $Content/LevelImage/PreviewBackground
+@onready var boss_silhouette: TextureRect = $Content/LevelImage/BossSilhouette
 @onready var lock_overlay: ColorRect = $Content/LevelImage/LockOverlay
 @onready var lock_label: Label = $Content/LevelImage/LockOverlay/LockLabel
 @onready var start_button: Button = $Content/StartButton
@@ -17,6 +19,11 @@ const SWIPE_THRESHOLD := 65.0
 @onready var next_button: Button = $NextButton
 @onready var page_label: Label = $PageLabel
 @onready var swipe_hint: Label = $SwipeHint
+@onready var recommended_level_value: Label = $Content/InfoCardLeft/Value
+@onready var enemy_turn_value: Label = $Content/InfoCardLeft2/Value
+@onready var gimmick_value: Label = $Content/InfoCardLeft3/Value
+@onready var gimmick_icon: TextureRect = $Content/InfoCardLeft3/Icon
+@onready var reward_value: Label = $Content/RewardPanel/Value
 
 var viewed_level_index := 0
 var pointer_start := Vector2.ZERO
@@ -25,6 +32,8 @@ var page_tween: Tween
 
 
 func _ready() -> void:
+	level_preview.material = level_preview.material.duplicate()
+	level_preview.resized.connect(_update_preview_mask_mapping)
 	viewed_level_index = GameSession.selected_level_index
 	start_button.pressed.connect(_on_start_button_pressed)
 	previous_button.pressed.connect(_show_previous_level)
@@ -89,17 +98,65 @@ func _show_level(index: int, direction := 0) -> void:
 	viewed_level_index = index
 	var unlocked := GameSession.is_level_unlocked(index)
 	level_name_label.text = level.level_name
+	level_preview.texture = level.level_select_preview
+	level_preview.visible = level_preview.texture != null
+	_update_preview_mask_mapping.call_deferred()
+	_update_level_info(level)
+	boss_silhouette.texture = _get_level_boss_sprite(level)
+	boss_silhouette.visible = boss_silhouette.texture != null
+	placeholder_label.visible = not level_preview.visible
 	placeholder_label.text = level.image_placeholder if unlocked else "LOCKED LEVEL\n미리보기"
 	lock_overlay.visible = not unlocked
 	lock_label.text = "🔒\n이전 스테이지를 클리어하세요"
 	start_button.disabled = not unlocked
 	start_button.text = "게임 시작" if unlocked else "잠긴 스테이지"
-	previous_button.disabled = index <= 0
-	next_button.disabled = index >= GameSession.get_level_count() - 1
+	previous_button.visible = index > 0
+	next_button.visible = index < GameSession.get_level_count() - 1
+	previous_button.disabled = not previous_button.visible
+	next_button.disabled = not next_button.visible
 	page_label.text = "%d / %d" % [index + 1, GameSession.get_level_count()]
 	combo_test_button.disabled = not unlocked
 	if direction != 0:
 		_play_page_transition(direction)
+
+
+func _update_level_info(level: LevelData) -> void:
+	recommended_level_value.text = "Lv. %d" % level.recommended_ball_level
+	var attack_turns := 0
+	if not level.enemies.is_empty() and level.enemies.front() != null:
+		attack_turns = level.enemies.front().enemy_attack_drop_interval
+	enemy_turn_value.text = "%d턴" % attack_turns if attack_turns > 0 else "-"
+	gimmick_value.text = level.stage_gimmick_name
+	gimmick_icon.texture = level.stage_gimmick_icon
+	reward_value.text = level.reward_name
+
+
+func _update_preview_mask_mapping() -> void:
+	if level_preview.texture == null or not level_preview.material is ShaderMaterial:
+		return
+	var texture_size := level_preview.texture.get_size()
+	var rect_size := level_preview.size
+	if texture_size.x <= 0.0 or texture_size.y <= 0.0 or rect_size.x <= 0.0 or rect_size.y <= 0.0:
+		return
+	var texture_aspect := texture_size.x / texture_size.y
+	var rect_aspect := rect_size.x / rect_size.y
+	var visible_offset := Vector2.ZERO
+	var visible_scale := Vector2.ONE
+	if texture_aspect > rect_aspect:
+		visible_scale.x = rect_aspect / texture_aspect
+		visible_offset.x = (1.0 - visible_scale.x) * 0.5
+	elif texture_aspect < rect_aspect:
+		visible_scale.y = texture_aspect / rect_aspect
+		visible_offset.y = (1.0 - visible_scale.y) * 0.5
+	level_preview.material.set_shader_parameter("visible_uv_offset", visible_offset)
+	level_preview.material.set_shader_parameter("visible_uv_scale", visible_scale)
+
+
+func _get_level_boss_sprite(level: Resource) -> Texture2D:
+	if level == null or level.enemies.is_empty():
+		return null
+	var boss = level.enemies.back()
+	return boss.sprite if boss != null else null
 
 
 func _play_page_transition(direction: int) -> void:

@@ -1,11 +1,10 @@
-[gd_resource type="Resource" script_class="StatusEffectData" load_steps=3 format=3]
+[gd_resource type="Resource" script_class="StatusEffectData" format=3 uid="uid://1uxye05ow0g"]
 
-[ext_resource type="Script" path="res://scripts/status_effect_data.gd" id="1"]
-[ext_resource type="Texture2D" path="res://assets/effects/vulnerable_placeholder.svg" id="2"]
+[ext_resource type="Script" uid="uid://c1lhsgnevvhpo" path="res://scripts/status_effect_data.gd" id="1"]
+[ext_resource type="Texture2D" uid="uid://btrk2g4xs17p7" path="res://assets/effects/generated/status_vulnerable.png" id="2"]
 
 [resource]
 script = ExtResource("1")
 effect_id = &"ingestion_vulnerable"
 display_name = "포식 저지 · 받는 피해 증가"
 icon = ExtResource("2")
-icon_modulate = Color(1, 0.84, 0.2, 1)

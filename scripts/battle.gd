@@ -6,21 +6,19 @@ const GameplayDebugSnapshotClass = preload("res://scripts/gameplay_debug_snapsho
 const EnemyAttackEffect: StatusEffectData = preload("res://resources/effects/enemy_attack_countdown.tres")
 const MergeAttackEffectScene = preload("res://scenes/merge_attack_effect.tscn")
 const BallCatalogClass = preload("res://scripts/ball_catalog.gd")
+const WaterHealthBarClass = preload("res://scripts/water_health_bar.gd")
 
 @onready var left_fighter: Fighter = $UI/LeftFighter
 @onready var right_fighter: Fighter = $UI/RightFighter
-@onready var left_bar: ProgressBar = $UI/LeftHealthBar
-@onready var right_bar: ProgressBar = $UI/RightHealthBar
-@onready var left_hp_label: Label = $UI/LeftHealthLabel
-@onready var right_hp_label: Label = $UI/RightHealthLabel
-@onready var left_stats: Label = $UI/LeftStats
-@onready var right_stats: Label = $UI/RightStats
+@onready var left_bar: WaterHealthBarClass = $UI/LeftHealthBar
+@onready var right_bar: WaterHealthBarClass = $UI/RightHealthBar
 @onready var title_label: Label = $UI/Title
 @onready var status_label: Label = $UI/StatusLabel
 @onready var enemy_progress_label: Label = $UI/EnemyProgress
 @onready var left_status_effects: StatusEffectBar = $UI/LeftStatusEffects
 @onready var right_status_effects: StatusEffectBar = $UI/RightStatusEffects
 @onready var skill_durability_label: Label = $UI/SkillDurabilityLabel
+@onready var background_artwork: TextureRect = $BackgroundArtwork
 @onready var monster_action_controller = $MonsterActionController
 @onready var merge_game = $MergeGame
 
@@ -55,6 +53,8 @@ func _load_level() -> void:
 	title_label.text = level_data.level_name
 	current_enemy_index = 0
 	level_finished = false
+	if level_data.battle_background != null:
+		background_artwork.texture = level_data.battle_background
 	left_fighter.set_character_data(level_data.player_character)
 	_load_enemy(current_enemy_index)
 	merge_game.configure(
@@ -68,18 +68,19 @@ func _load_level() -> void:
 	)
 	status_label.text = "전투 준비"
 	status_label.modulate = Color("#ffd166")
-	_update_stats()
 
 
 func _load_enemy(index: int) -> void:
-	right_fighter.set_character_data(level_data.enemies[index])
+	var enemy_data = level_data.enemies[index]
+	right_fighter.set_character_data(enemy_data)
+	right_bar.fill_color = enemy_data.health_bar_color
+	right_bar.queue_redraw()
 	enemy_drop_count = 0
 	enemy_progress_label.text = "적 %d / %d" % [index + 1, level_data.enemies.size()]
 	monster_action_controller.configure(
 		self, right_fighter, left_fighter, merge_game,
 		right_status_effects, skill_durability_label
 	)
-	_update_stats()
 
 
 func _start_battle() -> void:
@@ -89,20 +90,12 @@ func _start_battle() -> void:
 
 
 func _on_left_health_changed(health: int, maximum: int) -> void:
-	left_bar.max_value = maximum
-	left_bar.value = health
-	left_hp_label.text = "%s  %d / %d" % [left_fighter.display_name, health, maximum]
+	left_bar.set_health(health, maximum)
 
 
 func _on_right_health_changed(health: int, maximum: int) -> void:
-	right_bar.max_value = maximum
-	right_bar.value = health
-	right_hp_label.text = "%d / %d  %s" % [health, maximum, right_fighter.display_name]
+	right_bar.set_health(health, maximum)
 
-
-func _update_stats() -> void:
-	left_stats.text = "%s  머지 점수 공격" % left_fighter.display_name
-	right_stats.text = "%s  공 %d개마다 공격" % [right_fighter.display_name, right_fighter.enemy_attack_drop_interval]
 
 func _on_ball_dropped() -> void:
 	if not battle_running or not right_fighter.is_alive() or not left_fighter.is_alive():
@@ -111,7 +104,7 @@ func _on_ball_dropped() -> void:
 
 func _on_merge_attack_requested(
 	damage: int,
-	_combo_count: int,
+	combo_count: int,
 	_base_points: int,
 	origin: Vector2,
 	ball_level: int
@@ -123,8 +116,9 @@ func _on_merge_attack_requested(
 		return
 	var effect = MergeAttackEffectScene.instantiate()
 	add_child(effect)
+	left_fighter.play_cast_animation()
 	effect.hit.connect(_on_merge_projectile_hit)
-	effect.play(origin, right_fighter.global_position, BallCatalogClass.get_ball(ball_level), damage)
+	effect.play(origin, right_fighter.global_position, BallCatalogClass.get_ball(ball_level), damage, combo_count)
 
 
 func _on_merge_projectile_hit(damage: int) -> void:

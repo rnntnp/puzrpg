@@ -20,13 +20,12 @@ config/icon="res://icon.svg"
 
 GameSession="*res://scripts/game_session.gd"
 
-McpBridge="*res://mcp_bridge.gd"
 [display]
 
 window/size/viewport_width=720
 window/size/viewport_height=1280
-window/size/window_width_override=360
-window/size/window_height_override=640
+window/size/window_width_override=720
+window/size/window_height_override=1280
 window/stretch/mode="canvas_items"
 window/stretch/aspect="expand"
 
@@ -36,6 +35,7 @@ movie_writer/movie_file="C:/Users/jaynap/Desktop/vids/001.avi"
 
 [gui]
 
+theme/custom="res://resources/themes/level_select_theme.tres"
 theme/default_font_multichannel_signed_distance_field=true
 
 [physics]

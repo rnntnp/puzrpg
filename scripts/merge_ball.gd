@@ -87,6 +87,10 @@ func get_merge_score() -> int:
 	return ball_data.merge_score if ball_data != null else 0
 
 
+func has_landed() -> bool:
+	return _has_contacted
+
+
 func set_ingestion_marked(marked: bool) -> void:
 	ingestion_marked = marked
 	queue_redraw()

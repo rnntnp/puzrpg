@@ -8,6 +8,7 @@ const SWIPE_THRESHOLD := 65.0
 @onready var content: Control = $Content
 @onready var level_name_label: Label = $Content/LevelName
 @onready var placeholder_label: Label = $Content/LevelImage/PlaceholderText
+@onready var level_preview: TextureRect = $Content/LevelImage/PreviewBackground
 @onready var boss_silhouette: TextureRect = $Content/LevelImage/BossSilhouette
 @onready var lock_overlay: ColorRect = $Content/LevelImage/LockOverlay
 @onready var lock_label: Label = $Content/LevelImage/LockOverlay/LockLabel
@@ -90,15 +91,20 @@ func _show_level(index: int, direction := 0) -> void:
 	viewed_level_index = index
 	var unlocked := GameSession.is_level_unlocked(index)
 	level_name_label.text = level.level_name
+	level_preview.texture = level.level_select_preview
+	level_preview.visible = level_preview.texture != null
 	boss_silhouette.texture = _get_level_boss_sprite(level)
 	boss_silhouette.visible = boss_silhouette.texture != null
+	placeholder_label.visible = not level_preview.visible
 	placeholder_label.text = level.image_placeholder if unlocked else "LOCKED LEVEL\n미리보기"
 	lock_overlay.visible = not unlocked
 	lock_label.text = "🔒\n이전 스테이지를 클리어하세요"
 	start_button.disabled = not unlocked
 	start_button.text = "게임 시작" if unlocked else "잠긴 스테이지"
-	previous_button.disabled = index <= 0
-	next_button.disabled = index >= GameSession.get_level_count() - 1
+	previous_button.visible = index > 0
+	next_button.visible = index < GameSession.get_level_count() - 1
+	previous_button.disabled = not previous_button.visible
+	next_button.disabled = not next_button.visible
 	page_label.text = "%d / %d" % [index + 1, GameSession.get_level_count()]
 	combo_test_button.disabled = not unlocked
 	if direction != 0:

@@ -1,16 +1,28 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene load_steps=4 format=3]
 
 [ext_resource type="Script" path="res://scripts/ball_evolution_strip.gd" id="1"]
+[ext_resource type="Texture2D" path="res://assets/ui/pond/evolution_rail.png" id="2_background"]
 
 [sub_resource type="StyleBoxFlat" id="Background"]
 bg_color = Color(0, 0, 0, 0)
 
 [node name="BallEvolutionStrip" type="Panel"]
-offset_right = 76.0
-offset_bottom = 840.0
+offset_right = 72.0
+offset_bottom = 620.0
 mouse_filter = 2
 theme_override_styles/panel = SubResource("Background")
 script = ExtResource("1")
+
+[node name="Background" type="TextureRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("2_background")
+expand_mode = 1
 
 [node name="Sequence" type="VBoxContainer" parent="."]
 layout_mode = 1
@@ -20,9 +32,9 @@ anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
 offset_left = -20.0
-offset_top = -285.0
+offset_top = -270.0
 offset_right = 20.0
-offset_bottom = 285.0
+offset_bottom = 270.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_constants/separation = 0

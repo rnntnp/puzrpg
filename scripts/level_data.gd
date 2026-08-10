@@ -6,6 +6,8 @@ const CharacterDataClass = preload("res://scripts/character_data.gd")
 @export_category("레벨 정보")
 @export var level_name: String = "Level"
 @export_multiline var image_placeholder: String = "LEVEL IMAGE\nPLACEHOLDER"
+@export var battle_background: Texture2D
+@export var level_select_preview: Texture2D
 
 @export_category("전투 구성")
 @export var player_character: CharacterDataClass

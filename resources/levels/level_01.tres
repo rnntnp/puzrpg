@@ -4,12 +4,16 @@
 [ext_resource type="Resource" uid="uid://dd8t0hxokj424" path="res://resources/characters/blue_fighter.tres" id="2_player"]
 [ext_resource type="Resource" uid="uid://bwjblomuukh5q" path="res://resources/characters/red_fighter.tres" id="3_enemy"]
 [ext_resource type="Script" uid="uid://duu5mev8uwp8d" path="res://scripts/character_data.gd" id="4_character_type"]
+[ext_resource type="Texture2D" path="res://assets/backgrounds/stage_01_moonlit_pond.png" id="5_background"]
+[ext_resource type="Texture2D" path="res://assets/level_previews/level_01_preview.png" id="6_preview"]
 
 [resource]
 script = ExtResource("1_level")
 level_name = "1. 훈련장"
 image_placeholder = "TRAINING GROUND
 LEVEL IMAGE"
+battle_background = ExtResource("5_background")
+level_select_preview = ExtResource("6_preview")
 player_character = ExtResource("2_player")
 enemies = Array[ExtResource("4_character_type")]([ExtResource("3_enemy")])
 ball_drop_time_limit = -1.0

@@ -5,13 +5,15 @@
 [ext_resource type="Script" uid="uid://bophiem3isusd" path="res://scripts/merge_hit_stop.gd" id="3"]
 [ext_resource type="Script" uid="uid://bmry4fgrxlopp" path="res://scripts/combo_test_scenario.gd" id="4"]
 [ext_resource type="Resource" uid="uid://c3ik0sjmjhs7a" path="res://resources/merge_physics_data.tres" id="5_physics"]
-[ext_resource type="Texture2D" uid="uid://bax07dfmvtufr" path="res://assets/backgrounds/drop_board_frame_reference_inpainted_no_bottom_gem.png" id="6_board"]
+[ext_resource type="Texture2D" uid="uid://crn16upp52jrb" path="res://assets/ui/pond/drop_board_reference_translucent.png" id="6_board"]
+[ext_resource type="Script" uid="uid://8qiwn1gfogtj" path="res://scripts/danger_line.gd" id="7_danger_line"]
+[ext_resource type="PackedScene" path="res://scenes/next_preview_panel.tscn" id="8_next_panel"]
 
 [sub_resource type="RectangleShape2D" id="wall"]
-size = Vector2(12, 850)
+size = Vector2(6, 869.5)
 
 [sub_resource type="RectangleShape2D" id="floor"]
-size = Vector2(536, 4)
+size = Vector2(596, 4)
 
 [node name="MergeGame" type="Node2D" unique_id=2061783318]
 script = ExtResource("1")
@@ -25,23 +27,16 @@ script = ExtResource("4")
 
 [node name="BoardArtwork" type="TextureRect" parent="." unique_id=702315937]
 z_index = -10
-offset_left = 17.0
-offset_top = 32.0
-offset_right = 723.0
-offset_bottom = 940.8513
+offset_left = 43.0
+offset_top = 102.0
+offset_right = 671.0
+offset_bottom = 881.0
 mouse_filter = 2
 texture = ExtResource("6_board")
 expand_mode = 3
 
-[node name="Instruction" type="Label" parent="." unique_id=999739034]
-offset_left = 112.0
-offset_top = 10.0
-offset_right = 410.0
-offset_bottom = 48.0
-theme_override_font_sizes/font_size = 18
-text = "터치해서 공 떨어뜨리기"
-
 [node name="ScoreLabel" type="Label" parent="." unique_id=1180603034]
+visible = false
 offset_left = 440.0
 offset_top = 10.0
 offset_right = 608.0
@@ -61,25 +56,17 @@ theme_override_font_sizes/font_size = 16
 text = "자동 낙하 5.0초"
 horizontal_alignment = 2
 
-[node name="NextTitle" type="Label" parent="." unique_id=1442535734]
-offset_left = 112.0
-offset_top = 48.0
-offset_right = 182.0
-offset_bottom = 78.0
-theme_override_colors/font_color = Color(0.65, 0.72, 0.82, 1)
-theme_override_font_sizes/font_size = 15
-text = "NEXT"
+[node name="NextPanel" parent="." unique_id=1158388454 instance=ExtResource("8_next_panel")]
+layout_mode = 3
+anchors_preset = 0
+offset_left = 100.0
+offset_top = 90.0
+offset_right = 250.0
+offset_bottom = 140.0
 
-[node name="NextPreviewHolder" type="Node2D" parent="." unique_id=1252056447]
-position = Vector2(202, 63)
-
-[node name="DropLine" type="ColorRect" parent="." unique_id=1186322495]
-offset_left = 102.0
-offset_top = 228.0
-offset_right = 618.0
-offset_bottom = 232.0
-mouse_filter = 2
-color = Color(1, 0.25, 0.32, 0.65)
+[node name="DropLine" type="Node2D" parent="." unique_id=1186322495]
+visible = false
+script = ExtResource("7_danger_line")
 
 [node name="GuideLine" type="Line2D" parent="." unique_id=934882983]
 points = PackedVector2Array(360, 140, 360, 825)
@@ -116,16 +103,19 @@ script = ExtResource("2")
 position = Vector2(90, 425)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="LeftWall" unique_id=1771649085]
+position = Vector2(0, 6.5)
 shape = SubResource("wall")
 
 [node name="RightWall" type="StaticBody2D" parent="." unique_id=199110667]
 position = Vector2(630, 425)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="RightWall" unique_id=2099721541]
+position = Vector2(59, 6)
 shape = SubResource("wall")
 
 [node name="Floor" type="StaticBody2D" parent="." unique_id=1965182260]
 position = Vector2(360, 848)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Floor" unique_id=61497292]
+position = Vector2(30, 16)
 shape = SubResource("floor")

@@ -38,10 +38,10 @@ func _create_ball_icon(data: Resource, index: int, ball_count: int) -> TextureRe
 func _create_arrow() -> Label:
 	var arrow := Label.new()
 	arrow.custom_minimum_size = Vector2(26, 8)
-	arrow.text = "⌄"
+	arrow.text = "∨"
 	arrow.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	arrow.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	arrow.add_theme_color_override("font_color", Color("#8090a8"))
+	arrow.add_theme_color_override("font_color", Color(0.62, 0.90, 1.0, 0.72))
 	arrow.add_theme_font_size_override("font_size", 10)
 	arrow.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	return arrow

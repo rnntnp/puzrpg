@@ -13,7 +13,7 @@ max_contacts_reported = 8
 continuous_cd = 2
 script = ExtResource("1")
 [node name="Sprite2D" type="Sprite2D" parent="."]
-texture_filter = 2
+texture_filter = 4
 
 [node name="GlowAura" type="Node2D" parent="."]
 show_behind_parent = true

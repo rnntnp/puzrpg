@@ -4,11 +4,15 @@
 [ext_resource type="Resource" path="res://resources/characters/blue_fighter.tres" id="2"]
 [ext_resource type="Resource" path="res://resources/characters/ice_monster.tres" id="3"]
 [ext_resource type="Script" path="res://scripts/character_data.gd" id="4"]
+[ext_resource type="Texture2D" path="res://assets/backgrounds/cave_battle_background_inpainted.png" id="5"]
+[ext_resource type="Texture2D" path="res://assets/level_previews/level_03_preview.png" id="6"]
 
 [resource]
 script = ExtResource("1")
 level_name = "3. 얼어붙은 관문"
 image_placeholder = "ICE FIELD\nLEVEL IMAGE"
+battle_background = ExtResource("5")
+level_select_preview = ExtResource("6")
 player_character = ExtResource("2")
 enemies = Array[ExtResource("4")]([ExtResource("3")])
 ball_drop_time_limit = -1.0

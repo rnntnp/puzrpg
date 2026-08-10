@@ -7,7 +7,7 @@
 [resource]
 script = ExtResource("1")
 display_name = "설원 설인"
-health_bar_color = Color(0.055, 0.18, 0.38, 1)
+health_bar_color = Color(0.6130624, 0.7521825, 0.9739663, 1)
 sprite = ExtResource("3_sprite")
 sprite_size = Vector2(210, 210)
 max_health = 140

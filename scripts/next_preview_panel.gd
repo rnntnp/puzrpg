@@ -6,13 +6,15 @@ extends Control
 
 
 func _ready() -> void:
-	if not Engine.is_editor_hint():
-		editor_preview.visible = false
+	editor_preview.visible = editor_preview.texture != null
 
 
-func apply_preview_layout(ball: MergeBall) -> void:
-	if ball == null or editor_preview == null:
+func set_preview_data(ball_data: Resource) -> void:
+	if editor_preview == null:
 		return
-	ball.position = editor_preview.position
-	ball.rotation = editor_preview.rotation
-	ball.scale = editor_preview.scale
+	if ball_data == null:
+		editor_preview.visible = false
+		return
+	editor_preview.texture = ball_data.sprite
+	editor_preview.modulate = ball_data.sprite_modulate
+	editor_preview.visible = editor_preview.texture != null

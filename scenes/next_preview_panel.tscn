@@ -47,6 +47,6 @@ position = Vector2(126, 25)
 
 [node name="EditorPreview" type="Sprite2D" parent="PreviewHolder" unique_id=766355484]
 texture_filter = 2
-position = Vector2(-25, 1)
-scale = Vector2(0.2, 0.2)
+position = Vector2(-13.900009, 2.9000015)
+scale = Vector2(0.37343743, 0.37343743)
 texture = ExtResource("3_preview_ball")

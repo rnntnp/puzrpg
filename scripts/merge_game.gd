@@ -33,7 +33,6 @@ const MERGE_PUSH_RADIUS := 260.0
 @onready var balls: Node2D = $Balls
 @onready var preview_holder: Node2D = $PreviewHolder
 @onready var next_panel: NextPreviewPanelClass = $NextPanel
-@onready var next_preview_holder: Node2D = $NextPanel/PreviewHolder
 @onready var guide_line: Line2D = $GuideLine
 @onready var danger_line: DangerLineClass = $DropLine
 @onready var score_label: Label = $ScoreLabel
@@ -55,7 +54,6 @@ var can_drop := true
 var is_aiming := false
 var aim_x := 360.0
 var preview_ball
-var next_preview_ball
 var drop_grace_remaining := 0.0
 var overflow_time := 0.0
 var is_game_over := false
@@ -404,18 +402,12 @@ func _random_drop_level() -> int:
 func _refresh_preview() -> void:
 	if is_instance_valid(preview_ball):
 		preview_ball.queue_free()
-	if is_instance_valid(next_preview_ball):
-		next_preview_ball.queue_free()
 	preview_ball = BallScene.instantiate()
 	preview_holder.add_child(preview_ball)
 	preview_ball.position = Vector2(aim_x, drop_position_y)
 	preview_ball.setup(current_level, physics_speed_multiplier)
 	preview_ball.lock_for_merge()
-	next_preview_ball = BallScene.instantiate()
-	next_preview_holder.add_child(next_preview_ball)
-	next_preview_ball.setup(next_level, physics_speed_multiplier)
-	next_preview_ball.lock_for_merge()
-	next_panel.apply_preview_layout(next_preview_ball)
+	next_panel.set_preview_data(BallCatalogClass.get_ball(next_level))
 
 func _on_merge_requested(first, second) -> void:
 	if first.merge_locked or second.merge_locked or first.merge_level >= max_level_index:

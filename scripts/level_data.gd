@@ -9,6 +9,12 @@ const CharacterDataClass = preload("res://scripts/character_data.gd")
 @export var battle_background: Texture2D
 @export var level_select_preview: Texture2D
 
+@export_category("레벨 선택 정보")
+@export_range(1, 11, 1) var recommended_ball_level: int = 5
+@export var stage_gimmick_icon: Texture2D
+@export var stage_gimmick_name: String = "기본 전투"
+@export var reward_name: String = "첫 승리 보상"
+
 @export_category("전투 구성")
 @export var player_character: CharacterDataClass
 @export var enemies: Array[CharacterDataClass] = []

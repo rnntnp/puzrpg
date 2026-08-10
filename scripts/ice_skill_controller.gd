@@ -2,14 +2,17 @@ class_name IceSkillController
 extends Node
 
 const IceSkillDataClass = preload("res://scripts/ice_skill_data.gd")
+const IceCastEffectScene = preload("res://scenes/ice_cast_effect.tscn")
 
 var merge_game: MergeGame
 var skill: IceSkillDataClass
+var caster: Fighter
 
 
-func configure(game: MergeGame, skill_data: IceSkillDataClass) -> void:
+func configure(game: MergeGame, skill_data: IceSkillDataClass, caster_fighter: Fighter) -> void:
 	merge_game = game
 	skill = skill_data
+	caster = caster_fighter
 	if not merge_game.merge_completed.is_connected(_on_merge_completed):
 		merge_game.merge_completed.connect(_on_merge_completed)
 
@@ -29,10 +32,21 @@ func execute() -> int:
 	for ball in targets:
 		if is_instance_valid(ball):
 			ball.set_ice_targeted(false)
-			ball.freeze_in_ice(skill.ice_durability)
+			await _cast_freeze_at(ball)
 	await get_tree().create_timer(skill.freeze_effect_duration).timeout
 	print("[ICE FREEZE] count=%d | durability=%d" % [targets.size(), skill.ice_durability])
 	return targets.size()
+
+
+func _cast_freeze_at(ball: MergeBall) -> void:
+	if not is_instance_valid(ball) or not is_instance_valid(caster):
+		return
+	var effect := IceCastEffectScene.instantiate() as IceCastEffect
+	get_tree().current_scene.add_child(effect)
+	effect.play(caster.get_spell_origin_global_position(), ball.global_position)
+	await effect.arrived
+	if is_instance_valid(ball):
+		ball.freeze_in_ice(skill.ice_durability)
 
 
 func clear_all_ice() -> void:

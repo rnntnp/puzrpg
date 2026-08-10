@@ -1,0 +1,38 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/ice_cast_effect.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://assets/effects/generated/status_ice.png" id="2_ice"]
+
+[sub_resource type="CanvasItemMaterial" id="AdditiveMaterial"]
+blend_mode = 1
+
+[node name="IceCastEffect" type="Node2D"]
+z_index = 60
+script = ExtResource("1_script")
+
+[node name="Trail" type="Line2D" parent="."]
+z_index = -1
+width = 12.0
+default_color = Color(0.36, 0.88, 1, 0.72)
+joint_mode = 1
+begin_cap_mode = 2
+end_cap_mode = 2
+antialiased = true
+
+[node name="Projectile" type="Sprite2D" parent="."]
+texture_filter = 2
+texture = ExtResource("2_ice")
+
+[node name="Glow" type="Sprite2D" parent="Projectile"]
+show_behind_parent = true
+z_index = -1
+material = SubResource("AdditiveMaterial")
+scale = Vector2(1.65, 1.65)
+texture = ExtResource("2_ice")
+modulate = Color(0.45, 0.9, 1, 0.65)
+
+[node name="ImpactRing" type="Sprite2D" parent="."]
+visible = false
+material = SubResource("AdditiveMaterial")
+texture_filter = 2
+texture = ExtResource("2_ice")

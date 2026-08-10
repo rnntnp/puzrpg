@@ -71,7 +71,10 @@ func _load_level() -> void:
 
 
 func _load_enemy(index: int) -> void:
-	right_fighter.set_character_data(level_data.enemies[index])
+	var enemy_data = level_data.enemies[index]
+	right_fighter.set_character_data(enemy_data)
+	right_bar.fill_color = enemy_data.health_bar_color
+	right_bar.queue_redraw()
 	enemy_drop_count = 0
 	enemy_progress_label.text = "적 %d / %d" % [index + 1, level_data.enemies.size()]
 	monster_action_controller.configure(

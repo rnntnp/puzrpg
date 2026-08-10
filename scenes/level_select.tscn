@@ -14,7 +14,11 @@
 [ext_resource type="Texture2D" uid="uid://b66yelr328nox" path="res://assets/ui/level_select_extracted/info_card.png" id="11_info_card"]
 [ext_resource type="Texture2D" uid="uid://b2ndpb7p85wju" path="res://assets/ui/level_select_extracted/page_pill.png" id="12_page"]
 [ext_resource type="Texture2D" uid="uid://8pmde2sp0voe" path="res://assets/ui/level_select_extracted/reward_panel.png" id="13_reward"]
-[ext_resource type="Material" path="res://resources/materials/rounded_preview_material.tres" id="15_rounded_material"]
+[ext_resource type="Material" path="res://resources/materials/level_preview_mask_material.tres" id="14_preview_mask"]
+[ext_resource type="Texture2D" uid="uid://b317atc5dkiql" path="res://assets/ui/level_select_icons/recommended_ball.png" id="15_ball_info"]
+[ext_resource type="Texture2D" uid="uid://j08g6fp5qsiq" path="res://assets/ui/level_select_icons/enemy_turn.png" id="16_enemy_turn"]
+[ext_resource type="Texture2D" uid="uid://diw8e6ahibw5w" path="res://assets/effects/generated/status_attack.png" id="17_gimmick"]
+[ext_resource type="Texture2D" uid="uid://cywjxqlq2ge01" path="res://assets/ui/level_select_icons/reward_chest.png" id="18_reward_chest"]
 
 [sub_resource type="StyleBoxFlat" id="ImagePanel"]
 bg_color = Color(1, 1, 1, 0)
@@ -130,6 +134,7 @@ expand_mode = 1
 
 [node name="PreviewBackground" type="TextureRect" parent="Content/LevelImage" unique_id=464118953]
 texture_filter = 2
+material = ExtResource("14_preview_mask")
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -141,7 +146,6 @@ offset_bottom = 10.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-material = ExtResource("15_rounded_material")
 texture = ExtResource("7_rovvv")
 expand_mode = 1
 stretch_mode = 6
@@ -229,32 +233,143 @@ vertical_alignment = 1
 [node name="InfoCardLeft" type="TextureRect" parent="Content" unique_id=1055374800]
 layout_mode = 0
 offset_left = 125.0
-offset_top = 681.0
+offset_top = 664.0
 offset_right = 274.0
-offset_bottom = 859.0
+offset_bottom = 864.0
 mouse_filter = 2
 texture = ExtResource("11_info_card")
 expand_mode = 1
+
+[node name="Title" type="Label" parent="Content/InfoCardLeft" unique_id=1421378644]
+layout_mode = 0
+offset_left = 8.0
+offset_top = 37.0
+offset_right = 141.0
+offset_bottom = 63.0
+theme_override_colors/font_color = Color(0.045, 0.13, 0.29, 1)
+theme_override_fonts/font = ExtResource("5_rovvv")
+theme_override_font_sizes/font_size = 17
+text = "권장 공 레벨"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Icon" type="TextureRect" parent="Content/InfoCardLeft" unique_id=626212803]
+layout_mode = 0
+offset_left = 43.0
+offset_top = 62.0
+offset_right = 106.0
+offset_bottom = 129.0
+mouse_filter = 2
+texture = ExtResource("15_ball_info")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Value" type="Label" parent="Content/InfoCardLeft" unique_id=477953796]
+layout_mode = 0
+offset_left = 8.0
+offset_top = 131.0
+offset_right = 141.0
+offset_bottom = 165.0
+theme_override_colors/font_color = Color(0.07, 0.3, 0.67, 1)
+theme_override_fonts/font = ExtResource("5_rovvv")
+theme_override_font_sizes/font_size = 23
+text = "Lv. 5"
+horizontal_alignment = 1
+vertical_alignment = 1
 
 [node name="InfoCardLeft2" type="TextureRect" parent="Content" unique_id=51119009]
 layout_mode = 0
 offset_left = 283.0
-offset_top = 679.0
+offset_top = 662.0
 offset_right = 432.0
-offset_bottom = 857.0
+offset_bottom = 862.0
 mouse_filter = 2
 texture = ExtResource("11_info_card")
 expand_mode = 1
 
+[node name="Title" type="Label" parent="Content/InfoCardLeft2" unique_id=316378128]
+layout_mode = 0
+offset_left = 8.0
+offset_top = 37.0
+offset_right = 141.0
+offset_bottom = 63.0
+theme_override_colors/font_color = Color(0.045, 0.13, 0.29, 1)
+theme_override_fonts/font = ExtResource("5_rovvv")
+theme_override_font_sizes/font_size = 17
+text = "적 공격 주기"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Icon" type="TextureRect" parent="Content/InfoCardLeft2" unique_id=907219262]
+layout_mode = 0
+offset_left = 43.0
+offset_top = 62.0
+offset_right = 106.0
+offset_bottom = 129.0
+mouse_filter = 2
+texture = ExtResource("16_enemy_turn")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Value" type="Label" parent="Content/InfoCardLeft2" unique_id=1609474926]
+layout_mode = 0
+offset_left = 8.0
+offset_top = 131.0
+offset_right = 141.0
+offset_bottom = 165.0
+theme_override_colors/font_color = Color(0.07, 0.3, 0.67, 1)
+theme_override_fonts/font = ExtResource("5_rovvv")
+theme_override_font_sizes/font_size = 23
+text = "3턴"
+horizontal_alignment = 1
+vertical_alignment = 1
+
 [node name="InfoCardLeft3" type="TextureRect" parent="Content" unique_id=701321650]
 layout_mode = 0
 offset_left = 441.0
-offset_top = 679.0
+offset_top = 662.0
 offset_right = 590.0
-offset_bottom = 857.0
+offset_bottom = 862.0
 mouse_filter = 2
 texture = ExtResource("11_info_card")
 expand_mode = 1
+
+[node name="Title" type="Label" parent="Content/InfoCardLeft3" unique_id=1924471421]
+layout_mode = 0
+offset_left = 8.0
+offset_top = 37.0
+offset_right = 141.0
+offset_bottom = 63.0
+theme_override_colors/font_color = Color(0.045, 0.13, 0.29, 1)
+theme_override_fonts/font = ExtResource("5_rovvv")
+theme_override_font_sizes/font_size = 17
+text = "스테이지 기믹"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Icon" type="TextureRect" parent="Content/InfoCardLeft3" unique_id=519024901]
+layout_mode = 0
+offset_left = 43.0
+offset_top = 62.0
+offset_right = 106.0
+offset_bottom = 129.0
+mouse_filter = 2
+texture = ExtResource("17_gimmick")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Value" type="Label" parent="Content/InfoCardLeft3" unique_id=1760508790]
+layout_mode = 0
+offset_left = 5.0
+offset_top = 131.0
+offset_right = 144.0
+offset_bottom = 165.0
+theme_override_colors/font_color = Color(0.07, 0.3, 0.67, 1)
+theme_override_fonts/font = ExtResource("5_rovvv")
+theme_override_font_sizes/font_size = 18
+text = "기본 전투"
+horizontal_alignment = 1
+vertical_alignment = 1
 
 [node name="RewardPanel" type="TextureRect" parent="Content" unique_id=1513884693]
 layout_mode = 0
@@ -265,6 +380,43 @@ offset_bottom = 952.0
 mouse_filter = 2
 texture = ExtResource("13_reward")
 expand_mode = 1
+
+[node name="Title" type="Label" parent="Content/RewardPanel" unique_id=1110224639]
+layout_mode = 0
+offset_left = 42.0
+offset_top = 23.0
+offset_right = 230.0
+offset_bottom = 57.0
+theme_override_colors/font_color = Color(0.35, 0.23, 0.18, 1)
+theme_override_fonts/font = ExtResource("5_rovvv")
+theme_override_font_sizes/font_size = 25
+text = "✦ 주요 보상 ✦"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Value" type="Label" parent="Content/RewardPanel" unique_id=1388894196]
+layout_mode = 0
+offset_left = 35.0
+offset_top = 57.0
+offset_right = 250.0
+offset_bottom = 88.0
+theme_override_colors/font_color = Color(0.045, 0.13, 0.29, 1)
+theme_override_fonts/font = ExtResource("5_rovvv")
+theme_override_font_sizes/font_size = 18
+text = "연못 보물상자"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Icon" type="TextureRect" parent="Content/RewardPanel" unique_id=364937203]
+layout_mode = 0
+offset_left = 314.0
+offset_top = -5.0
+offset_right = 470.0
+offset_bottom = 111.0
+mouse_filter = 2
+texture = ExtResource("18_reward_chest")
+expand_mode = 1
+stretch_mode = 5
 
 [node name="StartButton" type="Button" parent="Content" unique_id=851607383]
 layout_mode = 0
@@ -380,9 +532,9 @@ flip_h = true
 [node name="PageFrame" type="TextureRect" parent="." unique_id=72995375]
 layout_mode = 0
 offset_left = 250.0
-offset_top = 770.0
+offset_top = 738.0
 offset_right = 470.0
-offset_bottom = 838.0
+offset_bottom = 806.0
 mouse_filter = 2
 texture = ExtResource("12_page")
 expand_mode = 1
@@ -391,9 +543,9 @@ stretch_mode = 5
 [node name="PageLabel" type="Label" parent="." unique_id=1316009687]
 layout_mode = 0
 offset_left = 270.0
-offset_top = 782.0
+offset_top = 750.0
 offset_right = 450.0
-offset_bottom = 824.0
+offset_bottom = 792.0
 theme_override_colors/font_color = Color(1, 1, 1, 0.9)
 theme_override_fonts/font = ExtResource("5_rovvv")
 theme_override_font_sizes/font_size = 29

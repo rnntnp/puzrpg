@@ -1,0 +1,11 @@
+[gd_resource type="ShaderMaterial" load_steps=3 format=3]
+
+[ext_resource type="Shader" path="res://shaders/texture_alpha_mask.gdshader" id="1_mask_shader"]
+[ext_resource type="Texture2D" path="res://assets/ui/masks/level_preview_rounded_mask.png" id="2_mask_texture"]
+
+[resource]
+shader = ExtResource("1_mask_shader")
+shader_parameter/mask_texture = ExtResource("2_mask_texture")
+shader_parameter/alpha_cutoff = 0.001
+shader_parameter/visible_uv_offset = Vector2(0, 0)
+shader_parameter/visible_uv_scale = Vector2(1, 1)

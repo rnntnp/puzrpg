@@ -11,7 +11,7 @@
 [ext_resource type="Script" uid="uid://dt1r13l2o08vm" path="res://scripts/monster_action_controller.gd" id="8"]
 [ext_resource type="Script" uid="uid://cybyiygyn3sw4" path="res://scripts/ice_skill_controller.gd" id="9"]
 [ext_resource type="Texture2D" uid="uid://c3vhyr1ewy74w" path="res://assets/backgrounds/cave_battle_background_inpainted.png" id="10_background"]
-[ext_resource type="PackedScene" path="res://scenes/water_health_bar.tscn" id="11_health_bar"]
+[ext_resource type="PackedScene" uid="uid://idr4ll5kki3x" path="res://scenes/water_health_bar.tscn" id="11_health_bar"]
 
 [node name="Battle" type="Node2D" unique_id=1064943574]
 script = ExtResource("1")
@@ -79,7 +79,7 @@ text = "적 1 / 1"
 horizontal_alignment = 1
 
 [node name="LeftHealthBar" parent="UI" unique_id=1196444105 instance=ExtResource("11_health_bar")]
-anchors_preset = 0
+layout_mode = 0
 offset_left = 40.0
 offset_top = 108.0
 offset_right = 330.0
@@ -89,7 +89,7 @@ accent_color = Color(0.56, 0.94, 1, 1)
 heart_color = Color(1, 0.46, 0.63, 1)
 
 [node name="RightHealthBar" parent="UI" unique_id=1613456624 instance=ExtResource("11_health_bar")]
-anchors_preset = 0
+layout_mode = 0
 offset_left = 390.0
 offset_top = 108.0
 offset_right = 680.0
@@ -154,3 +154,9 @@ color = Color(0.2, 0.2901961, 0.43137255, 0)
 
 [node name="MergeGame" parent="." unique_id=252762906 instance=ExtResource("5")]
 position = Vector2(0, 390)
+
+[node name="NextPanel" parent="MergeGame" index="5" unique_id=1158388454]
+offset_top = 54.0
+offset_bottom = 112.0
+
+[editable path="MergeGame"]

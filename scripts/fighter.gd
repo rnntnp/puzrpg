@@ -8,10 +8,12 @@ signal defeated(fighter: Fighter)
 
 @export var character_data: CharacterDataClass
 @onready var character_sprite: Sprite2D = $Sprite2D
+@onready var ingestion_belly_glow: IngestionBellyGlow = $IngestionBellyGlow
 
 var current_health: int
 var base_scale: Vector2
 var _visual_tween: Tween
+var _visual_override: Texture2D
 
 var max_health: int:
 	get: return character_data.max_health
@@ -32,6 +34,7 @@ func _ready() -> void:
 
 func set_character_data(data: CharacterDataClass, refill_health := true) -> void:
 	character_data = data
+	_visual_override = null
 	_apply_character_visual()
 	if refill_health:
 		reset()
@@ -41,21 +44,56 @@ func _apply_character_visual() -> void:
 	if character_data == null:
 		return
 	color = character_data.display_color
-	character_sprite.texture = character_data.sprite
 	character_sprite.modulate = character_data.display_color * character_data.sprite_modulate
-	character_sprite.visible = character_sprite.texture != null
-	if character_sprite.texture != null:
-		var texture_size := character_sprite.texture.get_size()
-		if texture_size.x > 0.0 and texture_size.y > 0.0:
-			character_sprite.scale = Vector2(
-				character_data.sprite_size.x / texture_size.x,
-				character_data.sprite_size.y / texture_size.y
-			)
+	_apply_current_texture()
 	# Polygon2D는 스프라이트가 없는 데이터의 예비 표시로만 사용한다.
 	polygon = PackedVector2Array() if character_sprite.visible else PackedVector2Array([
 		Vector2(-55, -75), Vector2(20, -75), Vector2(55, -35),
 		Vector2(55, 70), Vector2(-55, 70)
 	])
+
+
+func set_visual_override(texture: Texture2D) -> void:
+	_visual_override = texture
+	_apply_current_texture()
+
+
+func clear_visual_override() -> void:
+	_visual_override = null
+	_apply_current_texture()
+
+
+func show_ingestion_glow(color: Color) -> void:
+	ingestion_belly_glow.position = character_data.ingestion_belly_glow_offset
+	ingestion_belly_glow.show_glow(color)
+
+
+func hide_ingestion_glow() -> void:
+	ingestion_belly_glow.hide_glow()
+
+
+func get_ingestion_mouth_global_position() -> Vector2:
+	return to_global(character_data.ingestion_mouth_offset)
+
+
+func get_spell_origin_global_position() -> Vector2:
+	var toward_center := 1.0 if global_position.x < 360.0 else -1.0
+	return global_position + Vector2(42.0 * toward_center, 5.0)
+
+
+func _apply_current_texture() -> void:
+	if character_data == null or character_sprite == null:
+		return
+	character_sprite.texture = _visual_override if _visual_override != null else character_data.sprite
+	character_sprite.visible = character_sprite.texture != null
+	if character_sprite.texture == null:
+		return
+	var texture_size := character_sprite.texture.get_size()
+	if texture_size.x > 0.0 and texture_size.y > 0.0:
+		character_sprite.scale = Vector2(
+			character_data.sprite_size.x / texture_size.x,
+			character_data.sprite_size.y / texture_size.y
+		)
 
 
 func reset() -> void:
@@ -131,8 +169,7 @@ func play_cast_animation() -> void:
 	_visual_tween.tween_interval(0.16)
 	_visual_tween.tween_property(character_sprite, "scale", resting_scale, 0.1)
 	_visual_tween.tween_callback(func():
-		if character_data != null:
-			character_sprite.texture = character_data.sprite
+		_apply_current_texture()
 	)
 
 
@@ -141,13 +178,7 @@ func _stop_visual_tween() -> void:
 		_visual_tween.kill()
 	modulate = Color.WHITE
 	if character_data != null and character_sprite != null:
-		character_sprite.texture = character_data.sprite
-		var texture_size := character_sprite.texture.get_size() if character_sprite.texture != null else Vector2.ONE
-		if texture_size.x > 0.0 and texture_size.y > 0.0:
-			character_sprite.scale = Vector2(
-				character_data.sprite_size.x / texture_size.x,
-				character_data.sprite_size.y / texture_size.y
-			)
+		_apply_current_texture()
 
 func play_defeat_animation() -> void:
 	var defeated_scale := Vector2(base_scale.x * 1.15, 0.05)

@@ -188,6 +188,32 @@ func consume_ball(ball: MergeBall) -> void:
 	ball.queue_free()
 
 
+func animate_ball_consumption(ball: MergeBall, target_global_position: Vector2, duration := 0.55) -> bool:
+	if not is_instance_valid(ball) or ball.merge_locked:
+		return false
+	ball.set_ingestion_marked(false)
+	ball.lock_for_merge()
+	ball.z_index = 200
+	var start_position := ball.global_position
+	var control_position := (start_position + target_global_position) * 0.5 + Vector2(0.0, -90.0)
+	var start_scale := ball.scale
+	var tween := create_tween()
+	tween.set_parallel(true)
+	tween.tween_method(func(weight: float) -> void:
+		if is_instance_valid(ball):
+			var first_leg := start_position.lerp(control_position, weight)
+			var second_leg := control_position.lerp(target_global_position, weight)
+			ball.global_position = first_leg.lerp(second_leg, weight)
+	, 0.0, 1.0, duration).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN_OUT)
+	tween.tween_property(ball, "scale", start_scale * 0.12, duration).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_IN)
+	tween.tween_property(ball, "rotation", ball.rotation + TAU * 0.8, duration)
+	await tween.finished
+	if not is_instance_valid(ball):
+		return false
+	ball.queue_free()
+	return true
+
+
 func insert_ball_after_current(level: int) -> void:
 	var previous_next := next_level
 	next_level = clampi(level, 0, max_level_index)
@@ -387,9 +413,9 @@ func _refresh_preview() -> void:
 	preview_ball.lock_for_merge()
 	next_preview_ball = BallScene.instantiate()
 	next_preview_holder.add_child(next_preview_ball)
-	next_preview_ball.scale = Vector2(0.55, 0.55)
 	next_preview_ball.setup(next_level, physics_speed_multiplier)
 	next_preview_ball.lock_for_merge()
+	next_panel.apply_preview_layout(next_preview_ball)
 
 func _on_merge_requested(first, second) -> void:
 	if first.merge_locked or second.merge_locked or first.merge_level >= max_level_index:

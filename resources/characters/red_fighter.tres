@@ -8,4 +8,6 @@ script = ExtResource("1_data")
 display_name = "RED"
 display_color = Color(1, 1, 1, 1)
 sprite = ExtResource("2_sprite")
+max_health = 200
+attack_power = 12
 sprite_size = Vector2(190, 190)

@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="CharacterData" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/character_data.gd" id="1"]
+[ext_resource type="Resource" path="res://resources/skills/enhanced_ice.tres" id="2"]
+[ext_resource type="Texture2D" path="res://assets/characters/generated/ice_yeti_boss_enhanced_gemini_transparent.png" id="3_sprite"]
+
+[resource]
+script = ExtResource("1")
+display_name = "설산 강화 몬스터"
+health_bar_color = Color(0.45, 0.65, 1, 1)
+sprite = ExtResource("3_sprite")
+sprite_size = Vector2(210, 210)
+max_health = 400
+attack_power = 10
+enemy_attack_drop_interval = 4
+ice_skill = ExtResource("2")

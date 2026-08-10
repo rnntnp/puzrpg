@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="IceSkillData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/ice_skill_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+freeze_count = 2
+target_min_level = 1
+target_max_level = 4
+max_frozen_balls = 2
+ice_durability = 2
+target_highlight_duration = 0.25
+freeze_effect_duration = 0.3

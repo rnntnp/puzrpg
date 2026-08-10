@@ -155,7 +155,7 @@ func _update_preview_mask_mapping() -> void:
 func _get_level_boss_sprite(level: Resource) -> Texture2D:
 	if level == null or level.enemies.is_empty():
 		return null
-	var boss = level.enemies.back()
+	var boss = level.enemies.front()
 	return boss.sprite if boss != null else null
 
 

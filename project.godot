@@ -35,8 +35,8 @@ movie_writer/movie_file="C:/Users/jaynap/Desktop/vids/001.avi"
 
 [gui]
 
-theme/custom="res://resources/themes/level_select_theme.tres"
 theme/default_font_multichannel_signed_distance_field=true
+theme/custom="res://resources/themes/level_select_theme.tres"
 
 [physics]
 

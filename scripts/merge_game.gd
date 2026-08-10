@@ -348,7 +348,6 @@ func _on_merge_requested(first, second) -> void:
 	first.queue_free()
 	second.queue_free()
 	var merged_ball_data: Resource = BallCatalogClass.get_ball(level)
-	_spawn_merge_burst(at, merged_ball_data.sprite_modulate)
 	var earned_points: int = merged_ball_data.merge_score
 	score += earned_points
 	score_label.text = "점수 %d" % score
@@ -358,6 +357,7 @@ func _on_merge_requested(first, second) -> void:
 		combo_points += earned_points
 		last_merge_msec = Time.get_ticks_msec()
 		attack_combo_count = combo_count
+	_spawn_merge_burst(at, merged_ball_data, attack_combo_count)
 	var merge_damage := _calculate_merge_damage(earned_points, attack_combo_count)
 	if attack_combo_count >= 2:
 		_show_combo_effect(attack_combo_count, merge_damage)
@@ -370,10 +370,10 @@ func _on_merge_requested(first, second) -> void:
 	drop_grace_remaining = maxf(drop_grace_remaining, 0.5)
 
 
-func _spawn_merge_burst(at: Vector2, color: Color) -> void:
+func _spawn_merge_burst(at: Vector2, data: Resource, merge_combo_count: int) -> void:
 	var burst = MergeBurstEffectScene.instantiate()
 	add_child(burst)
-	burst.play(at, color)
+	burst.play(at, data.glow_color, data.get_radius(), merge_combo_count, data.level)
 
 
 func _spawn_merged_ball(at: Vector2, level: int, carries_ingestion_target: bool = false) -> void:

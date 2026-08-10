@@ -1,6 +1,12 @@
-[gd_scene load_steps=7 format=3]
+[gd_scene load_steps=11 format=3]
 
 [ext_resource type="Script" path="res://scripts/level_select.gd" id="1_level"]
+[ext_resource type="Shader" path="res://shaders/boss_silhouette.gdshader" id="2_silhouette"]
+[ext_resource type="Theme" path="res://resources/themes/level_select_theme.tres" id="3_theme"]
+[ext_resource type="FontFile" path="res://assets/fonts/do_hyeon/DoHyeon-Regular.ttf" id="4_heading"]
+
+[sub_resource type="ShaderMaterial" id="SilhouetteMaterial"]
+shader = ExtResource("2_silhouette")
 
 [sub_resource type="StyleBoxFlat" id="ImagePanel"]
 bg_color = Color(0.18, 0.25, 0.34, 1)
@@ -69,6 +75,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+theme = ExtResource("3_theme")
 script = ExtResource("1_level")
 
 [node name="Background" type="ColorRect" parent="."]
@@ -97,6 +104,7 @@ offset_top = 30.0
 offset_right = 688.0
 offset_bottom = 90.0
 theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_fonts/font = ExtResource("4_heading")
 theme_override_font_sizes/font_size = 28
 text = "LEVEL SELECT"
 vertical_alignment = 1
@@ -119,6 +127,7 @@ theme_override_colors/font_color = Color(1, 1, 1, 1)
 theme_override_colors/font_shadow_color = Color(0.08, 0.06, 0.04, 0.8)
 theme_override_constants/shadow_offset_x = 4
 theme_override_constants/shadow_offset_y = 5
+theme_override_fonts/font = ExtResource("4_heading")
 theme_override_font_sizes/font_size = 48
 text = "1. 훈련장"
 horizontal_alignment = 1
@@ -140,10 +149,30 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_colors/font_color = Color(0.72, 0.8, 0.89, 1)
-theme_override_font_sizes/font_size = 32
+z_index = 2
+offset_top = 380.0
+theme_override_colors/font_color = Color(0.72, 0.8, 0.89, 0.72)
+theme_override_font_sizes/font_size = 20
 text = "LEVEL IMAGE\nPLACEHOLDER"
 horizontal_alignment = 1
 vertical_alignment = 1
+
+[node name="BossSilhouette" type="TextureRect" parent="Content/LevelImage"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 54.0
+offset_top = 36.0
+offset_right = -54.0
+offset_bottom = -52.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+material = SubResource("SilhouetteMaterial")
+expand_mode = 1
+stretch_mode = 5
+texture_filter = 2
 
 [node name="LockOverlay" type="ColorRect" parent="Content/LevelImage"]
 visible = false
@@ -178,6 +207,7 @@ offset_bottom = 1015.0
 theme_override_colors/font_color = Color(0.08, 0.07, 0.05, 1)
 theme_override_colors/font_hover_color = Color(0.08, 0.07, 0.05, 1)
 theme_override_colors/font_pressed_color = Color(0.08, 0.07, 0.05, 1)
+theme_override_fonts/font = ExtResource("4_heading")
 theme_override_font_sizes/font_size = 40
 theme_override_styles/normal = SubResource("ButtonNormal")
 theme_override_styles/hover = SubResource("ButtonHover")
@@ -239,6 +269,7 @@ offset_top = 870.0
 offset_right = 450.0
 offset_bottom = 908.0
 theme_override_colors/font_color = Color(1, 1, 1, 0.9)
+theme_override_fonts/font = ExtResource("4_heading")
 theme_override_font_sizes/font_size = 20
 text = "1 / 3"
 horizontal_alignment = 1

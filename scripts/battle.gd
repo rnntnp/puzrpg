@@ -111,7 +111,7 @@ func _on_ball_dropped() -> void:
 
 func _on_merge_attack_requested(
 	damage: int,
-	_combo_count: int,
+	combo_count: int,
 	_base_points: int,
 	origin: Vector2,
 	ball_level: int
@@ -125,7 +125,7 @@ func _on_merge_attack_requested(
 	add_child(effect)
 	left_fighter.play_cast_animation()
 	effect.hit.connect(_on_merge_projectile_hit)
-	effect.play(origin, right_fighter.global_position, BallCatalogClass.get_ball(ball_level), damage)
+	effect.play(origin, right_fighter.global_position, BallCatalogClass.get_ball(ball_level), damage, combo_count)
 
 
 func _on_merge_projectile_hit(damage: int) -> void:

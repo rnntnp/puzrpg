@@ -6,6 +6,7 @@ signal first_contact(ball: MergeBall)
 
 const BallCatalogClass = preload("res://scripts/ball_catalog.gd")
 @onready var sprite: Sprite2D = $Sprite2D
+@onready var glow_aura = $GlowAura
 @onready var collision_shape: CollisionShape2D = $CollisionShape2D
 @onready var ice_durability_label: Label = $IceDurabilityLabel
 var merge_level := 0
@@ -34,6 +35,7 @@ func setup(level: int, physics_speed: float = 1.0) -> void:
 	var texture_size := sprite.texture.get_size() if sprite.texture != null else Vector2.ONE
 	var diameter: float = ball_data.get_radius() * 2.0
 	sprite.scale = Vector2(diameter / texture_size.x, diameter / texture_size.y)
+	glow_aura.setup(ball_data.get_radius(), ball_data.glow_color, ball_data.glow_strength)
 	mass = maxf(1.0, ball_data.get_radius() / 20.0)
 	# 자유 낙하 시간은 중력의 제곱근에 반비례하므로 배속의 제곱을 적용한다.
 	gravity_scale = physics_speed * physics_speed

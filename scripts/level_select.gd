@@ -8,6 +8,7 @@ const SWIPE_THRESHOLD := 65.0
 @onready var content: Control = $Content
 @onready var level_name_label: Label = $Content/LevelName
 @onready var placeholder_label: Label = $Content/LevelImage/PlaceholderText
+@onready var boss_silhouette: TextureRect = $Content/LevelImage/BossSilhouette
 @onready var lock_overlay: ColorRect = $Content/LevelImage/LockOverlay
 @onready var lock_label: Label = $Content/LevelImage/LockOverlay/LockLabel
 @onready var start_button: Button = $Content/StartButton
@@ -89,6 +90,8 @@ func _show_level(index: int, direction := 0) -> void:
 	viewed_level_index = index
 	var unlocked := GameSession.is_level_unlocked(index)
 	level_name_label.text = level.level_name
+	boss_silhouette.texture = _get_level_boss_sprite(level)
+	boss_silhouette.visible = boss_silhouette.texture != null
 	placeholder_label.text = level.image_placeholder if unlocked else "LOCKED LEVEL\n미리보기"
 	lock_overlay.visible = not unlocked
 	lock_label.text = "🔒\n이전 스테이지를 클리어하세요"
@@ -100,6 +103,13 @@ func _show_level(index: int, direction := 0) -> void:
 	combo_test_button.disabled = not unlocked
 	if direction != 0:
 		_play_page_transition(direction)
+
+
+func _get_level_boss_sprite(level: Resource) -> Texture2D:
+	if level == null or level.enemies.is_empty():
+		return null
+	var boss = level.enemies.back()
+	return boss.sprite if boss != null else null
 
 
 func _play_page_transition(direction: int) -> void:

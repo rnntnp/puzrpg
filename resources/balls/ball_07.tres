@@ -11,5 +11,7 @@ script = ExtResource("1")
 level = 7
 sprite = ExtResource("2")
 show_placeholder_outline = false
+glow_color = Color(0.08, 1, 0.86, 1)
+glow_strength = 0.52
 collision_shape = SubResource("Circle")
 merge_score = 60

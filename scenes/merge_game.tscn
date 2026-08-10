@@ -5,7 +5,7 @@
 [ext_resource type="Script" uid="uid://bophiem3isusd" path="res://scripts/merge_hit_stop.gd" id="3"]
 [ext_resource type="Script" uid="uid://bmry4fgrxlopp" path="res://scripts/combo_test_scenario.gd" id="4"]
 [ext_resource type="Resource" uid="uid://c3ik0sjmjhs7a" path="res://resources/merge_physics_data.tres" id="5_physics"]
-[ext_resource type="Texture2D" path="res://assets/backgrounds/drop_board_frame_reference_inpainted_no_bottom_gem.png" id="6_board"]
+[ext_resource type="Texture2D" uid="uid://bax07dfmvtufr" path="res://assets/backgrounds/drop_board_frame_reference_inpainted_no_bottom_gem.png" id="6_board"]
 
 [sub_resource type="RectangleShape2D" id="wall"]
 size = Vector2(12, 850)
@@ -25,10 +25,10 @@ script = ExtResource("4")
 
 [node name="BoardArtwork" type="TextureRect" parent="." unique_id=702315937]
 z_index = -10
-offset_left = 29.0
-offset_top = 92.0
-offset_right = 685.4
-offset_bottom = 937.0
+offset_left = 17.0
+offset_top = 32.0
+offset_right = 723.0
+offset_bottom = 940.8513
 mouse_filter = 2
 texture = ExtResource("6_board")
 expand_mode = 3

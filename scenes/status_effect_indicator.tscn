@@ -40,6 +40,7 @@ offset_bottom = 39.0
 mouse_filter = 2
 expand_mode = 1
 stretch_mode = 5
+texture_filter = 2
 
 [node name="TurnLabel" type="Label" parent="."]
 layout_mode = 0

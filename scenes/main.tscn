@@ -4,7 +4,7 @@
 [ext_resource type="PackedScene" path="res://scenes/fighter.tscn" id="2"]
 [ext_resource type="Resource" uid="uid://dd8t0hxokj424" path="res://resources/characters/blue_fighter.tres" id="3"]
 [ext_resource type="Resource" uid="uid://bwjblomuukh5q" path="res://resources/characters/red_fighter.tres" id="4"]
-[ext_resource type="PackedScene" path="res://scenes/merge_game.tscn" id="5"]
+[ext_resource type="PackedScene" uid="uid://csdbilaagryk1" path="res://scenes/merge_game.tscn" id="5"]
 [ext_resource type="PackedScene" path="res://scenes/status_effect_bar.tscn" id="6"]
 [ext_resource type="PackedScene" path="res://scenes/ball_evolution_strip.tscn" id="7"]
 [ext_resource type="Script" uid="uid://dt1r13l2o08vm" path="res://scripts/monster_action_controller.gd" id="8"]
@@ -176,13 +176,13 @@ text = "포식 내구도 7 / 7"
 horizontal_alignment = 2
 
 [node name="LeftFighter" parent="UI" unique_id=849620028 instance=ExtResource("2")]
-position = Vector2(195, 255)
-scale = Vector2(0.75, 0.75)
+position = Vector2(210, 300)
+scale = Vector2(1.5, 1.5)
 character_data = ExtResource("3")
 
 [node name="RightFighter" parent="UI" unique_id=805224498 instance=ExtResource("2")]
-position = Vector2(525, 255)
-scale = Vector2(0.75, 0.75)
+position = Vector2(498, 300)
+scale = Vector2(1.5, 1.5)
 character_data = ExtResource("4")
 
 [node name="Versus" type="Label" parent="UI" unique_id=875060772]

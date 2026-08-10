@@ -1,11 +1,10 @@
-[gd_resource type="Resource" script_class="StatusEffectData" load_steps=3 format=3]
+[gd_resource type="Resource" script_class="StatusEffectData" format=3 uid="uid://bgxwtisx7qiie"]
 
-[ext_resource type="Script" path="res://scripts/status_effect_data.gd" id="1"]
-[ext_resource type="Texture2D" path="res://assets/effects/attack_placeholder.svg" id="2"]
+[ext_resource type="Script" uid="uid://c1lhsgnevvhpo" path="res://scripts/status_effect_data.gd" id="1"]
+[ext_resource type="Texture2D" uid="uid://diw8e6ahibw5w" path="res://assets/effects/generated/status_attack.png" id="2"]
 
 [resource]
 script = ExtResource("1")
 effect_id = &"enemy_attack"
 display_name = "다음 공격까지 남은 턴"
 icon = ExtResource("2")
-icon_modulate = Color(1, 0.42, 0.48, 1)

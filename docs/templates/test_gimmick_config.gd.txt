@@ -1,0 +1,5 @@
+class_name ExampleGimmickConfig
+extends Resource
+
+@export_range(1, 20, 1) var example_turns := 3
+@export_range(0.0, 5.0, 0.05) var example_multiplier := 1.5

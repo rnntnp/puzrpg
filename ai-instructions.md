@@ -35,3 +35,17 @@
 - 새 기능은 기존 구조와 일관된 이름과 경로를 사용한다.
 - 수정 후에는 Godot에서 프로젝트를 실행해 파서 오류와 런타임 오류가 없는지 확인한다.
 - 구조를 변경할 때 기존 동작이 유지되는지도 함께 검증한다.
+
+## 테스트 기믹 추가 규칙
+
+- 신규 테스트 기믹은 `scripts/gimmicks/handlers/`의 독립 핸들러로 작성한다.
+- 핸들러는 `TestGimmickHandler`를 상속하고 필요한 수명주기 메서드만 구현한다.
+- 신규 기믹을 `LegacyTestGimmickHandler`에 추가하지 않는다.
+- 기믹별 조절값은 `scripts/gimmicks/configs/`의 전용 Resource에 정의하고 `TestGimmickData.tuning`에 연결한다.
+- 기믹 전용 시각화는 `scripts/gimmicks/visuals/`의 독립 Node로 작성하고 `attach_visual_layer()`를 사용한다.
+- 신규 기믹 시각화를 공용 `gimmick_overlay.gd`의 종류별 분기로 추가하지 않는다.
+- 복수 몬스터 HP는 `TestGimmickData.enemy_healths`를 사용한다.
+- 몬스터 사이에 보드 기믹을 유지해야 하면 `preserve_board_between_enemies`를 사용한다.
+- `Battle`이나 `MonsterActionController`에 특정 기믹 Kind 분기를 추가하지 않는다.
+- 테스트 레벨은 `resources/catalogs/main_level_catalog.tres`에 등록한다.
+- 자세한 구조와 추가 절차는 `docs/test_gimmick_architecture.md`를 따른다.

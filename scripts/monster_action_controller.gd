@@ -14,7 +14,7 @@ const IceEffect: StatusEffectData = preload("res://resources/effects/ice_countdo
 const IceSkillDataClass = preload("res://scripts/ice_skill_data.gd")
 const IceSkillControllerClass = preload("res://scripts/ice_skill_controller.gd")
 
-var battle
+var battle: Battle
 var enemy: Fighter
 var player: Fighter
 var merge_game: MergeGame
@@ -23,6 +23,8 @@ var durability_label: Label
 var skill: IngestionSkillData
 var ice_skill: IceSkillDataClass
 var ice_controller: IceSkillControllerClass
+var test_gimmick_controller: TestGimmickController
+var using_test_gimmick := false
 
 var state := State.NORMAL_ATTACK
 var remaining_turns := 0
@@ -34,7 +36,7 @@ var _state_version := 0
 
 
 func configure(
-	battle_node,
+	battle_node: Battle,
 	enemy_fighter: Fighter,
 	player_fighter: Fighter,
 	game: MergeGame,
@@ -50,6 +52,7 @@ func configure(
 	skill = enemy.character_data.ingestion_skill as IngestionSkillData
 	ice_skill = enemy.character_data.ice_skill as IceSkillDataClass
 	ice_controller = get_node("IceSkillController") as IceSkillControllerClass
+	test_gimmick_controller = get_node("TestGimmickController") as TestGimmickController
 	ice_controller.configure(merge_game, ice_skill, enemy)
 	enemy.clear_visual_override()
 	enemy.hide_ingestion_glow()
@@ -59,6 +62,10 @@ func configure(
 	vulnerable_turns = 0
 	status_effects.clear_effects()
 	durability_label.visible = false
+	using_test_gimmick = battle.level_data != null and battle.level_data.test_gimmick != null
+	if using_test_gimmick:
+		test_gimmick_controller.configure(battle, enemy, player, merge_game, battle.level_data.test_gimmick)
+		return
 	_enter_normal_attack()
 	if not merge_game.ingestion_target_replaced.is_connected(_on_target_replaced):
 		merge_game.ingestion_target_replaced.connect(_on_target_replaced)
@@ -66,6 +73,9 @@ func configure(
 
 func on_ball_dropped() -> void:
 	if enemy == null or not enemy.is_alive() or not player.is_alive():
+		return
+	if using_test_gimmick:
+		test_gimmick_controller.on_turn_completed()
 		return
 	remaining_turns = maxi(0, remaining_turns - 1)
 	_update_ui()
@@ -90,9 +100,11 @@ func on_ball_dropped() -> void:
 	_schedule_vulnerability_tick()
 
 
-func route_player_damage(damage: int) -> int:
+func route_player_damage(damage: int, merge_result_level_index := -1, combo_count := 1, merge_origin := Vector2.ZERO) -> int:
 	if damage <= 0:
 		return 0
+	if using_test_gimmick:
+		return test_gimmick_controller.modify_player_damage(damage, merge_result_level_index, combo_count, merge_origin)
 	var hp_damage := damage
 	if state == State.INGESTION_RESPONSE and current_durability > 0:
 		var absorbed := mini(current_durability, hp_damage)
@@ -108,6 +120,12 @@ func route_player_damage(damage: int) -> int:
 
 
 func on_enemy_defeated() -> void:
+	if using_test_gimmick:
+		var has_next_enemy: bool = battle.current_enemy_index + 1 < battle.level_data.enemies.size()
+		if not has_next_enemy or not test_gimmick_controller.should_preserve_between_enemies():
+			test_gimmick_controller.cleanup()
+		using_test_gimmick = false
+		return
 	enemy.clear_visual_override()
 	enemy.hide_ingestion_glow()
 	if swallowed_ball_level >= 0:

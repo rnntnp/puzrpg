@@ -1,0 +1,39 @@
+[gd_resource type="Resource" script_class="LevelData" load_steps=9 format=3]
+
+[ext_resource type="Script" path="res://scripts/level_data.gd" id="1"]
+[ext_resource type="Resource" path="res://resources/characters/blue_fighter.tres" id="2"]
+[ext_resource type="Resource" path="res://resources/characters/red_fighter.tres" id="3"]
+[ext_resource type="Script" path="res://scripts/character_data.gd" id="4"]
+[ext_resource type="Script" path="res://scripts/test_gimmick_data.gd" id="5"]
+[ext_resource type="Texture2D" path="res://assets/backgrounds/stage_01_moonlit_pond.png" id="6"]
+[ext_resource type="Texture2D" path="res://assets/level_previews/level_01_preview.png" id="7"]
+[ext_resource type="Texture2D" path="res://assets/effects/generated/status_attack.png" id="8"]
+
+[sub_resource type="Resource" id="Gimmick"]
+script = ExtResource("5")
+kind = 21
+display_name = "수면 상승 / 범람"
+monster_health = 300
+action_interval = 5
+normal_attack_interval = 3
+duration_turns = 4
+animation_duration = 0.75
+initial_flood_ratio = 0.35
+maximum_flood_ratio = 0.5
+buoyancy_ratio = 0.8
+submerged_linear_damp = 5.0
+
+[resource]
+script = ExtResource("1")
+level_name = "기믹 21 · 수면 상승"
+battle_background = ExtResource("6")
+level_select_preview = ExtResource("7")
+stage_gimmick_icon = ExtResource("8")
+stage_gimmick_name = "수면 상승 / 범람"
+reward_name = "3차 기믹 플레이테스트"
+player_character = ExtResource("2")
+enemies = Array[ExtResource("4")]([ExtResource("3")])
+is_gimmick_test_level = true
+test_gimmick = SubResource("Gimmick")
+ball_drop_time_limit = -1.0
+

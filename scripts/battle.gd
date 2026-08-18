@@ -18,6 +18,8 @@ const WaterHealthBarClass = preload("res://scripts/water_health_bar.gd")
 @onready var left_status_effects: StatusEffectBar = $UI/LeftStatusEffects
 @onready var right_status_effects: StatusEffectBar = $UI/RightStatusEffects
 @onready var skill_durability_label: Label = $UI/SkillDurabilityLabel
+@onready var gimmick_action_label: Label = $UI/GimmickActionLabel
+@onready var gimmick_detail_label: Label = $UI/GimmickDetailLabel
 @onready var background_artwork: TextureRect = $BackgroundArtwork
 @onready var monster_action_controller = $MonsterActionController
 @onready var merge_game = $MergeGame
@@ -40,7 +42,7 @@ func _ready() -> void:
 	right_fighter.defeated.connect(_on_fighter_defeated)
 	merge_game.game_over.connect(_on_merge_game_over)
 	merge_game.merge_attack_requested.connect(_on_merge_attack_requested)
-	merge_game.ball_dropped.connect(_on_ball_dropped)
+	merge_game.turn_completed.connect(_on_ball_dropped)
 	_load_level()
 	_start_battle()
 
@@ -72,6 +74,11 @@ func _load_level() -> void:
 
 func _load_enemy(index: int) -> void:
 	var enemy_data = level_data.enemies[index]
+	if level_data.test_gimmick != null:
+		enemy_data = enemy_data.duplicate(true)
+		enemy_data.max_health = level_data.test_gimmick.get_enemy_health(current_enemy_index)
+		enemy_data.attack_power = level_data.test_gimmick.normal_attack_damage
+		enemy_data.enemy_attack_drop_interval = level_data.test_gimmick.action_interval
 	right_fighter.set_character_data(enemy_data)
 	right_bar.fill_color = enemy_data.health_bar_color
 	right_bar.queue_redraw()
@@ -81,6 +88,25 @@ func _load_enemy(index: int) -> void:
 		self, right_fighter, left_fighter, merge_game,
 		right_status_effects, skill_durability_label
 	)
+
+
+func update_gimmick_ui(primary: String, detail: String) -> void:
+	gimmick_action_label.visible = not primary.is_empty()
+	gimmick_detail_label.visible = not detail.is_empty()
+	gimmick_action_label.text = primary
+	gimmick_detail_label.text = detail
+
+
+func fail_gimmick_level(reason: String) -> void:
+	if level_finished or not battle_running:
+		return
+	battle_running = false
+	merge_game.set_input_enabled(false)
+	status_label.text = reason
+	status_label.modulate = Color("#ff6b6b")
+	GameSession.set_battle_result(false, "%s · %s" % [level_data.level_name, reason])
+	await get_tree().create_timer(0.8).timeout
+	get_tree().change_scene_to_file("res://scenes/battle_result.tscn")
 
 
 func _start_battle() -> void:
@@ -117,14 +143,14 @@ func _on_merge_attack_requested(
 	var effect = MergeAttackEffectScene.instantiate()
 	add_child(effect)
 	left_fighter.play_cast_animation()
-	effect.hit.connect(_on_merge_projectile_hit)
+	effect.hit.connect(_on_merge_projectile_hit.bind(ball_level, combo_count, origin))
 	effect.play(origin, right_fighter.global_position, BallCatalogClass.get_ball(ball_level), damage, combo_count)
 
 
-func _on_merge_projectile_hit(damage: int) -> void:
+func _on_merge_projectile_hit(damage: int, ball_level: int, combo_count: int, merge_origin: Vector2) -> void:
 	if not battle_running or not right_fighter.is_alive():
 		return
-	damage = monster_action_controller.route_player_damage(damage)
+	damage = monster_action_controller.route_player_damage(damage, ball_level, combo_count, merge_origin)
 	if damage <= 0:
 		return
 	print("[MERGE ATTACK] damage=%d" % damage)

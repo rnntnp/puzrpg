@@ -1,0 +1,31 @@
+class_name ExampleGimmickHandler
+extends TestGimmickHandler
+
+var tuning: ExampleGimmickConfig
+var remaining_turns := 0
+
+
+func _on_configured() -> void:
+	tuning = data.tuning as ExampleGimmickConfig
+	if tuning == null:
+		tuning = ExampleGimmickConfig.new()
+	remaining_turns = data.action_interval
+	_update_ui()
+
+
+func on_turn_completed() -> void:
+	if not active or busy or not enemy.is_alive() or not player.is_alive():
+		return
+	remaining_turns = maxi(0, remaining_turns - 1)
+	if remaining_turns <= 0:
+		debug_special_execution_count += 1
+		remaining_turns = data.action_interval
+	_update_ui()
+
+
+func _update_ui() -> void:
+	battle.update_gimmick_ui("EXAMPLE · %d턴" % remaining_turns, "전용 설정값을 여기에 표시")
+
+
+func _on_cleanup() -> void:
+	pass

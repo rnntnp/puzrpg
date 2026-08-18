@@ -2,6 +2,7 @@ class_name LevelData
 extends Resource
 
 const CharacterDataClass = preload("res://scripts/character_data.gd")
+const TestGimmickDataClass = preload("res://scripts/test_gimmick_data.gd")
 
 @export_category("레벨 정보")
 @export var level_name: String = "Level"
@@ -18,6 +19,10 @@ const CharacterDataClass = preload("res://scripts/character_data.gd")
 @export_category("전투 구성")
 @export var player_character: CharacterDataClass
 @export var enemies: Array[CharacterDataClass] = []
+
+@export_category("기믹 테스트")
+@export var is_gimmick_test_level := false
+@export var test_gimmick: TestGimmickDataClass
 
 @export_category("드롭 앤 머지 설정")
 ## 음수로 설정하면 자동 낙하와 시간제한을 사용하지 않는다.

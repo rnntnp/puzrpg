@@ -1,0 +1,51 @@
+[gd_resource type="Resource" script_class="LevelData" load_steps=15 format=3]
+
+[ext_resource type="Script" path="res://scripts/level_data.gd" id="1_level"]
+[ext_resource type="Resource" path="res://resources/characters/blue_fighter.tres" id="2_player"]
+[ext_resource type="Resource" path="res://resources/characters/stance_weakness_enemy.tres" id="3_weakness"]
+[ext_resource type="Script" path="res://scripts/character_data.gd" id="4_character"]
+[ext_resource type="Script" path="res://scripts/test_gimmick_data.gd" id="5_gimmick"]
+[ext_resource type="Texture2D" path="res://assets/backgrounds/stage_01_moonlit_pond.png" id="6_background"]
+[ext_resource type="Texture2D" path="res://assets/level_previews/level_01_preview.png" id="7_preview"]
+[ext_resource type="Texture2D" path="res://assets/effects/generated/status_attack.png" id="8_icon"]
+[ext_resource type="Resource" path="res://resources/characters/stance_attack_enemy.tres" id="9_attack"]
+[ext_resource type="Resource" path="res://resources/characters/stance_combat_boss.tres" id="10_boss"]
+[ext_resource type="Script" path="res://scripts/gimmicks/handlers/enemy_stance_handler.gd" id="11_handler"]
+[ext_resource type="Script" path="res://scripts/gimmicks/configs/enemy_stance_config.gd" id="12_config"]
+
+[sub_resource type="Resource" id="StanceConfig"]
+script = ExtResource("12_config")
+enemy_modes = Array[int]([0, 1, 2])
+weak_multiplier = 1.5
+stage_loss = 1
+
+[sub_resource type="Resource" id="Gimmick"]
+script = ExtResource("5_gimmick")
+kind = 32
+display_name = "적 자세 / 행동 유도"
+monster_health = 280
+normal_attack_damage = 5
+action_interval = 3
+normal_attack_interval = 3
+enemy_healths = Array[int]([220, 240, 280])
+preserve_board_between_enemies = true
+handler_script = ExtResource("11_handler")
+tuning = SubResource("StanceConfig")
+
+[resource]
+script = ExtResource("1_level")
+level_name = "기믹 32 · 적 자세 / 행동 유도"
+image_placeholder = "ENEMY STANCE / ACTION INDUCTION"
+battle_background = ExtResource("6_background")
+level_select_preview = ExtResource("7_preview")
+recommended_ball_level = 5
+stage_gimmick_icon = ExtResource("8_icon")
+stage_gimmick_name = "STANCE / WEAK / ATTACK"
+reward_name = "적 자세 행동 유도 테스트"
+player_character = ExtResource("2_player")
+enemies = Array[ExtResource("4_character")]([ExtResource("3_weakness"), ExtResource("9_attack"), ExtResource("10_boss")])
+is_gimmick_test_level = true
+test_gimmick = SubResource("Gimmick")
+ball_drop_time_limit = -1.0
+merge_hit_stop_time_scale = 0.18
+merge_hit_stop_duration = 0.2

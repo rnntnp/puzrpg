@@ -1,0 +1,42 @@
+[gd_resource type="Resource" script_class="LevelData" load_steps=9 format=3]
+
+[ext_resource type="Script" path="res://scripts/level_data.gd" id="1_level"]
+[ext_resource type="Resource" path="res://resources/characters/blue_fighter.tres" id="2_player"]
+[ext_resource type="Resource" path="res://resources/characters/red_fighter.tres" id="3_enemy"]
+[ext_resource type="Script" path="res://scripts/character_data.gd" id="4_character"]
+[ext_resource type="Script" path="res://scripts/test_gimmick_data.gd" id="5_gimmick"]
+[ext_resource type="Texture2D" path="res://assets/backgrounds/stage_01_moonlit_pond.png" id="6_background"]
+[ext_resource type="Texture2D" path="res://assets/level_previews/level_01_preview.png" id="7_preview"]
+[ext_resource type="Texture2D" path="res://assets/effects/generated/status_attack.png" id="8_icon"]
+
+[sub_resource type="Resource" id="Gimmick"]
+script = ExtResource("5_gimmick")
+kind = 2
+display_name = "공 중량화"
+monster_health = 260
+normal_attack_damage = 5
+action_interval = 4
+normal_attack_interval = 3
+minimum_ball_stage = 1
+maximum_ball_stage = 4
+maximum_targets = 2
+mass_multiplier = 4.0
+
+[resource]
+script = ExtResource("1_level")
+level_name = "기믹 02 · 공 중량화"
+image_placeholder = "GIMMICK TEST 02"
+battle_background = ExtResource("6_background")
+level_select_preview = ExtResource("7_preview")
+recommended_ball_level = 5
+stage_gimmick_icon = ExtResource("8_icon")
+stage_gimmick_name = "공 중량화"
+reward_name = "기믹 플레이테스트"
+player_character = ExtResource("2_player")
+enemies = Array[ExtResource("4_character")]([ExtResource("3_enemy")])
+is_gimmick_test_level = true
+test_gimmick = SubResource("Gimmick")
+ball_drop_time_limit = -1.0
+merge_hit_stop_time_scale = 0.18
+merge_hit_stop_duration = 0.2
+

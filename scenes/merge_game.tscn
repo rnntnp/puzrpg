@@ -8,12 +8,19 @@
 [ext_resource type="Texture2D" uid="uid://crn16upp52jrb" path="res://assets/ui/pond/drop_board_reference_translucent.png" id="6_board"]
 [ext_resource type="Script" uid="uid://8qiwn1gfogtj" path="res://scripts/danger_line.gd" id="7_danger_line"]
 [ext_resource type="PackedScene" path="res://scenes/next_preview_panel.tscn" id="8_next_panel"]
+[ext_resource type="Script" path="res://scripts/gimmick_overlay.gd" id="9_gimmick_overlay"]
 
 [sub_resource type="RectangleShape2D" id="wall"]
 size = Vector2(6, 869.5)
 
 [sub_resource type="RectangleShape2D" id="floor"]
 size = Vector2(596, 4)
+
+[sub_resource type="RectangleShape2D" id="trap_floor"]
+size = Vector2(176, 8)
+
+[sub_resource type="RectangleShape2D" id="trap_wall"]
+size = Vector2(6, 140)
 
 [node name="MergeGame" type="Node2D" unique_id=2061783318]
 script = ExtResource("1")
@@ -94,6 +101,12 @@ vertical_alignment = 1
 
 [node name="Balls" type="Node2D" parent="." unique_id=379940337]
 
+[node name="GimmickObjects" type="Node2D" parent="."]
+
+[node name="GimmickOverlay" type="Node2D" parent="."]
+z_index = 5
+script = ExtResource("9_gimmick_overlay")
+
 [node name="PreviewHolder" type="Node2D" parent="." unique_id=1256035902]
 
 [node name="MergeAutoplayBot" type="Node" parent="." unique_id=44205454]
@@ -119,3 +132,42 @@ position = Vector2(360, 848)
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Floor" unique_id=61497292]
 position = Vector2(30, 16)
 shape = SubResource("floor")
+
+[node name="TrapdoorFloor" type="Node2D" parent="."]
+visible = false
+
+[node name="Left" type="StaticBody2D" parent="TrapdoorFloor"]
+[node name="FloorShape" type="CollisionShape2D" parent="TrapdoorFloor/Left"]
+shape = SubResource("trap_floor")
+[node name="LeftWallShape" type="CollisionShape2D" parent="TrapdoorFloor/Left"]
+position = Vector2(-88, -70)
+shape = SubResource("trap_wall")
+disabled = true
+[node name="RightWallShape" type="CollisionShape2D" parent="TrapdoorFloor/Left"]
+position = Vector2(88, -70)
+shape = SubResource("trap_wall")
+disabled = true
+
+[node name="Center" type="StaticBody2D" parent="TrapdoorFloor"]
+[node name="FloorShape" type="CollisionShape2D" parent="TrapdoorFloor/Center"]
+shape = SubResource("trap_floor")
+[node name="LeftWallShape" type="CollisionShape2D" parent="TrapdoorFloor/Center"]
+position = Vector2(-88, -70)
+shape = SubResource("trap_wall")
+disabled = true
+[node name="RightWallShape" type="CollisionShape2D" parent="TrapdoorFloor/Center"]
+position = Vector2(88, -70)
+shape = SubResource("trap_wall")
+disabled = true
+
+[node name="Right" type="StaticBody2D" parent="TrapdoorFloor"]
+[node name="FloorShape" type="CollisionShape2D" parent="TrapdoorFloor/Right"]
+shape = SubResource("trap_floor")
+[node name="LeftWallShape" type="CollisionShape2D" parent="TrapdoorFloor/Right"]
+position = Vector2(-88, -70)
+shape = SubResource("trap_wall")
+disabled = true
+[node name="RightWallShape" type="CollisionShape2D" parent="TrapdoorFloor/Right"]
+position = Vector2(88, -70)
+shape = SubResource("trap_wall")
+disabled = true

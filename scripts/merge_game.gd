@@ -10,8 +10,11 @@ signal merge_attack_requested(
 	ball_level: int
 )
 signal ball_dropped
+signal turn_completed
 signal ingestion_target_replaced(ball: MergeBall)
 signal merge_completed(merged_ball: MergeBall)
+signal merge_registered(result_level: int, origin: Vector2, chain_index: int, source_ids: Array[int], involved_cursed: bool)
+signal player_ball_landed(level: int, drop_x: float)
 
 const BallScene = preload("res://scenes/merge_ball.tscn")
 const MergeBurstEffectScene = preload("res://scenes/merge_burst_effect.tscn")
@@ -19,6 +22,7 @@ const BallCatalogClass = preload("res://scripts/ball_catalog.gd")
 const MergePhysicsDataClass = preload("res://scripts/merge_physics_data.gd")
 const DangerLineClass = preload("res://scripts/danger_line.gd")
 const NextPreviewPanelClass = preload("res://scripts/next_preview_panel.gd")
+const GimmickObjectScene = preload("res://scenes/gimmick_object.tscn")
 const DROP_HEIGHT_RATIO := 0.1655
 const DANGER_LINE_HEIGHT_RATIO := 0.2720
 const DANGER_LINE_REVEAL_FILL_RATIO := 0.8
@@ -29,6 +33,7 @@ const COMBO_SETTLE_MSEC := 500
 const COMBO_MAX_WAIT_MSEC := 4000
 const MERGE_ATTACK_DELAY := 0.25
 const MERGE_PUSH_RADIUS := 260.0
+const TRAPDOOR_WALL_PATHS: Array[NodePath] = [^"LeftWallShape", ^"RightWallShape"]
 
 @onready var balls: Node2D = $Balls
 @onready var preview_holder: Node2D = $PreviewHolder
@@ -46,6 +51,14 @@ const MERGE_PUSH_RADIUS := 260.0
 @onready var left_wall_shape: CollisionShape2D = $LeftWall/CollisionShape2D
 @onready var right_wall_shape: CollisionShape2D = $RightWall/CollisionShape2D
 @onready var floor_shape: CollisionShape2D = $Floor/CollisionShape2D
+@onready var trapdoor_floor: Node2D = $TrapdoorFloor
+@onready var trapdoor_segments: Array[StaticBody2D] = [
+	$TrapdoorFloor/Left,
+	$TrapdoorFloor/Center,
+	$TrapdoorFloor/Right,
+]
+@onready var gimmick_objects: Node2D = $GimmickObjects
+@onready var gimmick_overlay: GimmickOverlay = $GimmickOverlay
 @export var physics_data: MergePhysicsDataClass
 var current_level := 0
 var next_level := 0
@@ -80,9 +93,23 @@ var board_inner_top := 0.0
 var board_inner_bottom := 846.0
 var drop_position_y := 140.0
 var danger_line_y := 230.0
+var danger_suppression_remaining := 0.0
+var sealed_stage_index := -1
+var blocked_drop_zone := Rect2()
+var board_tilt_active := false
+var _base_left_wall_transform: Transform2D
+var _base_right_wall_transform: Transform2D
+var _base_floor_transform: Transform2D
+var _base_board_bounds := Rect2()
+var trapdoor_enabled := false
+var active_gimmick_tweens: Array[Tween] = []
 
 func _ready() -> void:
 	_sync_board_geometry_from_collisions()
+	_base_left_wall_transform = left_wall.transform
+	_base_right_wall_transform = right_wall.transform
+	_base_floor_transform = floor_body.transform
+	_base_board_bounds = get_board_inner_bounds()
 	_apply_physics_data()
 	autoplay_bot.set_enabled(OS.is_debug_build() and GameSession.developer_autoplay_enabled)
 	_reset_ball_queue()
@@ -156,6 +183,53 @@ func autoplay_drop_at(x_position: float) -> void:
 func get_active_balls() -> Array:
 	return balls.get_children()
 
+
+func spawn_gimmick_ball(level_index: int, at: Vector2, velocity := Vector2.ZERO) -> MergeBall:
+	var ball := _spawn_ball(at, clampi(level_index, 0, max_level_index)) as MergeBall
+	if is_instance_valid(ball):
+		ball.linear_velocity = velocity
+	return ball
+
+
+func remove_gimmick_ball(ball: MergeBall) -> void:
+	if not is_instance_valid(ball) or ball.merge_locked:
+		return
+	ball.lock_for_merge()
+	ball.queue_free()
+
+
+func replace_ball_stage(ball: MergeBall, new_level_index: int) -> MergeBall:
+	if not is_instance_valid(ball) or ball.merge_locked:
+		return null
+	var at := ball.position
+	var velocity := ball.linear_velocity
+	remove_gimmick_ball(ball)
+	return spawn_gimmick_ball(new_level_index, at, velocity)
+
+
+func spawn_gimmick_object() -> GimmickObject:
+	var object := GimmickObjectScene.instantiate() as GimmickObject
+	gimmick_objects.add_child(object)
+	return object
+
+
+func spawn_one_way_platform(rect: Rect2, one_way_margin := 12.0) -> StaticBody2D:
+	var body := StaticBody2D.new()
+	body.name = "StageFilterPlatform"
+	body.collision_layer = 1
+	body.collision_mask = 1
+	body.position = rect.get_center()
+	body.add_to_group(&"drop_landing_surface")
+	var collision := CollisionShape2D.new()
+	var shape := RectangleShape2D.new()
+	shape.size = rect.size
+	collision.shape = shape
+	collision.one_way_collision = true
+	collision.one_way_collision_margin = one_way_margin
+	body.add_child(collision)
+	gimmick_objects.add_child(body)
+	return body
+
 func get_current_ball_level() -> int:
 	return current_level
 
@@ -165,6 +239,256 @@ func get_board_inner_bounds() -> Rect2:
 		Vector2(board_inner_left, board_inner_top),
 		Vector2(board_inner_right - board_inner_left, board_inner_bottom - board_inner_top)
 	)
+
+
+func get_base_board_bounds() -> Rect2:
+	return _base_board_bounds
+
+
+func suppress_danger_line(seconds: float) -> void:
+	danger_suppression_remaining = maxf(danger_suppression_remaining, seconds)
+	overflow_time = 0.0
+
+
+func set_sealed_stage(stage_number: int) -> void:
+	sealed_stage_index = stage_number - 1 if stage_number > 0 else -1
+	for child in balls.get_children():
+		if child is MergeBall:
+			(child as MergeBall).set_sealed_visual(sealed_stage_index >= 0 and child.merge_level == sealed_stage_index)
+	if sealed_stage_index < 0:
+		call_deferred("_rescan_touching_merges")
+
+
+func set_blocked_drop_zone(rect: Rect2) -> void:
+	blocked_drop_zone = rect
+	aim_x = _clamp_aim_x(aim_x)
+	_update_preview_position()
+
+
+func clear_blocked_drop_zone() -> void:
+	blocked_drop_zone = Rect2()
+
+
+func get_future_levels(count: int) -> Array[int]:
+	_ensure_future_queue(count)
+	var result: Array[int] = [next_level]
+	for index in mini(count - 1, queued_levels.size()):
+		result.append(queued_levels[index])
+	return result
+
+
+func reverse_future_queue(count := 3) -> Array[int]:
+	var future := get_future_levels(count)
+	future.reverse()
+	next_level = future[0]
+	for index in range(1, future.size()):
+		if index - 1 < queued_levels.size():
+			queued_levels[index - 1] = future[index]
+		else:
+			queued_levels.append(future[index])
+	_refresh_preview()
+	return future
+
+
+func _ensure_future_queue(count: int) -> void:
+	while queued_levels.size() < maxi(0, count - 1):
+		queued_levels.append(_random_drop_level())
+
+
+func apply_velocity_impulse(delta_velocity: Vector2) -> void:
+	for child in balls.get_children():
+		if not child is MergeBall:
+			continue
+		var ball := child as MergeBall
+		if ball.merge_locked:
+			continue
+		ball.apply_central_impulse(delta_velocity * ball.mass)
+
+
+func set_base_floor_collision_enabled(enabled: bool) -> void:
+	floor_shape.disabled = not enabled
+
+
+func set_ball_vertical_floor_bounds_enabled(enabled: bool) -> void:
+	for child in balls.get_children():
+		if child is MergeBall:
+			(child as MergeBall).vertical_floor_bound_enabled = enabled
+
+
+func set_trapdoor_enabled(enabled: bool) -> void:
+	trapdoor_enabled = enabled
+	floor_shape.disabled = enabled
+	trapdoor_floor.visible = enabled
+	var bounds := get_base_board_bounds()
+	var segment_width := bounds.size.x / 3.0
+	for index in trapdoor_segments.size():
+		var segment := trapdoor_segments[index]
+		segment.position = Vector2(bounds.position.x + segment_width * (float(index) + 0.5), bounds.end.y)
+		var floor_collision := segment.get_node("FloorShape") as CollisionShape2D
+		floor_collision.shape = floor_collision.shape.duplicate()
+		var floor_rectangle := floor_collision.shape as RectangleShape2D
+		floor_rectangle.size = Vector2(segment_width + 2.0, 8.0)
+		floor_collision.disabled = not enabled
+		for wall_path: NodePath in TRAPDOOR_WALL_PATHS:
+			var wall := segment.get_node(wall_path) as CollisionShape2D
+			wall.shape = wall.shape.duplicate()
+			wall.position.x = (-segment_width * 0.5 if wall_path == TRAPDOOR_WALL_PATHS[0] else segment_width * 0.5)
+			wall.disabled = true
+	for child in balls.get_children():
+		if child is MergeBall:
+			(child as MergeBall).vertical_floor_bound_enabled = not enabled
+
+
+func animate_trapdoor(section: int, depth_ratio: float, duration: float, lowered: bool) -> void:
+	if not trapdoor_enabled:
+		set_trapdoor_enabled(true)
+	var target := trapdoor_segments[clampi(section, 0, trapdoor_segments.size() - 1)]
+	var base_y := get_base_board_bounds().end.y
+	var target_y := base_y + get_base_board_bounds().size.y * depth_ratio if lowered else base_y
+	for wall_path: NodePath in TRAPDOOR_WALL_PATHS:
+		var wall := target.get_node(wall_path) as CollisionShape2D
+		if lowered:
+			var rectangle := wall.shape as RectangleShape2D
+			rectangle.size.y = get_base_board_bounds().size.y * depth_ratio + 12.0
+			wall.position.y = -get_base_board_bounds().size.y * depth_ratio * 0.5
+			wall.disabled = true
+	suppress_danger_line(duration + 0.5)
+	var tween := _create_board_gimmick_tween()
+	tween.tween_property(target, "position:y", target_y, duration)
+	await tween.finished
+	for wall_path: NodePath in TRAPDOOR_WALL_PATHS:
+		(target.get_node(wall_path) as CollisionShape2D).disabled = not lowered
+
+
+func is_ball_position_safe(ball: MergeBall, position: Vector2) -> bool:
+	for child in balls.get_children():
+		if not child is MergeBall or child == ball:
+			continue
+		var other := child as MergeBall
+		if other.merge_locked:
+			continue
+		if position.distance_to(other.position) < ball.get_radius() + other.get_radius() + 3.0:
+			return false
+	return true
+
+
+func animate_board_compression(step_ratio: float, duration: float) -> void:
+	var shift := _base_board_bounds.size.x * step_ratio
+	var tween := _create_board_gimmick_tween().set_parallel(true)
+	tween.tween_property(left_wall, "position:x", left_wall.position.x + shift, duration)
+	tween.tween_property(right_wall, "position:x", right_wall.position.x - shift, duration)
+	await tween.finished
+	_sync_board_geometry_from_collisions()
+	_refresh_ball_bounds()
+	suppress_danger_line(0.5)
+
+
+func animate_floor_rise(step_ratio: float, duration: float) -> void:
+	var shift := _base_board_bounds.size.y * step_ratio
+	var fixed_danger_y := danger_line_y
+	var fixed_drop_y := drop_position_y
+	var tween := _create_board_gimmick_tween()
+	tween.tween_property(floor_body, "position:y", floor_body.position.y - shift, duration)
+	await tween.finished
+	_sync_board_geometry_from_collisions()
+	danger_line_y = fixed_danger_y
+	drop_position_y = fixed_drop_y
+	danger_line.configure(board_inner_left, board_inner_right, danger_line_y)
+	_update_preview_position()
+	_refresh_ball_bounds()
+	suppress_danger_line(0.5)
+
+
+func animate_board_tilt(degrees: float, duration: float) -> void:
+	board_tilt_active = not is_zero_approx(degrees)
+	var angle := deg_to_rad(degrees)
+	var pivot := _base_board_bounds.get_center()
+	var targets := [left_wall, right_wall, floor_body]
+	var bases := [_base_left_wall_transform, _base_right_wall_transform, _base_floor_transform]
+	var tween := _create_board_gimmick_tween().set_parallel(true)
+	for index in targets.size():
+		var node: Node2D = targets[index]
+		var base: Transform2D = bases[index]
+		var target_position := pivot + (base.origin - pivot).rotated(angle)
+		tween.tween_property(node, "position", target_position, duration)
+		tween.tween_property(node, "rotation", base.get_rotation() + angle, duration)
+	_set_ball_bounds_enabled(not board_tilt_active)
+	await tween.finished
+	suppress_danger_line(0.5)
+
+
+func reset_gimmick_state() -> void:
+	for tween in active_gimmick_tweens:
+		if tween != null and tween.is_valid():
+			tween.kill()
+	active_gimmick_tweens.clear()
+	left_wall.transform = _base_left_wall_transform
+	right_wall.transform = _base_right_wall_transform
+	floor_body.transform = _base_floor_transform
+	board_tilt_active = false
+	blocked_drop_zone = Rect2()
+	sealed_stage_index = -1
+	danger_suppression_remaining = 0.0
+	for child in gimmick_objects.get_children():
+		child.queue_free()
+	gimmick_overlay.clear_all()
+	set_trapdoor_enabled(false)
+	for segment in trapdoor_segments:
+		segment.position.y = _base_board_bounds.end.y
+	_sync_board_geometry_from_collisions()
+	_refresh_ball_bounds()
+	for child in balls.get_children():
+		if child is MergeBall:
+			var ball := child as MergeBall
+			ball.set_enlarged(false, 1.0, 0.01)
+			ball.set_heavy(false)
+			ball.set_hazard_turns(0)
+			ball.set_sealed_visual(false)
+			ball.set_submerged(false)
+			ball.set_merge_curse(false)
+			ball.set_rewind_turns(0)
+			ball.vertical_floor_bound_enabled = true
+			if not ball.merge_locked:
+				ball.collision_layer = 1
+				ball.collision_mask = 1
+				ball.freeze = false
+
+
+func _create_board_gimmick_tween() -> Tween:
+	var tween := create_tween()
+	active_gimmick_tweens.append(tween)
+	return tween
+
+
+func _set_ball_bounds_enabled(enabled: bool) -> void:
+	for child in balls.get_children():
+		if child is MergeBall:
+			(child as MergeBall).horizontal_bounds_enabled = enabled
+
+
+func _refresh_ball_bounds() -> void:
+	var global_left := to_global(Vector2(board_inner_left, 0.0)).x
+	var global_right := to_global(Vector2(board_inner_right, 0.0)).x
+	var global_bottom := to_global(Vector2(0.0, board_inner_bottom)).y
+	for child in balls.get_children():
+		if child is MergeBall:
+			(child as MergeBall).set_play_area_bounds(global_left, global_right, global_bottom)
+
+
+func _rescan_touching_merges() -> void:
+	var active: Array[MergeBall] = []
+	for child in balls.get_children():
+		if child is MergeBall and not child.merge_locked:
+			active.append(child)
+	for first_index in active.size():
+		for second_index in range(first_index + 1, active.size()):
+			var first := active[first_index]
+			var second := active[second_index]
+			if first.merge_level != second.merge_level:
+				continue
+			if first.position.distance_to(second.position) <= first.get_radius() + second.get_radius() + 4.0:
+				_on_merge_requested(first, second)
+				return
 
 
 func wait_until_board_settled(max_wait_seconds := 4.0) -> void:
@@ -239,6 +563,9 @@ func configure(
 	_reset_ball_queue()
 
 func _process(delta: float) -> void:
+	if danger_suppression_remaining > 0.0:
+		danger_suppression_remaining = maxf(0.0, danger_suppression_remaining - delta)
+		overflow_time = 0.0
 	danger_line.visible = _should_show_danger_line()
 	if is_game_over:
 		return
@@ -295,7 +622,13 @@ func _clamp_aim_x(x_position: float) -> float:
 	var radius := 26.0
 	if is_instance_valid(preview_ball):
 		radius = preview_ball.get_radius()
-	return clampf(x_position, board_inner_left + radius, board_inner_right - radius)
+	var clamped := clampf(x_position, board_inner_left + radius, board_inner_right - radius)
+	if blocked_drop_zone.has_area() and blocked_drop_zone.position.x <= clamped and clamped <= blocked_drop_zone.end.x:
+		var left_candidate := blocked_drop_zone.position.x - radius
+		var right_candidate := blocked_drop_zone.end.x + radius
+		clamped = left_candidate if absf(clamped - left_candidate) <= absf(clamped - right_candidate) else right_candidate
+		clamped = clampf(clamped, board_inner_left + radius, board_inner_right - radius)
+	return clamped
 
 func _update_preview_position() -> void:
 	guide_line.points = PackedVector2Array([
@@ -327,12 +660,18 @@ func _drop_ball(x: float) -> void:
 
 func _finish_drop_sequence(sequence_id: int) -> void:
 	var sequence_started_msec := Time.get_ticks_msec()
+	var turn_was_emitted := false
 	await get_tree().physics_frame
 	while is_inside_tree():
 		var now := Time.get_ticks_msec()
 		var merge_is_quiet := now - last_merge_msec >= COMBO_SETTLE_MSEC
 		var exceeded_max_wait := now - sequence_started_msec >= COMBO_MAX_WAIT_MSEC
-		if (merge_is_quiet and not _has_moving_balls()) or exceeded_max_wait:
+		var turn_is_ready: bool = dropped_ball_has_landed and merge_is_quiet
+		# 적 턴은 합성/연쇄 합성이 끝난 시점에 넘긴다. 공 전체 정지는 투하 UI 복구에만 사용한다.
+		if not turn_was_emitted and (turn_is_ready or exceeded_max_wait):
+			turn_was_emitted = true
+			turn_completed.emit()
+		if (turn_is_ready and not _has_moving_balls()) or exceeded_max_wait:
 			break
 		await get_tree().physics_frame
 	if not is_inside_tree():
@@ -343,6 +682,8 @@ func _finish_drop_sequence(sequence_id: int) -> void:
 	if auto_drop_enabled:
 		drop_time_remaining = drop_time_limit
 	_update_drop_preview_visibility()
+	if not turn_was_emitted:
+		turn_completed.emit()
 
 func _spawn_ball(at: Vector2, level: int, contact_sequence_id: int = -1):
 	if not is_inside_tree() or not is_instance_valid(balls) or balls.is_queued_for_deletion():
@@ -354,6 +695,7 @@ func _spawn_ball(at: Vector2, level: int, contact_sequence_id: int = -1):
 	ball.continuous_cd = RigidBody2D.CCD_MODE_DISABLED
 	balls.add_child(ball)
 	ball.setup(level, physics_speed_multiplier)
+	ball.set_sealed_visual(sealed_stage_index >= 0 and ball.merge_level == sealed_stage_index)
 	if physics_data != null:
 		ball.linear_damp = physics_data.ball_linear_damp
 		ball.angular_damp = physics_data.ball_angular_damp
@@ -362,9 +704,11 @@ func _spawn_ball(at: Vector2, level: int, contact_sequence_id: int = -1):
 	var global_right := to_global(Vector2(board_inner_right, 0.0)).x
 	var global_bottom := to_global(Vector2(0.0, board_inner_bottom)).y
 	ball.set_play_area_bounds(global_left, global_right, global_bottom)
+	if board_tilt_active:
+		ball.horizontal_bounds_enabled = false
 	ball.merge_requested.connect(_on_merge_requested)
 	if contact_sequence_id >= 0:
-		ball.first_contact.connect(_on_dropped_ball_first_contact.bind(contact_sequence_id), CONNECT_ONE_SHOT)
+		ball.first_contact.connect(_on_dropped_ball_first_contact.bind(contact_sequence_id, at.x), CONNECT_ONE_SHOT)
 	return ball
 
 
@@ -374,10 +718,11 @@ func _enable_ball_ccd_after_spawn(ball: RigidBody2D) -> void:
 		ball.continuous_cd = RigidBody2D.CCD_MODE_CAST_SHAPE
 
 
-func _on_dropped_ball_first_contact(_ball: MergeBall, sequence_id: int) -> void:
+func _on_dropped_ball_first_contact(_ball: MergeBall, sequence_id: int, original_drop_x: float) -> void:
 	if sequence_id != drop_sequence_id or is_game_over:
 		return
 	dropped_ball_has_landed = true
+	player_ball_landed.emit(_ball.merge_level, original_drop_x)
 	if not input_locked:
 		can_drop = true
 	if auto_drop_enabled:
@@ -392,6 +737,8 @@ func _advance_ball_queue() -> void:
 func _reset_ball_queue() -> void:
 	current_level = _random_drop_level()
 	next_level = _random_drop_level()
+	queued_levels.clear()
+	_ensure_future_queue(3)
 	drop_time_remaining = drop_time_limit
 	timer_label.visible = auto_drop_enabled
 	_refresh_preview()
@@ -412,9 +759,13 @@ func _refresh_preview() -> void:
 func _on_merge_requested(first, second) -> void:
 	if first.merge_locked or second.merge_locked or first.merge_level >= max_level_index:
 		return
+	if sealed_stage_index >= 0 and first.merge_level == sealed_stage_index:
+		return
 	var at: Vector2 = (first.position + second.position) * 0.5
 	var level: int = first.merge_level + 1
 	var carries_ingestion_target: bool = first.ingestion_marked or second.ingestion_marked
+	var involved_cursed: bool = first.is_merge_cursed or second.is_merge_cursed
+	var source_ids: Array[int] = [first.get_instance_id(), second.get_instance_id()]
 	first.lock_for_merge()
 	second.lock_for_merge()
 	# 연쇄 접촉은 순서를 예약해 하나씩 보여준 뒤 합성한다. 실제 시간 기준이라 FPS와 무관하다.
@@ -442,6 +793,7 @@ func _on_merge_requested(first, second) -> void:
 		combo_points += earned_points
 		last_merge_msec = Time.get_ticks_msec()
 		attack_combo_count = combo_count
+	merge_registered.emit(level, at, attack_combo_count, source_ids, involved_cursed)
 	_spawn_merge_burst(at, merged_ball_data, attack_combo_count)
 	var merge_damage := _calculate_merge_damage(earned_points, attack_combo_count)
 	if attack_combo_count >= 2:
@@ -489,6 +841,8 @@ func _apply_merge_push(origin: Vector2, merged_ball: MergeBall) -> void:
 		ball.apply_central_impulse(impulse)
 
 func _has_ball_over_danger_line() -> bool:
+	if danger_suppression_remaining > 0.0:
+		return false
 	for child in balls.get_children():
 		if child.merge_locked:
 			continue
@@ -498,7 +852,7 @@ func _has_ball_over_danger_line() -> bool:
 
 
 func _should_show_danger_line() -> bool:
-	if is_game_over:
+	if is_game_over or danger_suppression_remaining > 0.0:
 		return false
 	var reveal_y := lerpf(board_inner_bottom, danger_line_y, DANGER_LINE_REVEAL_FILL_RATIO)
 	for child in balls.get_children():

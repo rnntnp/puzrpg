@@ -10,6 +10,7 @@
 [ext_resource type="PackedScene" path="res://scenes/ball_evolution_strip.tscn" id="7"]
 [ext_resource type="Script" uid="uid://dt1r13l2o08vm" path="res://scripts/monster_action_controller.gd" id="8"]
 [ext_resource type="Script" uid="uid://cybyiygyn3sw4" path="res://scripts/ice_skill_controller.gd" id="9"]
+[ext_resource type="Script" path="res://scripts/test_gimmick_controller.gd" id="12_gimmick_controller"]
 [ext_resource type="Texture2D" uid="uid://c3vhyr1ewy74w" path="res://assets/backgrounds/cave_battle_background_inpainted.png" id="10_background"]
 [ext_resource type="PackedScene" uid="uid://idr4ll5kki3x" path="res://scenes/water_health_bar.tscn" id="11_health_bar"]
 
@@ -21,6 +22,9 @@ script = ExtResource("8")
 
 [node name="IceSkillController" type="Node" parent="MonsterActionController" unique_id=1773554680]
 script = ExtResource("9")
+
+[node name="TestGimmickController" type="Node" parent="MonsterActionController"]
+script = ExtResource("12_gimmick_controller")
 
 [node name="Background" type="ColorRect" parent="." unique_id=1499977064]
 z_index = -20
@@ -125,6 +129,36 @@ theme_override_colors/font_color = Color(0.86, 0.65, 1, 1)
 theme_override_font_sizes/font_size = 15
 text = "포식 내구도 7 / 7"
 horizontal_alignment = 2
+
+[node name="GimmickActionLabel" type="Label" parent="UI"]
+visible = false
+layout_mode = 0
+offset_left = 186.0
+offset_top = 360.0
+offset_right = 534.0
+offset_bottom = 390.0
+theme_override_colors/font_color = Color(1, 0.85, 0.42, 1)
+theme_override_colors/font_outline_color = Color(0.05, 0.08, 0.14, 1)
+theme_override_constants/outline_size = 5
+theme_override_fonts/font = ExtResource("5_eb6dy")
+theme_override_font_sizes/font_size = 20
+text = "다음: 기믹 · 4턴"
+horizontal_alignment = 1
+
+[node name="GimmickDetailLabel" type="Label" parent="UI"]
+visible = false
+layout_mode = 0
+offset_left = 120.0
+offset_top = 392.0
+offset_right = 600.0
+offset_bottom = 420.0
+theme_override_colors/font_color = Color(0.82, 0.9, 1, 1)
+theme_override_colors/font_outline_color = Color(0.05, 0.08, 0.14, 1)
+theme_override_constants/outline_size = 4
+theme_override_fonts/font = ExtResource("5_eb6dy")
+theme_override_font_sizes/font_size = 16
+text = "기믹 상태"
+horizontal_alignment = 1
 
 [node name="LeftFighter" parent="UI" unique_id=849620028 instance=ExtResource("2")]
 position = Vector2(210, 300)

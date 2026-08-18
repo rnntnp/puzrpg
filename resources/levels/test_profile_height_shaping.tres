@@ -1,0 +1,59 @@
+[gd_resource type="Resource" script_class="LevelData" load_steps=15 format=3]
+
+[ext_resource type="Script" path="res://scripts/level_data.gd" id="1_level"]
+[ext_resource type="Resource" path="res://resources/characters/blue_fighter.tres" id="2_player"]
+[ext_resource type="Resource" path="res://resources/characters/profile_single_enemy.tres" id="3_single"]
+[ext_resource type="Script" path="res://scripts/character_data.gd" id="4_character"]
+[ext_resource type="Script" path="res://scripts/test_gimmick_data.gd" id="5_gimmick"]
+[ext_resource type="Texture2D" path="res://assets/backgrounds/stage_01_moonlit_pond.png" id="6_background"]
+[ext_resource type="Texture2D" path="res://assets/level_previews/level_01_preview.png" id="7_preview"]
+[ext_resource type="Texture2D" path="res://assets/effects/generated/status_attack.png" id="8_icon"]
+[ext_resource type="Resource" path="res://resources/characters/profile_dual_enemy.tres" id="9_dual"]
+[ext_resource type="Resource" path="res://resources/characters/profile_shape_boss.tres" id="10_boss"]
+[ext_resource type="Script" path="res://scripts/gimmicks/handlers/profile_height_handler.gd" id="11_handler"]
+[ext_resource type="Script" path="res://scripts/gimmicks/configs/profile_height_config.gd" id="12_config"]
+
+[sub_resource type="Resource" id="ProfileConfig"]
+script = ExtResource("12_config")
+enemy_modes = Array[int]([0, 1, 2])
+evaluation_intervals = Array[int]([3, 4, 4])
+single_section_profiles = Array[Vector3i]([Vector3i(0, -1, -1), Vector3i(-1, -1, 1), Vector3i(-1, 0, -1)])
+dual_section_profiles = Array[Vector3i]([Vector3i(0, -1, 1), Vector3i(1, -1, 0)])
+boss_profiles = Array[Vector3i]([Vector3i(0, 1, 0), Vector3i(1, 0, 1)])
+profile_line_safe_height_ratio = 0.5
+profile_break_damage = 15
+profile_miss_damage = 18
+result_feedback_duration = 0.65
+state_change_feedback_duration = 0.4
+settle_timeout = 1.5
+
+[sub_resource type="Resource" id="Gimmick"]
+script = ExtResource("5_gimmick")
+kind = 35
+display_name = "적층 임계선 / 높이 조형"
+monster_health = 300
+normal_attack_damage = 5
+action_interval = 4
+normal_attack_interval = 4
+enemy_healths = Array[int]([220, 250, 300])
+preserve_board_between_enemies = true
+handler_script = ExtResource("11_handler")
+tuning = SubResource("ProfileConfig")
+
+[resource]
+script = ExtResource("1_level")
+level_name = "기믹 35 · 적층 임계선 / 높이 조형"
+image_placeholder = "PROFILE HEIGHT SHAPING"
+battle_background = ExtResource("6_background")
+level_select_preview = ExtResource("7_preview")
+recommended_ball_level = 5
+stage_gimmick_icon = ExtResource("8_icon")
+stage_gimmick_name = "LOW / HIGH PROFILE"
+reward_name = "적층 프로필 플레이테스트"
+player_character = ExtResource("2_player")
+enemies = Array[ExtResource("4_character")]([ExtResource("3_single"), ExtResource("9_dual"), ExtResource("10_boss")])
+is_gimmick_test_level = true
+test_gimmick = SubResource("Gimmick")
+ball_drop_time_limit = -1.0
+merge_hit_stop_time_scale = 0.18
+merge_hit_stop_duration = 0.2

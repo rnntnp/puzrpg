@@ -5,10 +5,10 @@
 [ext_resource type="Script" uid="uid://bophiem3isusd" path="res://scripts/merge_hit_stop.gd" id="3"]
 [ext_resource type="Script" uid="uid://bmry4fgrxlopp" path="res://scripts/combo_test_scenario.gd" id="4"]
 [ext_resource type="Resource" uid="uid://c3ik0sjmjhs7a" path="res://resources/merge_physics_data.tres" id="5_physics"]
-[ext_resource type="Texture2D" uid="uid://crn16upp52jrb" path="res://assets/ui/pond/drop_board_reference_translucent.png" id="6_board"]
+[ext_resource type="Texture2D" uid="uid://dxaeqrj5gd2jw" path="res://assets/ui/pond/drop_board_cartoon.png" id="6_board"]
 [ext_resource type="Script" uid="uid://8qiwn1gfogtj" path="res://scripts/danger_line.gd" id="7_danger_line"]
-[ext_resource type="PackedScene" path="res://scenes/next_preview_panel.tscn" id="8_next_panel"]
-[ext_resource type="Script" path="res://scripts/gimmick_overlay.gd" id="9_gimmick_overlay"]
+[ext_resource type="PackedScene" uid="uid://cpcwk31ftbu6k" path="res://scenes/next_preview_panel.tscn" id="8_next_panel"]
+[ext_resource type="Script" uid="uid://b81dh2hb63rrl" path="res://scripts/gimmick_overlay.gd" id="9_gimmick_overlay"]
 
 [sub_resource type="RectangleShape2D" id="wall"]
 size = Vector2(6, 869.5)
@@ -34,13 +34,13 @@ script = ExtResource("4")
 
 [node name="BoardArtwork" type="TextureRect" parent="." unique_id=702315937]
 z_index = -10
-offset_left = 43.0
+offset_left = 82.0
 offset_top = 102.0
-offset_right = 671.0
+offset_right = 691.0
 offset_bottom = 881.0
 mouse_filter = 2
 texture = ExtResource("6_board")
-expand_mode = 3
+expand_mode = 4
 
 [node name="ScoreLabel" type="Label" parent="." unique_id=1180603034]
 visible = false
@@ -64,12 +64,10 @@ text = "자동 낙하 5.0초"
 horizontal_alignment = 2
 
 [node name="NextPanel" parent="." unique_id=1158388454 instance=ExtResource("8_next_panel")]
-layout_mode = 3
-anchors_preset = 0
-offset_left = 100.0
-offset_top = 48.0
-offset_right = 250.0
-offset_bottom = 106.0
+offset_left = -22.0
+offset_top = 118.0
+offset_right = 128.0
+offset_bottom = 176.0
 
 [node name="DropLine" type="Node2D" parent="." unique_id=1186322495]
 visible = false
@@ -101,9 +99,9 @@ vertical_alignment = 1
 
 [node name="Balls" type="Node2D" parent="." unique_id=379940337]
 
-[node name="GimmickObjects" type="Node2D" parent="."]
+[node name="GimmickObjects" type="Node2D" parent="." unique_id=784998579]
 
-[node name="GimmickOverlay" type="Node2D" parent="."]
+[node name="GimmickOverlay" type="Node2D" parent="." unique_id=1548379932]
 z_index = 5
 script = ExtResource("9_gimmick_overlay")
 
@@ -133,41 +131,50 @@ position = Vector2(360, 848)
 position = Vector2(30, 16)
 shape = SubResource("floor")
 
-[node name="TrapdoorFloor" type="Node2D" parent="."]
+[node name="TrapdoorFloor" type="Node2D" parent="." unique_id=788757098]
 visible = false
 
-[node name="Left" type="StaticBody2D" parent="TrapdoorFloor"]
-[node name="FloorShape" type="CollisionShape2D" parent="TrapdoorFloor/Left"]
+[node name="Left" type="StaticBody2D" parent="TrapdoorFloor" unique_id=1840183221]
+
+[node name="FloorShape" type="CollisionShape2D" parent="TrapdoorFloor/Left" unique_id=753278150]
 shape = SubResource("trap_floor")
-[node name="LeftWallShape" type="CollisionShape2D" parent="TrapdoorFloor/Left"]
+
+[node name="LeftWallShape" type="CollisionShape2D" parent="TrapdoorFloor/Left" unique_id=791624423]
 position = Vector2(-88, -70)
 shape = SubResource("trap_wall")
 disabled = true
-[node name="RightWallShape" type="CollisionShape2D" parent="TrapdoorFloor/Left"]
+
+[node name="RightWallShape" type="CollisionShape2D" parent="TrapdoorFloor/Left" unique_id=275100942]
 position = Vector2(88, -70)
 shape = SubResource("trap_wall")
 disabled = true
 
-[node name="Center" type="StaticBody2D" parent="TrapdoorFloor"]
-[node name="FloorShape" type="CollisionShape2D" parent="TrapdoorFloor/Center"]
+[node name="Center" type="StaticBody2D" parent="TrapdoorFloor" unique_id=847228249]
+
+[node name="FloorShape" type="CollisionShape2D" parent="TrapdoorFloor/Center" unique_id=1884873357]
 shape = SubResource("trap_floor")
-[node name="LeftWallShape" type="CollisionShape2D" parent="TrapdoorFloor/Center"]
+
+[node name="LeftWallShape" type="CollisionShape2D" parent="TrapdoorFloor/Center" unique_id=990776441]
 position = Vector2(-88, -70)
 shape = SubResource("trap_wall")
 disabled = true
-[node name="RightWallShape" type="CollisionShape2D" parent="TrapdoorFloor/Center"]
+
+[node name="RightWallShape" type="CollisionShape2D" parent="TrapdoorFloor/Center" unique_id=1970382557]
 position = Vector2(88, -70)
 shape = SubResource("trap_wall")
 disabled = true
 
-[node name="Right" type="StaticBody2D" parent="TrapdoorFloor"]
-[node name="FloorShape" type="CollisionShape2D" parent="TrapdoorFloor/Right"]
+[node name="Right" type="StaticBody2D" parent="TrapdoorFloor" unique_id=1140911301]
+
+[node name="FloorShape" type="CollisionShape2D" parent="TrapdoorFloor/Right" unique_id=250846175]
 shape = SubResource("trap_floor")
-[node name="LeftWallShape" type="CollisionShape2D" parent="TrapdoorFloor/Right"]
+
+[node name="LeftWallShape" type="CollisionShape2D" parent="TrapdoorFloor/Right" unique_id=1591904311]
 position = Vector2(-88, -70)
 shape = SubResource("trap_wall")
 disabled = true
-[node name="RightWallShape" type="CollisionShape2D" parent="TrapdoorFloor/Right"]
+
+[node name="RightWallShape" type="CollisionShape2D" parent="TrapdoorFloor/Right" unique_id=1791481525]
 position = Vector2(88, -70)
 shape = SubResource("trap_wall")
 disabled = true

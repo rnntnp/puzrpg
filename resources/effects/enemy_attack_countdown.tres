@@ -1,7 +1,7 @@
 [gd_resource type="Resource" script_class="StatusEffectData" format=3 uid="uid://bgxwtisx7qiie"]
 
 [ext_resource type="Script" uid="uid://c1lhsgnevvhpo" path="res://scripts/status_effect_data.gd" id="1"]
-[ext_resource type="Texture2D" uid="uid://diw8e6ahibw5w" path="res://assets/effects/generated/status_attack.png" id="2"]
+[ext_resource type="Texture2D" uid="uid://bcj4dsy0y2nn0" path="res://assets/effects/generated/status_attack_simple.png" id="2"]
 
 [resource]
 script = ExtResource("1")

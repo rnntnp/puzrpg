@@ -8,6 +8,11 @@ const TestGimmickDataClass = preload("res://scripts/test_gimmick_data.gd")
 @export var level_name: String = "Level"
 @export_multiline var image_placeholder: String = "LEVEL IMAGE\nPLACEHOLDER"
 @export var battle_background: Texture2D
+@export_group("세로 확장 배경")
+@export var battle_background_top: Texture2D
+@export var battle_background_middle: Texture2D
+@export var battle_background_bottom: Texture2D
+@export_group("")
 @export var level_select_preview: Texture2D
 
 @export_category("레벨 선택 정보")

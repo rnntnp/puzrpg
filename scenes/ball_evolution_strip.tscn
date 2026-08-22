@@ -1,7 +1,7 @@
 [gd_scene load_steps=4 format=3]
 
 [ext_resource type="Script" path="res://scripts/ball_evolution_strip.gd" id="1"]
-[ext_resource type="Texture2D" path="res://assets/ui/pond/evolution_rail.png" id="2_background"]
+[ext_resource type="Texture2D" path="res://assets/ui/pond/evolution_rail_cartoon.png" id="2_background"]
 
 [sub_resource type="StyleBoxFlat" id="Background"]
 bg_color = Color(0, 0, 0, 0)

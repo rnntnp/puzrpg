@@ -10,9 +10,10 @@
 [ext_resource type="PackedScene" path="res://scenes/ball_evolution_strip.tscn" id="7"]
 [ext_resource type="Script" uid="uid://dt1r13l2o08vm" path="res://scripts/monster_action_controller.gd" id="8"]
 [ext_resource type="Script" uid="uid://cybyiygyn3sw4" path="res://scripts/ice_skill_controller.gd" id="9"]
-[ext_resource type="Script" path="res://scripts/test_gimmick_controller.gd" id="12_gimmick_controller"]
 [ext_resource type="Texture2D" uid="uid://c3vhyr1ewy74w" path="res://assets/backgrounds/cave_battle_background_inpainted.png" id="10_background"]
 [ext_resource type="PackedScene" uid="uid://idr4ll5kki3x" path="res://scenes/water_health_bar.tscn" id="11_health_bar"]
+[ext_resource type="Script" uid="uid://fj4dw46p7gwd" path="res://scripts/test_gimmick_controller.gd" id="12_gimmick_controller"]
+[ext_resource type="Script" uid="uid://ck6ggsqikukgw" path="res://scripts/layered_battle_background.gd" id="12_layered_background"]
 
 [node name="Battle" type="Node2D" unique_id=1064943574]
 script = ExtResource("1")
@@ -23,7 +24,7 @@ script = ExtResource("8")
 [node name="IceSkillController" type="Node" parent="MonsterActionController" unique_id=1773554680]
 script = ExtResource("9")
 
-[node name="TestGimmickController" type="Node" parent="MonsterActionController"]
+[node name="TestGimmickController" type="Node" parent="MonsterActionController" unique_id=1102700157]
 script = ExtResource("12_gimmick_controller")
 
 [node name="Background" type="ColorRect" parent="." unique_id=1499977064]
@@ -35,10 +36,38 @@ color = Color(0.063, 0.094, 0.153, 1)
 
 [node name="BackgroundArtwork" type="TextureRect" parent="." unique_id=1001632493]
 z_index = -19
-offset_right = 720.0
-offset_bottom = 1280.0
+offset_left = 18.0
+offset_top = 1.0
+offset_right = 738.0
+offset_bottom = 1281.0
 mouse_filter = 2
 texture = ExtResource("10_background")
+expand_mode = 1
+
+[node name="LayeredBackground" type="Control" parent="." unique_id=1796014444]
+z_index = -19
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("12_layered_background")
+
+[node name="Top" type="TextureRect" parent="LayeredBackground" unique_id=2100345644]
+layout_mode = 0
+mouse_filter = 2
+expand_mode = 1
+
+[node name="Middle" type="TextureRect" parent="LayeredBackground" unique_id=863093564]
+layout_mode = 0
+mouse_filter = 2
+expand_mode = 1
+
+[node name="Bottom" type="TextureRect" parent="LayeredBackground" unique_id=1858461353]
+layout_mode = 0
+mouse_filter = 2
 expand_mode = 1
 
 [node name="UI" type="Control" parent="." unique_id=1773913197]
@@ -103,21 +132,6 @@ accent_color = Color(0.74, 0.73, 1, 1)
 heart_color = Color(0.88, 0.48, 1, 1)
 right_aligned = true
 
-[node name="LeftStatusEffects" parent="UI" unique_id=1785068003 instance=ExtResource("6")]
-layout_mode = 0
-offset_left = 40.0
-offset_top = 177.0
-offset_right = 330.0
-offset_bottom = 225.0
-
-[node name="RightStatusEffects" parent="UI" unique_id=1963694840 instance=ExtResource("6")]
-layout_mode = 0
-offset_left = 390.0
-offset_top = 177.0
-offset_right = 680.0
-offset_bottom = 225.0
-alignment = 2
-
 [node name="SkillDurabilityLabel" type="Label" parent="UI" unique_id=492750425]
 visible = false
 layout_mode = 0
@@ -130,7 +144,7 @@ theme_override_font_sizes/font_size = 15
 text = "포식 내구도 7 / 7"
 horizontal_alignment = 2
 
-[node name="GimmickActionLabel" type="Label" parent="UI"]
+[node name="GimmickActionLabel" type="Label" parent="UI" unique_id=1345510197]
 visible = false
 layout_mode = 0
 offset_left = 186.0
@@ -145,7 +159,7 @@ theme_override_font_sizes/font_size = 20
 text = "다음: 기믹 · 4턴"
 horizontal_alignment = 1
 
-[node name="GimmickDetailLabel" type="Label" parent="UI"]
+[node name="GimmickDetailLabel" type="Label" parent="UI" unique_id=110834246]
 visible = false
 layout_mode = 0
 offset_left = 120.0
@@ -160,22 +174,48 @@ theme_override_font_sizes/font_size = 16
 text = "기믹 상태"
 horizontal_alignment = 1
 
+[node name="LeftFighterShadow" type="Polygon2D" parent="UI" unique_id=647406744]
+position = Vector2(178, 419)
+color = Color(0.09, 0.08, 0.2, 0.3)
+polygon = PackedVector2Array(-58, 0, -53.586, -8.419, -41.012, -15.556, -22.196, -20.325, 0, -22, 22.196, -20.325, 41.012, -15.556, 53.586, -8.419, 58, 0, 53.586, 8.419, 41.012, 15.556, 22.196, 20.325, 0, 22, -22.196, 20.325, -41.012, 15.556, -53.586, 8.419)
+
+[node name="RightFighterShadow" type="Polygon2D" parent="UI" unique_id=969166555]
+position = Vector2(533, 419)
+color = Color(0.09, 0.08, 0.2, 0.3)
+polygon = PackedVector2Array(-58, 0, -53.586, -8.419, -41.012, -15.556, -22.196, -20.325, 0, -22, 22.196, -20.325, 41.012, -15.556, 53.586, -8.419, 58, 0, 53.586, 8.419, 41.012, 15.556, 22.196, 20.325, 0, 22, -22.196, 20.325, -41.012, 15.556, -53.586, 8.419)
+
 [node name="LeftFighter" parent="UI" unique_id=849620028 instance=ExtResource("2")]
-position = Vector2(210, 300)
+position = Vector2(181, 300)
 scale = Vector2(1.5, 1.5)
 character_data = ExtResource("3")
 
 [node name="RightFighter" parent="UI" unique_id=805224498 instance=ExtResource("2")]
-position = Vector2(498, 300)
+position = Vector2(529, 300)
 scale = Vector2(1.5, 1.5)
 character_data = ExtResource("4")
+
+[node name="LeftStatusEffects" parent="UI" unique_id=1785068003 instance=ExtResource("6")]
+layout_mode = 0
+offset_left = 40.0
+offset_top = 177.0
+offset_right = 330.0
+offset_bottom = 225.0
+alignment = 1
+
+[node name="RightStatusEffects" parent="UI" unique_id=1963694840 instance=ExtResource("6")]
+layout_mode = 0
+offset_left = 390.0
+offset_top = 151.0
+offset_right = 642.0
+offset_bottom = 199.0
+alignment = 1
 
 [node name="BallEvolutionStrip" parent="UI" unique_id=1201681759 instance=ExtResource("7")]
 layout_mode = 0
 offset_left = 8.0
-offset_top = 585.0
+offset_top = 605.0
 offset_right = 80.0
-offset_bottom = 1205.0
+offset_bottom = 1225.0
 
 [node name="Divider" type="ColorRect" parent="UI" unique_id=2055641159]
 layout_mode = 0
@@ -189,8 +229,13 @@ color = Color(0.2, 0.2901961, 0.43137255, 0)
 [node name="MergeGame" parent="." unique_id=252762906 instance=ExtResource("5")]
 position = Vector2(0, 390)
 
+[node name="BoardArtwork" parent="MergeGame" index="2" unique_id=702315937]
+offset_right = 699.0
+
 [node name="NextPanel" parent="MergeGame" index="5" unique_id=1158388454]
-offset_top = 54.0
-offset_bottom = 112.0
+offset_left = -12.0
+offset_top = 124.0
+offset_right = 138.0
+offset_bottom = 182.0
 
 [editable path="MergeGame"]

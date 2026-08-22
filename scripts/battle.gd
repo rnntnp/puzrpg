@@ -21,6 +21,7 @@ const WaterHealthBarClass = preload("res://scripts/water_health_bar.gd")
 @onready var gimmick_action_label: Label = $UI/GimmickActionLabel
 @onready var gimmick_detail_label: Label = $UI/GimmickDetailLabel
 @onready var background_artwork: TextureRect = $BackgroundArtwork
+@onready var layered_background: LayeredBattleBackground = $LayeredBackground
 @onready var monster_action_controller = $MonsterActionController
 @onready var merge_game = $MergeGame
 
@@ -55,6 +56,20 @@ func _load_level() -> void:
 	title_label.text = level_data.level_name
 	current_enemy_index = 0
 	level_finished = false
+	if (
+		level_data.battle_background_top != null
+		and level_data.battle_background_middle != null
+		and level_data.battle_background_bottom != null
+	):
+		background_artwork.visible = false
+		layered_background.configure(
+			level_data.battle_background_top,
+			level_data.battle_background_middle,
+			level_data.battle_background_bottom
+		)
+	else:
+		layered_background.visible = false
+		background_artwork.visible = true
 	if level_data.battle_background != null:
 		background_artwork.texture = level_data.battle_background
 	left_fighter.set_character_data(level_data.player_character)

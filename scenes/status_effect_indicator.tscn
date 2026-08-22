@@ -1,8 +1,27 @@
 [gd_scene format=3 uid="uid://brsr3exyrx8lh"]
 
 [ext_resource type="Script" uid="uid://dmejwks6ojqhx" path="res://scripts/status_effect_indicator.gd" id="1"]
-[ext_resource type="Texture2D" uid="uid://cpnn3w6binv6w" path="res://assets/ui/pond/status_container_reference_translucent.png" id="2_background"]
 [ext_resource type="FontFile" uid="uid://op5qpjre8dba" path="res://assets/fonts/nanum_square_round/NanumSquareRoundEB.ttf" id="3_jx1p6"]
+[ext_resource type="Shader" uid="uid://d4knouww648y4" path="res://shaders/character_white_outline.gdshader" id="4_outline"]
+
+[sub_resource type="Gradient" id="Gradient_status_backdrop"]
+offsets = PackedFloat32Array(0, 0.34, 0.68, 1)
+colors = PackedColorArray(0, 0, 0, 0.5, 0, 0, 0, 0.4, 0, 0, 0, 0.16, 0, 0, 0, 0)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture_status_backdrop"]
+gradient = SubResource("Gradient_status_backdrop")
+width = 128
+height = 128
+fill = 1
+fill_from = Vector2(0.5, 0.5)
+fill_to = Vector2(1, 0.5)
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_status_outline"]
+shader = ExtResource("4_outline")
+shader_parameter/outline_color = Color(1, 1, 1, 1)
+shader_parameter/outline_size = 4.5
+shader_parameter/outer_fade_color = Color(0, 0, 0, 0)
+shader_parameter/outer_fade_size = 0.0
 
 [node name="StatusEffectIndicator" type="Control" unique_id=18635545]
 custom_minimum_size = Vector2(54, 56)
@@ -11,41 +30,40 @@ anchors_preset = 0
 mouse_filter = 1
 script = ExtResource("1")
 
-[node name="Background" type="TextureRect" parent="." unique_id=1172535750]
-texture_filter = 4
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
+[node name="SoftBackdrop" type="TextureRect" parent="." unique_id=1774927406]
+layout_mode = 0
+offset_left = -42.0
+offset_top = -9.0
+offset_right = 154.0
+offset_bottom = 72.0
 mouse_filter = 2
-texture = ExtResource("2_background")
+texture = SubResource("GradientTexture_status_backdrop")
 expand_mode = 1
+stretch_mode = 5
 
 [node name="Icon" type="TextureRect" parent="." unique_id=1030998641]
 texture_filter = 2
+material = SubResource("ShaderMaterial_status_outline")
 layout_mode = 0
-offset_left = 7.0
-offset_top = 8.0
-offset_right = 41.0
-offset_bottom = 42.0
+offset_left = -1.5
+offset_top = -0.5
+offset_right = 49.5
+offset_bottom = 50.5
 mouse_filter = 2
 expand_mode = 1
 stretch_mode = 5
 
 [node name="TurnLabel" type="Label" parent="." unique_id=237601355]
 layout_mode = 0
-offset_left = 36.0
-offset_top = 32.0
-offset_right = 53.0
-offset_bottom = 53.0
-theme_override_colors/font_color = Color(1, 0.91, 0.48, 1)
-theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.72)
-theme_override_constants/shadow_offset_x = 1
-theme_override_constants/shadow_offset_y = 1
+offset_left = 44.0
+offset_top = -8.0
+offset_right = 89.0
+offset_bottom = 73.0
+theme_override_colors/font_color = Color(1.0039686, 0.88194263, 0, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 8
 theme_override_fonts/font = ExtResource("3_jx1p6")
-theme_override_font_sizes/font_size = 18
+theme_override_font_sizes/font_size = 48
 text = "0"
 horizontal_alignment = 1
 vertical_alignment = 1

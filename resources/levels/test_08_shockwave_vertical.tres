@@ -17,7 +17,7 @@ monster_health = 250
 normal_attack_damage = 5
 action_interval = 4
 normal_attack_interval = 3
-impulse_speed = 280.0
+impulse_speed = 1120.0
 
 [resource]
 script = ExtResource("1_level")
@@ -36,4 +36,3 @@ test_gimmick = SubResource("Gimmick")
 ball_drop_time_limit = -1.0
 merge_hit_stop_time_scale = 0.18
 merge_hit_stop_duration = 0.2
-

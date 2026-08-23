@@ -19,8 +19,8 @@ action_interval = 5
 normal_attack_interval = 3
 minimum_ball_stage = 3
 maximum_ball_stage = 11
-spawn_offset = Vector2(30, -12)
-initial_velocity = Vector2(85, -20)
+spawn_offset = Vector2(52, -55)
+initial_velocity = Vector2(180, -600)
 
 [resource]
 script = ExtResource("1_level")
@@ -33,10 +33,10 @@ stage_gimmick_icon = ExtResource("8_icon")
 stage_gimmick_name = "공 분열"
 reward_name = "기믹 플레이테스트"
 player_character = ExtResource("2_player")
-enemies = Array[ExtResource("4_character")]([ExtResource("3_enemy")])
+enemies = Array[ExtResource("4_character")]([ExtResource("3_enemy"), ExtResource("3_enemy")])
 is_gimmick_test_level = true
 test_gimmick = SubResource("Gimmick")
+enemy_healths = Array[int]([270, 340])
 ball_drop_time_limit = -1.0
 merge_hit_stop_time_scale = 0.18
 merge_hit_stop_duration = 0.2
-

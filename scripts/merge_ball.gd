@@ -17,6 +17,7 @@ var ingestion_marked := false
 var is_ice_frozen := false
 var ice_durability := 0
 var ice_targeted := false
+var split_targeted := false
 var horizontal_bounds_enabled := false
 var horizontal_bound_left := 0.0
 var horizontal_bound_right := 720.0
@@ -160,6 +161,11 @@ func set_danger_marked(marked: bool) -> void:
 	queue_redraw()
 
 
+func set_split_targeted(targeted: bool) -> void:
+	split_targeted = targeted
+	queue_redraw()
+
+
 func freeze_in_ice(durability: int) -> void:
 	if merge_locked or is_ice_frozen:
 		return
@@ -218,8 +224,13 @@ func _draw() -> void:
 		]), Color("#e0a6ff"))
 	if ice_targeted:
 		draw_arc(Vector2.ZERO, radius + 12.0, 0.0, TAU, 40, Color("#d7f7ff"), 8.0, true)
+<<<<<<< Updated upstream
 	if danger_marked:
 		draw_arc(Vector2.ZERO, radius + 12.0, 0.0, TAU, 40, Color("#ff4d5f"), 7.0, true)
+=======
+	if split_targeted:
+		draw_arc(Vector2.ZERO, radius + 10.0, 0.0, TAU, 40, Color("#ffd166"), 5.0, true)
+>>>>>>> Stashed changes
 	if is_ice_frozen:
 		draw_circle(Vector2.ZERO, radius + 5.0, Color(0.36, 0.82, 1.0, 0.38))
 		draw_arc(Vector2.ZERO, radius + 5.0, 0.0, TAU, 40, Color("#9eeaff"), 6.0, true)

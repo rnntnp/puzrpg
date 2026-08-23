@@ -66,6 +66,8 @@ var filter_change_turns := 0
 var filter_platforms: Array[StaticBody2D] = []
 var filter_platform_pass_stages: Array[int] = []
 var filter_ball_pass_state: Dictionary = {}
+var split_targets: Array[MergeBall] = []
+var split_target_merge_pending := false
 
 
 func configure(
@@ -111,6 +113,7 @@ func configure(
 	filter_platforms.clear()
 	filter_platform_pass_stages.clear()
 	filter_ball_pass_state.clear()
+	_clear_split_targets()
 	if not merge_game.merge_completed.is_connected(_on_merge_completed):
 		merge_game.merge_completed.connect(_on_merge_completed)
 	if not merge_game.merge_registered.is_connected(_on_merge_registered):
@@ -163,6 +166,8 @@ func on_turn_completed() -> void:
 	if data.kind == TestGimmickData.Kind.STAGE_FILTER_BOARD:
 		_run_stage_filter_turn()
 		return
+	if data.kind == TestGimmickData.Kind.SPLIT and next_is_special:
+		_ensure_split_targets()
 	if data.kind == TestGimmickData.Kind.MERGE_ECHO:
 		await _advance_echo_turn()
 	if data.kind == TestGimmickData.Kind.MERGE_CURSE and next_is_special and remaining_turns == 2 and not is_instance_valid(curse_target):
@@ -362,6 +367,9 @@ func _execute_special() -> void:
 		_log("FALLBACK", "valid target unavailable")
 		enemy.attack_with_damage(player, data.normal_attack_damage)
 	if data.kind in [TestGimmickData.Kind.BOARD_STATE_TARGETING, TestGimmickData.Kind.ENEMY_STANCE]:
+		next_is_special = true
+		remaining_turns = data.action_interval
+	elif data.kind == TestGimmickData.Kind.SPLIT:
 		next_is_special = true
 		remaining_turns = data.action_interval
 	elif _uses_duration() and succeeded:
@@ -1065,24 +1073,56 @@ func _make_ball_heavy() -> bool:
 
 
 func _split_ball() -> bool:
+	_ensure_split_targets()
+	if split_targets.is_empty():
+		return false
+	var split_succeeded := false
+	var targets_to_split: Array[MergeBall] = split_targets.duplicate()
+	_clear_split_targets()
+	for target in targets_to_split:
+		if not is_instance_valid(target) or target.merge_locked:
+			continue
+		var parent_position: Vector2 = target.position
+		var child_level: int = target.merge_level - 1
+		merge_game.remove_gimmick_ball(target)
+		var first := merge_game.spawn_gimmick_ball(child_level, parent_position + Vector2(-data.spawn_offset.x, data.spawn_offset.y))
+		var second := merge_game.spawn_gimmick_ball(child_level, parent_position + Vector2(data.spawn_offset.x, data.spawn_offset.y))
+		if is_instance_valid(first) and is_instance_valid(second):
+			# 큰 분열 공은 같은 속도 대입만으로는 상대적으로 덜 퍼져 보이므로 크기에 비례해 보정한다.
+			var spread_scale := clampf(first.get_radius() / 35.0, 1.0, 2.0)
+			first.linear_velocity = Vector2(-absf(data.initial_velocity.x), data.initial_velocity.y) * spread_scale
+			second.linear_velocity = Vector2(absf(data.initial_velocity.x), data.initial_velocity.y) * spread_scale
+			first.add_collision_exception_with(second)
+			second.add_collision_exception_with(first)
+			_remove_split_exception(first, second)
+			_log("SPLIT", "stage=%d -> %d + %d" % [child_level + 2, child_level + 1, child_level + 1])
+			split_succeeded = true
+	return split_succeeded
+
+
+func _ensure_split_targets() -> void:
+	if data.kind != TestGimmickData.Kind.SPLIT:
+		return
+	split_targets = split_targets.filter(func(ball: MergeBall) -> bool: return is_instance_valid(ball) and not ball.merge_locked)
+	if not split_targets.is_empty():
+		return
 	var candidates := _valid_balls(data.minimum_ball_stage, data.maximum_ball_stage)
 	candidates.sort_custom(func(a: MergeBall, b: MergeBall) -> bool:
 		return a.merge_level > b.merge_level if a.merge_level != b.merge_level else a.position.y < b.position.y
 	)
-	if candidates.is_empty():
-		return false
-	var target: MergeBall = candidates.front()
-	var parent_position: Vector2 = target.position
-	var child_level: int = target.merge_level - 1
-	merge_game.remove_gimmick_ball(target)
-	var first := merge_game.spawn_gimmick_ball(child_level, parent_position + Vector2(-data.spawn_offset.x, data.spawn_offset.y), Vector2(-absf(data.initial_velocity.x), data.initial_velocity.y))
-	var second := merge_game.spawn_gimmick_ball(child_level, parent_position + Vector2(data.spawn_offset.x, data.spawn_offset.y), Vector2(absf(data.initial_velocity.x), data.initial_velocity.y))
-	if is_instance_valid(first) and is_instance_valid(second):
-		first.add_collision_exception_with(second)
-		second.add_collision_exception_with(first)
-		_remove_split_exception(first, second)
-	_log("SPLIT", "stage=%d -> %d + %d" % [child_level + 2, child_level + 1, child_level + 1])
-	return true
+	var target_count := mini(1 + battle.current_enemy_index, candidates.size())
+	for index in range(target_count):
+		var target: MergeBall = candidates[index]
+		split_targets.append(target)
+		target.set_split_targeted(true)
+
+
+func _clear_split_targets() -> void:
+	for target in split_targets:
+		if is_instance_valid(target):
+			target.set_split_targeted(false)
+	split_targets.clear()
+	split_target_merge_pending = false
 
 
 func _remove_split_exception(first: MergeBall, second: MergeBall) -> void:
@@ -1388,6 +1428,10 @@ func _attack_life_bubble() -> bool:
 func _on_merge_completed(merged_ball: MergeBall) -> void:
 	if not active or not is_instance_valid(merged_ball):
 		return
+	if data.kind == TestGimmickData.Kind.SPLIT and split_target_merge_pending:
+		merged_ball.set_split_targeted(true)
+		split_targets.append(merged_ball)
+		split_target_merge_pending = false
 	for index in range(rocks.size() - 1, -1, -1):
 		var rock := rocks[index]
 		if not is_instance_valid(rock):
@@ -1406,6 +1450,13 @@ func _on_merge_completed(merged_ball: MergeBall) -> void:
 func _on_merge_registered(result_level: int, origin: Vector2, chain_index: int, source_ids: Array[int], involved_cursed: bool) -> void:
 	if not active:
 		return
+	if data.kind == TestGimmickData.Kind.SPLIT:
+		for target in split_targets:
+			if is_instance_valid(target) and source_ids.has(target.get_instance_id()):
+				split_target_merge_pending = true
+				target.set_split_targeted(false)
+				split_targets.erase(target)
+				break
 	if data.kind == TestGimmickData.Kind.ENEMY_STANCE:
 		var merge_side := _stance_side_for_x(origin.x, merge_game.get_base_board_bounds())
 		if merge_side == 0:
@@ -1457,6 +1508,8 @@ func _update_rewind_labels(turns: int) -> void:
 func _update_action_ui() -> void:
 	if not active or not is_instance_valid(battle):
 		return
+	if data.kind == TestGimmickData.Kind.SPLIT and next_is_special:
+		_ensure_split_targets()
 	var primary := "다음: %s · %d턴" % [_next_action_name(), remaining_turns]
 	var detail := ""
 	if duration_remaining > 0:

@@ -1,7 +1,13 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene load_steps=5 format=3]
 
 [ext_resource type="Script" path="res://scripts/fighter.gd" id="1_fighter"]
 [ext_resource type="Script" path="res://scripts/ingestion_belly_glow.gd" id="2_glow"]
+[ext_resource type="Shader" path="res://shaders/character_white_outline.gdshader" id="3_outline"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_character_outline"]
+shader = ExtResource("3_outline")
+shader_parameter/outline_color = Color(1, 1, 1, 1)
+shader_parameter/outline_size = 4.2
 
 [node name="Fighter" type="Polygon2D"]
 polygon = PackedVector2Array(-55, -75, 20, -75, 55, -35, 55, 70, -55, 70)
@@ -9,6 +15,7 @@ color = Color(0.282, 0.663, 1, 1)
 script = ExtResource("1_fighter")
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
+material = SubResource("ShaderMaterial_character_outline")
 
 [node name="IngestionBellyGlow" type="Node2D" parent="."]
 visible = false

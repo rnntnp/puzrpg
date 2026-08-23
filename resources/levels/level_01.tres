@@ -7,6 +7,9 @@
 [ext_resource type="Texture2D" uid="uid://dalchpagcqfma" path="res://assets/backgrounds/stage_01_moonlit_pond.png" id="5_background"]
 [ext_resource type="Texture2D" uid="uid://c0wjr5kpx22kk" path="res://assets/level_previews/level_01_preview.png" id="6_preview"]
 [ext_resource type="Texture2D" uid="uid://diw8e6ahibw5w" path="res://assets/effects/generated/status_attack.png" id="7_gimmick"]
+[ext_resource type="Texture2D" path="res://assets/backgrounds/stage_01_moonlit_pond_handdrawn_v4_clear_top.png" id="8_background_top"]
+[ext_resource type="Texture2D" path="res://assets/backgrounds/stage_01_moonlit_pond_handdrawn_v4_clear_middle.png" id="9_background_middle"]
+[ext_resource type="Texture2D" path="res://assets/backgrounds/stage_01_moonlit_pond_handdrawn_v4_clear_bottom.png" id="10_background_bottom"]
 
 [resource]
 script = ExtResource("1_level")
@@ -14,6 +17,9 @@ level_name = "1. 고향 연못"
 image_placeholder = "TRAINING GROUND
 LEVEL IMAGE"
 battle_background = ExtResource("5_background")
+battle_background_top = ExtResource("8_background_top")
+battle_background_middle = ExtResource("9_background_middle")
+battle_background_bottom = ExtResource("10_background_bottom")
 level_select_preview = ExtResource("6_preview")
 stage_gimmick_icon = ExtResource("7_gimmick")
 stage_gimmick_name = "일반 공격"

@@ -33,6 +33,7 @@ var is_merge_cursed := false
 var curse_preview := false
 var rewind_turns := 0
 var bumper_cooldown_until_msec := 0
+var danger_marked := false
 
 func _ready() -> void:
 	body_entered.connect(_on_body_entered)
@@ -154,6 +155,10 @@ func set_ice_targeted(targeted: bool) -> void:
 	ice_targeted = targeted
 	queue_redraw()
 
+func set_danger_marked(marked: bool) -> void:
+	danger_marked = marked
+	queue_redraw()
+
 
 func freeze_in_ice(durability: int) -> void:
 	if merge_locked or is_ice_frozen:
@@ -213,6 +218,8 @@ func _draw() -> void:
 		]), Color("#e0a6ff"))
 	if ice_targeted:
 		draw_arc(Vector2.ZERO, radius + 12.0, 0.0, TAU, 40, Color("#d7f7ff"), 8.0, true)
+	if danger_marked:
+		draw_arc(Vector2.ZERO, radius + 12.0, 0.0, TAU, 40, Color("#ff4d5f"), 7.0, true)
 	if is_ice_frozen:
 		draw_circle(Vector2.ZERO, radius + 5.0, Color(0.36, 0.82, 1.0, 0.38))
 		draw_arc(Vector2.ZERO, radius + 5.0, 0.0, TAU, 40, Color("#9eeaff"), 6.0, true)

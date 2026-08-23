@@ -24,6 +24,7 @@ const SWIPE_THRESHOLD := 65.0
 @onready var gimmick_value: Label = $Content/InfoCardLeft3/Value
 @onready var gimmick_icon: TextureRect = $Content/InfoCardLeft3/Icon
 @onready var reward_value: Label = $Content/RewardPanel/Value
+@onready var all_levels_button: Button = $AllLevelsButton
 
 var viewed_level_index := 0
 var pointer_start := Vector2.ZERO
@@ -43,6 +44,7 @@ func _ready() -> void:
 	autoplay_button.pressed.connect(_on_autoplay_button_pressed)
 	combo_test_button.visible = OS.is_debug_build()
 	combo_test_button.pressed.connect(_on_combo_test_button_pressed)
+	all_levels_button.pressed.connect(_show_all_levels)
 	_show_level(viewed_level_index)
 	_play_swipe_hint()
 	if GameSession.developer_autoplay_enabled:
@@ -205,4 +207,72 @@ func _on_combo_test_button_pressed() -> void:
 	combo_test_button.disabled = true
 	GameSession.developer_autoplay_enabled = false
 	GameSession.request_combo_test()
+	get_tree().change_scene_to_file(battle_scene_path)
+
+
+func _show_all_levels() -> void:
+	var overlay := ColorRect.new()
+	overlay.name = "AllLevelsOverlay"
+	overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	overlay.color = Color(0.025, 0.05, 0.1, 0.94)
+	overlay.mouse_filter = Control.MOUSE_FILTER_STOP
+	overlay.z_index = 20
+	add_child(overlay)
+
+	var title := Label.new()
+	title.text = "전체 레벨 선택"
+	title.position = Vector2(32, 28)
+	title.size = Vector2(500, 60)
+	title.add_theme_font_size_override("font_size", 36)
+	title.add_theme_color_override("font_color", Color("#eaf6ff"))
+	overlay.add_child(title)
+
+	var close_button := Button.new()
+	close_button.text = "닫기"
+	close_button.position = Vector2(585, 28)
+	close_button.size = Vector2(105, 58)
+	close_button.add_theme_font_size_override("font_size", 22)
+	close_button.pressed.connect(overlay.queue_free)
+	overlay.add_child(close_button)
+
+	var scroll := ScrollContainer.new()
+	scroll.position = Vector2(24, 108)
+	scroll.size = Vector2(672, 1100)
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	overlay.add_child(scroll)
+	var grid := GridContainer.new()
+	grid.columns = 3
+	grid.add_theme_constant_override("h_separation", 12)
+	grid.add_theme_constant_override("v_separation", 12)
+	grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll.add_child(grid)
+
+	for index in range(GameSession.get_level_count()):
+		var level: LevelData = GameSession.get_level_at(index)
+		if level == null:
+			continue
+		var level_button := Button.new()
+		level_button.custom_minimum_size = Vector2(212, 92)
+		level_button.add_theme_font_size_override("font_size", 18)
+		var unlocked := GameSession.is_level_unlocked(index)
+		level_button.text = "%02d\n%s" % [index + 1, _short_level_name(level.level_name)]
+		level_button.disabled = not unlocked
+		if not unlocked:
+			level_button.text += "\n🔒"
+		level_button.pressed.connect(_select_from_all_levels.bind(index, overlay))
+		grid.add_child(level_button)
+
+
+func _short_level_name(full_name: String) -> String:
+	var separator := full_name.find("·")
+	if separator >= 0:
+		return full_name.substr(separator + 1).strip_edges().split("/")[0].strip_edges()
+	return full_name
+
+
+func _select_from_all_levels(index: int, overlay: Control) -> void:
+	if not GameSession.select_level(index):
+		return
+	viewed_level_index = index
+	overlay.queue_free()
 	get_tree().change_scene_to_file(battle_scene_path)

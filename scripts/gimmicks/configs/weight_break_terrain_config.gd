@@ -1,17 +1,31 @@
 class_name WeightBreakTerrainConfig
 extends Resource
 
-@export var enemy_modes: Array[int] = [0, 1, 2]
-@export_range(1.0, 100.0, 0.5) var standard_break_weight := 25.0
-@export_range(1.0, 120.0, 0.5) var lower_break_weight := 30.0
-@export_range(1.0, 2.5, 0.05) var stage_weight_exponent := 1.25
-@export_range(0.4, 0.9, 0.01) var single_floor_width_ratio := 0.68
-@export_range(0.25, 0.48, 0.01) var split_floor_width_ratio := 0.42
-@export_range(0.45, 0.8, 0.01) var single_floor_height_ratio := 0.60
-@export_range(0.25, 0.65, 0.01) var upper_floor_height_ratio := 0.42
-@export_range(0.55, 0.85, 0.01) var lower_floor_height_ratio := 0.68
-@export_range(4.0, 30.0, 1.0) var platform_thickness := 10.0
+@export_range(1, 20, 1) var glass_rise_action_interval := 5
+@export_range(1, 20, 1) var full_glass_attack_interval := 3
+
+@export_category("Enemy 1 / Enemy 3 중앙 유리")
+@export_range(1, 100, 1) var crack_stage_sum := 10
+@export_range(1, 150, 1) var destroy_stage_sum := 16
+## Enemy 1 teaching platform. Enemy 3 keeps its existing glass_width_ratio.
+@export_range(0.05, 0.9, 0.01) var enemy1_glass_width_ratio := 0.55
+@export_range(0.05, 0.9, 0.01) var glass_width_ratio := 0.40
+@export_range(4.0, 30.0, 1.0) var glass_thickness := 10.0
+@export_range(1.0, 24.0, 1.0) var support_contact_margin := 8.0
+@export_range(0.05, 0.95, 0.01) var c1_height_ratio := 0.70
+@export_range(0.05, 0.95, 0.01) var c2_height_ratio := 0.50
+@export_range(0.05, 0.95, 0.01) var c3_height_ratio := 0.30
+
+@export_category("Enemy 2 좌우 유리")
+@export_range(1, 100, 1) var side_crack_stage_sum := 9
+@export_range(1, 150, 1) var side_destroy_stage_sum := 14
+@export_range(0.05, 0.40, 0.01) var side_glass_width_ratio := 0.34
+@export_range(0.0, 0.30, 0.01) var side_outer_margin_ratio := 0.11
+@export_range(0.05, 0.95, 0.01) var side_lower_height_ratio := 0.72
+@export_range(0.05, 0.95, 0.01) var side_upper_height_ratio := 0.50
+
+@export_category("공통 물리 / 표시")
 @export_range(1.0, 40.0, 1.0) var one_way_margin := 12.0
+@export_range(0.1, 4.0, 0.1) var movement_duration := 0.3
 @export_range(0.1, 4.0, 0.1) var settle_timeout := 1.8
 @export_range(0.0, 2.0, 0.05) var collapse_delay := 0.15
-

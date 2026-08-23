@@ -23,6 +23,7 @@ const WaterHealthBarClass = preload("res://scripts/water_health_bar.gd")
 @onready var background_artwork: TextureRect = $BackgroundArtwork
 @onready var monster_action_controller = $MonsterActionController
 @onready var merge_game = $MergeGame
+@onready var exit_button: Button = $UI/ExitButton
 
 var level_data: LevelDataClass
 var current_enemy_index := 0
@@ -36,15 +37,32 @@ func get_debug_snapshot() -> Dictionary:
 
 
 func _ready() -> void:
+	exit_button.pressed.connect(_show_exit_confirmation)
 	left_fighter.health_changed.connect(_on_left_health_changed)
 	right_fighter.health_changed.connect(_on_right_health_changed)
 	left_fighter.defeated.connect(_on_fighter_defeated)
 	right_fighter.defeated.connect(_on_fighter_defeated)
 	merge_game.game_over.connect(_on_merge_game_over)
+	merge_game.overflow_triggered.connect(_on_overflow_triggered)
 	merge_game.merge_attack_requested.connect(_on_merge_attack_requested)
 	merge_game.turn_completed.connect(_on_ball_dropped)
 	_load_level()
 	_start_battle()
+
+
+func _show_exit_confirmation() -> void:
+	if level_finished:
+		return
+	var dialog := ConfirmationDialog.new()
+	dialog.title = "전투 나가기"
+	dialog.dialog_text = "현재 전투를 포기하고 레벨 선택으로 돌아갈까요?\n진행 중인 전투는 저장되지 않습니다."
+	dialog.ok_button_text = "레벨 선택"
+	dialog.cancel_button_text = "계속 플레이"
+	dialog.confirmed.connect(func() -> void:
+		get_tree().change_scene_to_file("res://scenes/level_select.tscn")
+	)
+	add_child(dialog)
+	dialog.popup_centered(Vector2(560, 250))
 
 
 func _load_level() -> void:
@@ -188,3 +206,11 @@ func _on_merge_game_over() -> void:
 	battle_running = false
 	GameSession.set_battle_result(false, "%s · 머지 보드 게임오버" % level_data.level_name)
 	get_tree().change_scene_to_file("res://scenes/battle_result.tscn")
+
+
+func _on_overflow_triggered(damage: int) -> void:
+	if not battle_running or not left_fighter.is_alive():
+		return
+	status_label.text = "오버플로우! HP -%d" % damage
+	status_label.modulate = Color("#ff6677")
+	left_fighter.take_damage(damage)

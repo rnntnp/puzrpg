@@ -11,6 +11,7 @@ signal merge_attack_requested(
 )
 signal ball_dropped
 signal turn_completed
+signal overflow_triggered(damage: int)
 signal ingestion_target_replaced(ball: MergeBall)
 signal merge_completed(merged_ball: MergeBall)
 signal merge_registered(result_level: int, origin: Vector2, chain_index: int, source_ids: Array[int], involved_cursed: bool)
@@ -24,11 +25,8 @@ const DangerLineClass = preload("res://scripts/danger_line.gd")
 const NextPreviewPanelClass = preload("res://scripts/next_preview_panel.gd")
 const GimmickObjectScene = preload("res://scenes/gimmick_object.tscn")
 const DROP_HEIGHT_RATIO := 0.1655
-const DANGER_LINE_HEIGHT_RATIO := 0.2720
 const DANGER_LINE_REVEAL_FILL_RATIO := 0.8
 const GUIDE_BOTTOM_MARGIN := 21.0
-const DROP_GRACE_DURATION := 1.2
-const OVERFLOW_DURATION := 0.8
 const COMBO_SETTLE_MSEC := 500
 const COMBO_MAX_WAIT_MSEC := 4000
 const MERGE_ATTACK_DELAY := 0.25
@@ -60,6 +58,11 @@ const TRAPDOOR_WALL_PATHS: Array[NodePath] = [^"LeftWallShape", ^"RightWallShape
 @onready var gimmick_objects: Node2D = $GimmickObjects
 @onready var gimmick_overlay: GimmickOverlay = $GimmickOverlay
 @export var physics_data: MergePhysicsDataClass
+@export_category("Danger / Overflow")
+@export_range(0.05, 0.50, 0.005) var danger_line_height_ratio := 0.10
+@export_range(10.0, 300.0, 5.0) var warning_distance := 90.0
+@export_range(0.5, 10.0, 0.1) var danger_duration := 3.0
+@export_range(1, 100, 1) var overflow_damage := 10
 var current_level := 0
 var next_level := 0
 var score := 0
@@ -67,8 +70,8 @@ var can_drop := true
 var is_aiming := false
 var aim_x := 360.0
 var preview_ball
-var drop_grace_remaining := 0.0
-var overflow_time := 0.0
+var danger_timer := 0.0
+var danger_state := DangerLineClass.State.SAFE
 var is_game_over := false
 var input_locked := false
 var drop_time_limit := 5.0
@@ -131,7 +134,11 @@ func _sync_board_geometry_from_collisions() -> void:
 
 	var board_height := board_inner_bottom - board_inner_top
 	drop_position_y = board_inner_top + board_height * DROP_HEIGHT_RATIO
-	danger_line_y = board_inner_top + board_height * DANGER_LINE_HEIGHT_RATIO
+	# The gameplay board begins where player balls enter the board, not at the
+	# hidden top of the tall side-wall collision. Danger and vertical mechanics
+	# use this drop-to-floor span as their shared reference.
+	var playable_height := board_inner_bottom - drop_position_y
+	danger_line_y = drop_position_y + playable_height * danger_line_height_ratio
 	aim_x = (board_inner_left + board_inner_right) * 0.5
 	danger_line.configure(board_inner_left, board_inner_right, danger_line_y)
 	_update_preview_position()
@@ -245,9 +252,15 @@ func get_base_board_bounds() -> Rect2:
 	return _base_board_bounds
 
 
+func get_playable_board_bounds() -> Rect2:
+	return Rect2(
+		Vector2(board_inner_left, drop_position_y),
+		Vector2(board_inner_right - board_inner_left, maxf(0.0, board_inner_bottom - drop_position_y))
+	)
+
+
 func suppress_danger_line(seconds: float) -> void:
 	danger_suppression_remaining = maxf(danger_suppression_remaining, seconds)
-	overflow_time = 0.0
 
 
 func set_sealed_stage(stage_number: int) -> void:
@@ -565,8 +578,6 @@ func configure(
 func _process(delta: float) -> void:
 	if danger_suppression_remaining > 0.0:
 		danger_suppression_remaining = maxf(0.0, danger_suppression_remaining - delta)
-		overflow_time = 0.0
-	danger_line.visible = _should_show_danger_line()
 	if is_game_over:
 		return
 	if auto_drop_enabled and can_drop and not input_locked:
@@ -574,16 +585,7 @@ func _process(delta: float) -> void:
 		timer_label.text = "자동 낙하 %.1f초" % drop_time_remaining
 		if drop_time_remaining <= 0.0:
 			_drop_ball(aim_x)
-	if drop_grace_remaining > 0.0:
-		drop_grace_remaining -= delta
-		overflow_time = 0.0
-		return
-	if _has_ball_over_danger_line():
-		overflow_time += delta
-		if overflow_time >= OVERFLOW_DURATION:
-			_trigger_game_over()
-	else:
-		overflow_time = 0.0
+	_update_danger_state(delta)
 
 func _unhandled_input(event: InputEvent) -> void:
 	if input_locked or is_game_over:
@@ -652,7 +654,6 @@ func _drop_ball(x: float) -> void:
 	combo_points = 0
 	last_merge_msec = Time.get_ticks_msec()
 	next_merge_resolution_msec = last_merge_msec
-	drop_grace_remaining = DROP_GRACE_DURATION
 	_spawn_ball(Vector2(x, drop_position_y), current_level, current_sequence_id)
 	ball_dropped.emit()
 	_advance_ball_queue()
@@ -804,7 +805,6 @@ func _on_merge_requested(first, second) -> void:
 		str(drop_sequence_active), combo_count, combo_points
 	])
 	call_deferred("_spawn_merged_ball", at, level, carries_ingestion_target)
-	drop_grace_remaining = maxf(drop_grace_remaining, 0.5)
 
 
 func _spawn_merge_burst(at: Vector2, data: Resource, merge_combo_count: int) -> void:
@@ -840,30 +840,78 @@ func _apply_merge_push(origin: Vector2, merged_ball: MergeBall) -> void:
 		var impulse := offset.normalized() * merge_push_force * falloff * ball.mass
 		ball.apply_central_impulse(impulse)
 
-func _has_ball_over_danger_line() -> bool:
+func _update_danger_state(delta: float) -> void:
 	if danger_suppression_remaining > 0.0:
-		return false
-	for child in balls.get_children():
-		if child.merge_locked:
-			continue
-		if child.position.y - child.get_radius() < danger_line_y:
-			return true
-	return false
+		_refresh_danger_visuals([])
+		return
+	var overflow_balls := _get_overflow_balls()
+	if not overflow_balls.is_empty():
+		if danger_state != DangerLineClass.State.DANGER:
+			danger_state = DangerLineClass.State.DANGER
+			danger_timer = danger_duration
+		_refresh_danger_visuals(overflow_balls)
+		if not input_locked:
+			danger_timer = maxf(0.0, danger_timer - delta)
+		if danger_timer <= 0.0:
+			var confirmed_balls := _get_overflow_balls()
+			if not confirmed_balls.is_empty():
+				_resolve_overflow(confirmed_balls)
+			else:
+				_resolve_danger_recovery()
+		return
+	if danger_state == DangerLineClass.State.DANGER:
+		_resolve_danger_recovery()
+	else:
+		danger_state = DangerLineClass.State.WARNING if _has_warning_ball() else DangerLineClass.State.SAFE
+		_refresh_danger_visuals([])
 
 
-func _should_show_danger_line() -> bool:
-	if is_game_over or danger_suppression_remaining > 0.0:
-		return false
-	var reveal_y := lerpf(board_inner_bottom, danger_line_y, DANGER_LINE_REVEAL_FILL_RATIO)
+func _get_overflow_balls() -> Array[MergeBall]:
+	var result: Array[MergeBall] = []
 	for child in balls.get_children():
 		if not child is MergeBall:
 			continue
 		var ball := child as MergeBall
 		if ball.merge_locked or not ball.has_landed():
 			continue
-		if ball.position.y - ball.get_radius() <= reveal_y:
+		if ball.position.y < danger_line_y:
+			result.append(ball)
+	return result
+
+
+func _has_warning_ball() -> bool:
+	for child in balls.get_children():
+		if not child is MergeBall:
+			continue
+		var ball := child as MergeBall
+		if ball.merge_locked or not ball.has_landed():
+			continue
+		if ball.position.y <= danger_line_y + warning_distance:
 			return true
 	return false
+
+
+func _resolve_danger_recovery() -> void:
+	danger_timer = 0.0
+	danger_state = DangerLineClass.State.WARNING if _has_warning_ball() else DangerLineClass.State.SAFE
+	_refresh_danger_visuals([])
+
+
+func _resolve_overflow(overflow_balls: Array[MergeBall]) -> void:
+	for ball in overflow_balls:
+		remove_gimmick_ball(ball)
+	danger_timer = 0.0
+	danger_state = DangerLineClass.State.WARNING if _has_warning_ball() else DangerLineClass.State.SAFE
+	_refresh_danger_visuals([])
+	overflow_triggered.emit(overflow_damage)
+
+
+func _refresh_danger_visuals(overflow_balls: Array[MergeBall]) -> void:
+	for child in balls.get_children():
+		if child is MergeBall:
+			(child as MergeBall).set_danger_marked(child in overflow_balls)
+	danger_line.set_state(danger_state)
+	danger_line.visible = danger_state != DangerLineClass.State.SAFE and danger_suppression_remaining <= 0.0
 
 func _has_moving_balls() -> bool:
 	for child in balls.get_children():

@@ -29,7 +29,7 @@ A new mechanic may extend behavior through its own handler. It must not silently
 - The catalog currently contains 3 campaign levels followed by 50 mechanic test levels.
 - Campaign levels unlock sequentially. Every path in `test_level_paths` is always selectable.
 - The level-select start button stores the selected path in `GameSession` and opens `scenes/main.tscn`.
-- A battle win, fighter defeat, danger-line overflow, or explicit gimmick failure opens `scenes/battle_result.tscn`. Its buttons return to level select.
+- A battle win, fighter defeat, or explicit gimmick failure opens `scenes/battle_result.tscn`. Danger-Line overflow removes the overflowing balls and damages the player; it opens the result only if that damage defeats the player.
 - `LevelData.enemies` is the existing enemy-sequence system. Enemies are loaded in array order; do not create a second wave manager.
 - The board's balls remain in the same `MergeGame` while sequential enemies change. A test handler can also retain its mechanic state by setting `preserve_board_between_enemies`.
 - On the last enemy's defeat, the level result is recorded and `next_level_path` is used only when a next catalog entry exists.
@@ -118,14 +118,16 @@ Primary runtime evidence: `scripts/character_data.gd`, `scripts/fighter.gd`, `sc
 - A mechanic's UI must expose the state used for its next decision, the remaining turns, the player's actionable response, and the result when ambiguity would change play.
 - Prototype feedback may reuse existing sprites or use `Node2D`, `Line2D`, `Polygon2D`, `Label`, color overlays, arrows, and simple tweens. Finished art is not required.
 
-## 10. Danger line and game over
+## 10. Danger line and overflow
 
-- The danger line is positioned at 27.20% of the board height from its top.
-- It becomes visible when a landed ball reaches the reveal height corresponding to 80% fill toward the danger line.
-- Every normal drop starts a 1.2-second danger grace period.
-- After grace, an unlocked ball whose top crosses above the danger line accumulates overflow time. At 0.8 seconds the merge board triggers game over.
-- Board-transforming mechanics may call `suppress_danger_line(seconds)` during forced movement. Suppression resets overflow accumulation; it is not permission to disable the danger line for the mechanic's whole active duration.
-- Once forced movement and its short suppression finish, balls that genuinely remain over the line are judged normally.
+- The gameplay board is the rectangle from the current player-ball drop Y to the floor Collision top; the tall side-wall Collision above the drop point is not gameplay-board height. The danger line position is the `MergeGame.danger_line_height_ratio` Inspector value (default 10% from that gameplay-board top). Mechanics that need player-facing vertical placement may use `MergeGame.get_playable_board_bounds()`.
+- Only balls that have completed their first valid landing contact are eligible; a newly dropped ball falling through the line is not eligible until it lands.
+- A landed ball enters WARNING when its center reaches the configurable `warning_distance` below the line. WARNING has no countdown.
+- One or more eligible ball centers above the line enter DANGER. The board-level timer starts once at the configurable `danger_duration` (default 3.0 seconds) and does not reset when additional balls cross.
+- During DANGER, the player may keep dropping. If no eligible centers remain above the line, the timer is cancelled and the state returns to WARNING or SAFE.
+- On expiry, all currently overflowing eligible balls are removed and the player takes one configurable `overflow_damage` event (default 10), regardless of ball count. This is not a board instant-death condition.
+- The timer pauses while board input is locked or a mechanic calls `suppress_danger_line(seconds)`. Once normal input resumes, existing overflow is re-evaluated without resetting the timer.
+- Danger-Line damage uses the normal player HP/defeat path.
 
 Primary runtime evidence: `scripts/merge_game.gd` and `scripts/danger_line.gd`.
 

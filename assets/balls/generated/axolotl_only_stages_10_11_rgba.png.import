@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dmtn6vucprc6y"
-path="res://.godot/imported/axolotl_only_ball_red_doteyes_rgba.png-fa1f1cd45742ef3adedc91a0865986cb.ctex"
+uid="uid://do7tuba6n1lqp"
+path="res://.godot/imported/axolotl_only_stages_10_11_rgba.png-ab32ed9af0d6459cc70b702115614d74.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/balls/generated/axolotl_only_ball_red_doteyes_rgba.png"
-dest_files=["res://.godot/imported/axolotl_only_ball_red_doteyes_rgba.png-fa1f1cd45742ef3adedc91a0865986cb.ctex"]
+source_file="res://assets/balls/generated/axolotl_only_stages_10_11_rgba.png"
+dest_files=["res://.godot/imported/axolotl_only_stages_10_11_rgba.png-ab32ed9af0d6459cc70b702115614d74.ctex"]
 
 [params]
 

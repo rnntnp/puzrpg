@@ -1,17 +1,27 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene format=3 uid="uid://bid70mcjm3tfm"]
 
-[ext_resource type="PackedScene" path="res://scenes/dev/ball_visual_preview_item.tscn" id="1_item"]
+[ext_resource type="PackedScene" path="res://scenes/balls/visuals/ball_visual_01.tscn" id="1"]
+[ext_resource type="PackedScene" path="res://scenes/balls/visuals/ball_visual_02.tscn" id="2"]
+[ext_resource type="PackedScene" path="res://scenes/balls/visuals/ball_visual_03.tscn" id="3"]
+[ext_resource type="PackedScene" path="res://scenes/balls/visuals/ball_visual_04.tscn" id="4"]
+[ext_resource type="PackedScene" path="res://scenes/balls/visuals/ball_visual_05.tscn" id="5"]
+[ext_resource type="PackedScene" path="res://scenes/balls/visuals/ball_visual_06.tscn" id="6"]
+[ext_resource type="PackedScene" path="res://scenes/balls/visuals/ball_visual_07.tscn" id="7"]
+[ext_resource type="PackedScene" path="res://scenes/balls/visuals/ball_visual_08.tscn" id="8"]
+[ext_resource type="PackedScene" path="res://scenes/balls/visuals/ball_visual_09.tscn" id="9"]
+[ext_resource type="PackedScene" path="res://scenes/balls/visuals/ball_visual_10.tscn" id="10"]
+[ext_resource type="PackedScene" path="res://scenes/balls/visuals/ball_visual_11.tscn" id="11"]
 
-[node name="BallVisualPreview" type="Node2D"]
+[node name="BallVisualPreview" type="Node2D" unique_id=509715516]
 
-[node name="Background" type="ColorRect" parent="."]
+[node name="Background" type="ColorRect" parent="." unique_id=839520255]
 z_index = -10
 offset_right = 720.0
 offset_bottom = 1280.0
 mouse_filter = 2
 color = Color(0.035, 0.09, 0.2, 1)
 
-[node name="Title" type="Label" parent="."]
+[node name="Title" type="Label" parent="." unique_id=1600647726]
 offset_left = 40.0
 offset_top = 28.0
 offset_right = 680.0
@@ -20,70 +30,157 @@ theme_override_colors/font_color = Color(0.9, 0.97, 1, 1)
 theme_override_colors/font_outline_color = Color(0.03, 0.08, 0.18, 1)
 theme_override_constants/outline_size = 6
 theme_override_font_sizes/font_size = 32
-text = "구슬 비주얼 프리뷰"
+text = "구슬 비주얼 프리팹 프리뷰"
 horizontal_alignment = 1
 
-[node name="Hint" type="Label" parent="."]
-offset_left = 30.0
+[node name="Hint" type="Label" parent="." unique_id=878362429]
+offset_left = 25.0
 offset_top = 78.0
-offset_right = 690.0
-offset_bottom = 112.0
+offset_right = 695.0
+offset_bottom = 110.0
 theme_override_colors/font_color = Color(0.62, 0.78, 0.9, 1)
-theme_override_font_sizes/font_size = 17
-text = "각 Ball 노드를 선택해 tint_color · axolotl_offset · axolotl_scale을 조절하세요"
+theme_override_font_sizes/font_size = 16
+text = "scenes/balls/visuals의 단계별 씬을 열어 Axolotl을 직접 이동·확대하세요"
 horizontal_alignment = 1
 
-[node name="Ball01" parent="." instance=ExtResource("1_item")]
+[node name="Ball01" parent="." unique_id=1027163127 instance=ExtResource("1")]
 position = Vector2(120, 235)
-stage_number = 1
-tint_color = Color(0.18, 0.74, 1, 1)
+scale = Vector2(0.42, 0.42)
 
-[node name="Ball02" parent="." instance=ExtResource("1_item")]
+[node name="Ball02" parent="." unique_id=1622015023 instance=ExtResource("2")]
 position = Vector2(360, 235)
-stage_number = 2
-tint_color = Color(0.35, 1, 0.24, 1)
+scale = Vector2(0.42, 0.42)
 
-[node name="Ball03" parent="." instance=ExtResource("1_item")]
+[node name="Ball03" parent="." unique_id=960196445 instance=ExtResource("3")]
 position = Vector2(600, 235)
-stage_number = 3
-tint_color = Color(1, 0.82, 0.12, 1)
+scale = Vector2(0.42, 0.42)
 
-[node name="Ball04" parent="." instance=ExtResource("1_item")]
+[node name="Ball04" parent="." unique_id=575094931 instance=ExtResource("4")]
 position = Vector2(120, 565)
-stage_number = 4
-tint_color = Color(1, 0.37, 0.08, 1)
+scale = Vector2(0.42, 0.42)
 
-[node name="Ball05" parent="." instance=ExtResource("1_item")]
+[node name="Ball05" parent="." unique_id=582035099 instance=ExtResource("5")]
 position = Vector2(360, 565)
-stage_number = 5
-tint_color = Color(1, 0.16, 0.42, 1)
+scale = Vector2(0.42, 0.42)
 
-[node name="Ball06" parent="." instance=ExtResource("1_item")]
+[node name="Ball06" parent="." unique_id=1127675302 instance=ExtResource("6")]
 position = Vector2(600, 565)
-stage_number = 6
-tint_color = Color(0.68, 0.24, 1, 1)
+scale = Vector2(0.42, 0.42)
 
-[node name="Ball07" parent="." instance=ExtResource("1_item")]
+[node name="Ball07" parent="." unique_id=767968073 instance=ExtResource("7")]
 position = Vector2(120, 895)
-stage_number = 7
-tint_color = Color(0.08, 1, 0.86, 1)
+scale = Vector2(0.42, 0.42)
 
-[node name="Ball08" parent="." instance=ExtResource("1_item")]
+[node name="Ball08" parent="." unique_id=615152072 instance=ExtResource("8")]
 position = Vector2(360, 895)
-stage_number = 8
-tint_color = Color(1, 0.45, 0.7, 1)
+scale = Vector2(0.42, 0.42)
 
-[node name="Ball09" parent="." instance=ExtResource("1_item")]
+[node name="Ball09" parent="." unique_id=1707041772 instance=ExtResource("9")]
 position = Vector2(600, 895)
-stage_number = 9
-tint_color = Color(0.76, 0.9, 1, 1)
+scale = Vector2(0.42, 0.42)
 
-[node name="Footer" type="Label" parent="."]
+[node name="Ball10" parent="." unique_id=1411590712 instance=ExtResource("10")]
+position = Vector2(240, 1130)
+scale = Vector2(0.32, 0.32)
+
+[node name="Ball11" parent="." unique_id=1349882146 instance=ExtResource("11")]
+position = Vector2(480, 1130)
+scale = Vector2(0.32, 0.32)
+
+[node name="Label01" type="Label" parent="." unique_id=30121440]
+offset_left = 70.0
+offset_top = 340.0
+offset_right = 170.0
+offset_bottom = 372.0
+text = "1단계"
+horizontal_alignment = 1
+
+[node name="Label02" type="Label" parent="." unique_id=1496294347]
+offset_left = 310.0
+offset_top = 340.0
+offset_right = 410.0
+offset_bottom = 372.0
+text = "2단계"
+horizontal_alignment = 1
+
+[node name="Label03" type="Label" parent="." unique_id=1379198794]
+offset_left = 550.0
+offset_top = 340.0
+offset_right = 650.0
+offset_bottom = 372.0
+text = "3단계"
+horizontal_alignment = 1
+
+[node name="Label04" type="Label" parent="." unique_id=485023888]
+offset_left = 70.0
+offset_top = 670.0
+offset_right = 170.0
+offset_bottom = 702.0
+text = "4단계"
+horizontal_alignment = 1
+
+[node name="Label05" type="Label" parent="." unique_id=2001506086]
+offset_left = 310.0
+offset_top = 670.0
+offset_right = 410.0
+offset_bottom = 702.0
+text = "5단계"
+horizontal_alignment = 1
+
+[node name="Label06" type="Label" parent="." unique_id=1988215583]
+offset_left = 550.0
+offset_top = 670.0
+offset_right = 650.0
+offset_bottom = 702.0
+text = "6단계"
+horizontal_alignment = 1
+
+[node name="Label07" type="Label" parent="." unique_id=1066742846]
+offset_left = 70.0
+offset_top = 1000.0
+offset_right = 170.0
+offset_bottom = 1032.0
+text = "7단계"
+horizontal_alignment = 1
+
+[node name="Label08" type="Label" parent="." unique_id=1320199590]
+offset_left = 310.0
+offset_top = 1000.0
+offset_right = 410.0
+offset_bottom = 1032.0
+text = "8단계"
+horizontal_alignment = 1
+
+[node name="Label09" type="Label" parent="." unique_id=1674034639]
+offset_left = 550.0
+offset_top = 1000.0
+offset_right = 650.0
+offset_bottom = 1032.0
+text = "9단계"
+horizontal_alignment = 1
+
+[node name="Label10" type="Label" parent="." unique_id=510838746]
+offset_left = 190.0
+offset_top = 1205.0
+offset_right = 290.0
+offset_bottom = 1237.0
+text = "10단계"
+horizontal_alignment = 1
+
+[node name="Label11" type="Label" parent="." unique_id=324002328]
+offset_left = 430.0
+offset_top = 1205.0
+offset_right = 530.0
+offset_bottom = 1237.0
+text = "11단계"
+horizontal_alignment = 1
+
+[node name="Footer" type="Label" parent="." unique_id=236663188]
 offset_left = 40.0
-offset_top = 1080.0
+offset_top = 1250.0
 offset_right = 680.0
-offset_bottom = 1160.0
+offset_bottom = 1278.0
 theme_override_colors/font_color = Color(0.55, 0.7, 0.85, 1)
-theme_override_font_sizes/font_size = 16
-text = "이 씬은 비주얼 조정용입니다. 게임 리소스 값은 자동으로 변경하지 않습니다."
+theme_override_font_sizes/font_size = 12
+text = "단계별 씬 수정 사항은 이 프리뷰와 실제 게임에 함께 반영됩니다."
 horizontal_alignment = 1

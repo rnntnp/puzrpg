@@ -1,19 +1,21 @@
 [gd_resource type="Resource" script_class="BallData" format=3 uid="uid://dl5h4nck5kenf"]
 
 [ext_resource type="Script" uid="uid://cpjm025ca6ujc" path="res://scripts/ball_data.gd" id="1"]
-[ext_resource type="Texture2D" path="res://assets/balls/generated/axolotl_only_ball_red_doteyes_rgba.png" id="2"]
+[ext_resource type="Texture2D" uid="uid://dmtn6vucprc6y" path="res://assets/balls/generated/axolotl_only_ball_red_doteyes_rgba.png" id="2"]
+[ext_resource type="PackedScene" uid="uid://cnc0f48wwf3ub" path="res://scenes/balls/visuals/ball_visual_08.tscn" id="3"]
+
+[sub_resource type="CircleShape2D" id="Circle"]
+radius = 117.6
 
 [sub_resource type="AtlasTexture" id="Atlas"]
 atlas = ExtResource("2")
 region = Rect2(418, 836, 418, 418)
 
-[sub_resource type="CircleShape2D" id="Circle"]
-radius = 84.0
-
 [resource]
 script = ExtResource("1")
 level = 8
 sprite = SubResource("Atlas")
+visual_scene = ExtResource("3")
 show_placeholder_outline = false
 glow_color = Color(1, 0.45, 0.7, 1)
 glow_strength = 0.5

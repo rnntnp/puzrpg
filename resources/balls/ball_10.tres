@@ -2,14 +2,16 @@
 
 [ext_resource type="Script" uid="uid://cpjm025ca6ujc" path="res://scripts/ball_data.gd" id="1"]
 [ext_resource type="Texture2D" uid="uid://bsm6o6xh84jl5" path="res://assets/balls/generated/ball_10_vermilion.png" id="2"]
+[ext_resource type="PackedScene" uid="uid://yihewfsg6ejj" path="res://scenes/balls/visuals/ball_visual_10.tscn" id="3"]
 
 [sub_resource type="CircleShape2D" id="Circle"]
-radius = 108.0
+radius = 151.2
 
 [resource]
 script = ExtResource("1")
 level = 10
 sprite = ExtResource("2")
+visual_scene = ExtResource("3")
 show_placeholder_outline = false
 glow_color = Color(1, 0.12, 0.04, 1)
 glow_strength = 0.58

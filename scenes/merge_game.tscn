@@ -43,7 +43,7 @@ volume_db = -6.0
 
 [node name="RiverAmbience" type="AudioStreamPlayer" parent="."]
 stream = ExtResource("12_river_bgm")
-volume_db = -14.0
+volume_db = -8.0
 
 [node name="ComboTestScenario" type="Node" parent="." unique_id=1519166100]
 script = ExtResource("4")

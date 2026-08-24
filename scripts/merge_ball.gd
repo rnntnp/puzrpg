@@ -5,10 +5,9 @@ signal merge_requested(first: MergeBall, second: MergeBall)
 signal first_contact(ball: MergeBall)
 
 const BallCatalogClass = preload("res://scripts/ball_catalog.gd")
-@onready var sprite: Sprite2D = $Sprite2D
-@onready var shell_base: Sprite2D = $ShellBase
-@onready var shell_shadow: Sprite2D = $ShellShadow
-@onready var shell_gloss: Sprite2D = $ShellGloss
+const LEGACY_VISUAL_SCENE := preload("res://scenes/balls/visuals/ball_visual_base.tscn")
+const VISUAL_DESIGN_SIZE := 418.0
+@onready var visual_container: Node2D = $VisualContainer
 @onready var glow_aura = $GlowAura
 @onready var collision_shape: CollisionShape2D = $CollisionShape2D
 @onready var ice_durability_label: Label = $IceDurabilityLabel
@@ -46,21 +45,8 @@ func setup(level: int, physics_speed: float = 1.0) -> void:
 	merge_level = clampi(level, 0, BallCatalogClass.get_max_level_index())
 	ball_data = BallCatalogClass.get_ball(merge_level)
 	collision_shape.shape = ball_data.collision_shape
-	sprite.show_behind_parent = true
-	sprite.texture = ball_data.sprite
-	sprite.modulate = ball_data.sprite_modulate
-	var texture_size := sprite.texture.get_size() if sprite.texture != null else Vector2.ONE
 	var diameter: float = ball_data.get_radius() * 2.0
-	sprite.scale = Vector2(diameter / texture_size.x, diameter / texture_size.y)
-	var shell_size := shell_base.texture.get_size()
-	shell_base.scale = Vector2(diameter / shell_size.x, diameter / shell_size.y)
-	shell_base.modulate = ball_data.glow_color
-	var shadow_size := shell_shadow.texture.get_size()
-	shell_shadow.scale = Vector2(diameter / shadow_size.x, diameter / shadow_size.y)
-	shell_shadow.modulate = ball_data.glow_color.darkened(0.62)
-	var gloss_size := shell_gloss.texture.get_size()
-	shell_gloss.scale = Vector2(diameter / gloss_size.x, diameter / gloss_size.y)
-	shell_gloss.modulate = Color.WHITE
+	_setup_visual(diameter)
 	glow_aura.setup(
 		ball_data.get_radius() * ball_data.glow_radius_scale,
 		ball_data.glow_color,
@@ -71,6 +57,31 @@ func setup(level: int, physics_speed: float = 1.0) -> void:
 	# 자유 낙하 시간은 중력의 제곱근에 반비례하므로 배속의 제곱을 적용한다.
 	gravity_scale = physics_speed * physics_speed
 	queue_redraw()
+
+
+func _setup_visual(diameter: float) -> void:
+	for child in visual_container.get_children():
+		child.queue_free()
+	var scene: PackedScene = ball_data.visual_scene if ball_data.visual_scene != null else LEGACY_VISUAL_SCENE
+	var visual := scene.instantiate()
+	visual_container.add_child(visual)
+	visual_container.scale = Vector2.ONE * (diameter / VISUAL_DESIGN_SIZE)
+	if ball_data.visual_scene != null:
+		return
+	# 아직 전용 비주얼 씬이 없는 10·11단계의 호환 표시.
+	var axolotl := visual.get_node_or_null("Axolotl") as Sprite2D
+	var shell_base := visual.get_node_or_null("ShellBase") as Sprite2D
+	var shell_shadow := visual.get_node_or_null("ShellShadow") as Sprite2D
+	if axolotl != null:
+		axolotl.texture = ball_data.sprite
+		axolotl.modulate = ball_data.sprite_modulate
+		if ball_data.sprite != null:
+			var texture_size: Vector2 = ball_data.sprite.get_size()
+			axolotl.scale = Vector2(VISUAL_DESIGN_SIZE / texture_size.x, VISUAL_DESIGN_SIZE / texture_size.y)
+	if shell_base != null:
+		shell_base.modulate = ball_data.glow_color
+	if shell_shadow != null:
+		shell_shadow.modulate = ball_data.glow_color.darkened(0.62)
 
 
 func set_play_area_bounds(left: float, right: float, bottom: float) -> void:

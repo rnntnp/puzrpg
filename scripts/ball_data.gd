@@ -11,6 +11,7 @@ enum BallShape {
 
 @export_category("표시")
 @export var sprite: Texture2D
+@export var visual_scene: PackedScene
 @export var sprite_modulate: Color = Color.WHITE
 @export var show_placeholder_outline: bool = true
 @export var glow_color: Color = Color(0.55, 0.8, 1.0, 1.0)

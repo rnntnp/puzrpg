@@ -2,14 +2,16 @@
 
 [ext_resource type="Script" uid="uid://cpjm025ca6ujc" path="res://scripts/ball_data.gd" id="1"]
 [ext_resource type="Texture2D" uid="uid://klaf1ak8uv6e" path="res://assets/balls/generated/ball_11_gold.png" id="2"]
+[ext_resource type="PackedScene" uid="uid://cy63rtrsiq4jg" path="res://scenes/balls/visuals/ball_visual_11.tscn" id="3"]
 
 [sub_resource type="CircleShape2D" id="Circle"]
-radius = 122.0
+radius = 170.8
 
 [resource]
 script = ExtResource("1")
 level = 11
 sprite = ExtResource("2")
+visual_scene = ExtResource("3")
 show_placeholder_outline = false
 glow_color = Color(1, 0.68, 0.08, 1)
 glow_strength = 0.62

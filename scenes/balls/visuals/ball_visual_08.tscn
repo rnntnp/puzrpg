@@ -1,0 +1,21 @@
+[gd_scene format=3 uid="uid://cnc0f48wwf3ub"]
+
+[ext_resource type="PackedScene" path="res://scenes/balls/visuals/ball_visual_base.tscn" id="1_base"]
+[ext_resource type="Texture2D" uid="uid://dmtn6vucprc6y" path="res://assets/balls/generated/axolotl_only_ball_red_doteyes_rgba.png" id="2_atlas"]
+
+[sub_resource type="AtlasTexture" id="Atlas"]
+atlas = ExtResource("2_atlas")
+region = Rect2(418, 836, 418, 418)
+
+[node name="BallVisual08" unique_id=1921838234 instance=ExtResource("1_base")]
+tint_color = Color(1, 0.45, 0.7, 1)
+
+[node name="ShellBase" parent="." index="0"]
+modulate = Color(0.9999996, 0.87380993, 0.9197861, 1)
+
+[node name="Axolotl" parent="." index="1"]
+position = Vector2(-14, 43)
+texture = SubResource("Atlas")
+
+[node name="ShellShadow" parent="." index="2"]
+modulate = Color(0.38, 0.17099999, 0.266, 1)

@@ -2,10 +2,9 @@
 
 [ext_resource type="Script" uid="uid://in6yd2jsowfa" path="res://scripts/next_preview_panel.gd" id="1"]
 [ext_resource type="Texture2D" uid="uid://78xaqcnyimhp" path="res://assets/ui/pond/next_container_cartoon.png" id="2_background"]
-[ext_resource type="Texture2D" uid="uid://vgfbfcifd202" path="res://assets/balls/generated/ball_01_blue.png" id="3_preview_ball"]
 [ext_resource type="FontFile" uid="uid://op5qpjre8dba" path="res://assets/fonts/nanum_square_round/NanumSquareRoundEB.ttf" id="4_font"]
-[ext_resource type="Texture2D" uid="uid://ofxknv30arlj" path="res://assets/balls/circle_placeholder.svg" id="4_ghea5"]
 [ext_resource type="Texture2D" uid="uid://wp5212kps4mo" path="res://assets/ui/pond/next_bubble_ring.png" id="5_bubble_ring"]
+[ext_resource type="PackedScene" path="res://scenes/balls/visuals/ball_visual_01.tscn" id="6_default_visual"]
 
 [node name="NextPreviewPanel" type="Control" unique_id=426578386]
 custom_minimum_size = Vector2(150, 50)
@@ -50,23 +49,14 @@ vertical_alignment = 1
 [node name="PreviewHolder" type="Node2D" parent="." unique_id=2127482006]
 position = Vector2(126, 25)
 
-[node name="TextureRect" type="TextureRect" parent="PreviewHolder" unique_id=274034075]
-modulate = Color(18.892157, 18.892157, 18.892157, 0.15294118)
-offset_left = -110.0
-offset_top = -24.647064
-offset_right = -34.0
-offset_bottom = 55.823532
-texture = ExtResource("4_ghea5")
-expand_mode = 1
-
-[node name="BubbleRing" type="Sprite2D" parent="PreviewHolder" unique_id=413090280]
+[node name="BubbleRing" type="Sprite2D" parent="PreviewHolder"]
 texture_filter = 2
-position = Vector2(-70.5, 15.299994)
+position = Vector2(-70.5, 15.3)
 scale = Vector2(0.3035714, 0.3035714)
 texture = ExtResource("5_bubble_ring")
 
-[node name="EditorPreview" type="Sprite2D" parent="PreviewHolder" unique_id=766355484]
-texture_filter = 2
+[node name="VisualPreview" type="Node2D" parent="PreviewHolder"]
 position = Vector2(-71, 15)
-scale = Vector2(0.36679688, 0.36679688)
-texture = ExtResource("3_preview_ball")
+scale = Vector2(0.1454544, 0.1454544)
+
+[node name="BallVisual01" parent="PreviewHolder/VisualPreview" instance=ExtResource("6_default_visual")]

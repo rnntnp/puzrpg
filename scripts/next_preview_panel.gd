@@ -2,19 +2,24 @@
 class_name NextPreviewPanel
 extends Control
 
-@onready var editor_preview: Sprite2D = $PreviewHolder/EditorPreview
+@onready var visual_preview: Node2D = $PreviewHolder/VisualPreview
 
 
 func _ready() -> void:
-	editor_preview.visible = editor_preview.texture != null
+	visual_preview.visible = visual_preview.get_child_count() > 0
 
 
 func set_preview_data(ball_data: Resource) -> void:
-	if editor_preview == null:
+	if visual_preview == null:
 		return
+	for child in visual_preview.get_children():
+		child.queue_free()
 	if ball_data == null:
-		editor_preview.visible = false
+		visual_preview.visible = false
 		return
-	editor_preview.texture = ball_data.sprite
-	editor_preview.modulate = ball_data.sprite_modulate
-	editor_preview.visible = editor_preview.texture != null
+	var scene: PackedScene = ball_data.visual_scene
+	if scene == null:
+		visual_preview.visible = false
+		return
+	visual_preview.add_child(scene.instantiate())
+	visual_preview.visible = true

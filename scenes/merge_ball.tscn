@@ -1,9 +1,6 @@
-[gd_scene load_steps=8 format=3]
+[gd_scene load_steps=5 format=3]
 [ext_resource type="Script" path="res://scripts/merge_ball.gd" id="1"]
 [ext_resource type="Script" path="res://scripts/ball_glow.gd" id="2_glow"]
-[ext_resource type="Texture2D" path="res://assets/balls/generated/orb_shell_candidates/candidate_06/orb_06_fill.png" id="4_shell"]
-[ext_resource type="Texture2D" path="res://assets/balls/generated/orb_shell_candidates/candidate_06/orb_06_gloss.png" id="5_gloss"]
-[ext_resource type="Texture2D" path="res://assets/balls/generated/orb_shell_candidates/candidate_06/orb_06_shadow.png" id="6_shadow"]
 [sub_resource type="CircleShape2D" id="1"]
 radius = 22.0
 [sub_resource type="CanvasItemMaterial" id="GlowMaterial"]
@@ -16,28 +13,11 @@ max_contacts_reported = 8
 continuous_cd = 2
 script = ExtResource("1")
 
-[node name="ShellBase" type="Sprite2D" parent="."]
-show_behind_parent = true
-z_index = -1
-texture_filter = 4
-texture = ExtResource("4_shell")
-
-[node name="Sprite2D" type="Sprite2D" parent="."]
-texture_filter = 4
-
-[node name="ShellShadow" type="Sprite2D" parent="."]
-z_index = 1
-texture_filter = 4
-texture = ExtResource("6_shadow")
-
-[node name="ShellGloss" type="Sprite2D" parent="."]
-z_index = 2
-texture_filter = 4
-texture = ExtResource("5_gloss")
+[node name="VisualContainer" type="Node2D" parent="."]
 
 [node name="GlowAura" type="Node2D" parent="."]
 show_behind_parent = true
-z_index = -2
+z_index = -1
 material = SubResource("GlowMaterial")
 script = ExtResource("2_glow")
 

@@ -1,6 +1,6 @@
 extends Node
 
-const DEFAULT_LEVEL_PATH := "res://resources/levels/level_01.tres"
+const DEFAULT_LEVEL_PATH := "res://resources/levels/tutorial_temp.tres"
 const LevelDataClass = preload("res://scripts/level_data.gd")
 const PROGRESS_SAVE_PATH := "user://progress.cfg"
 const LEVEL_CATALOG: LevelCatalog = preload("res://resources/catalogs/main_level_catalog.tres")

@@ -283,9 +283,6 @@ func _update_ui() -> void:
 func _run_ice_turn() -> void:
 	_state_version += 1
 	merge_game.set_input_enabled(false)
-	battle.status_label.text = "몬스터 턴 · 보드 정리 중"
-	battle.status_label.modulate = Color("#9eeaff")
-	await merge_game.wait_until_board_settled()
 	if not is_instance_valid(enemy) or not enemy.is_alive() or not player.is_alive():
 		return
 	enemy.attack(player)

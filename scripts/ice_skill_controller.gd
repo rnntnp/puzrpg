@@ -20,10 +20,7 @@ func configure(game: MergeGame, skill_data: IceSkillDataClass, caster_fighter: F
 func execute() -> int:
 	if skill == null:
 		return 0
-	var available_slots: int = skill.max_frozen_balls - _get_frozen_balls().size()
-	if available_slots <= 0:
-		return 0
-	var targets := _select_targets(mini(skill.freeze_count, available_slots))
+	var targets := _select_targets(skill.freeze_count)
 	if targets.is_empty():
 		return 0
 	for ball in targets:
@@ -57,30 +54,43 @@ func clear_all_ice() -> void:
 
 
 func _select_targets(count: int) -> Array[MergeBall]:
-	var eligible: Array[MergeBall] = []
-	var fallback: Array[MergeBall] = []
+	var unfrozen: Array[MergeBall] = []
+	var damaged_frozen: Array[MergeBall] = []
 	for child in merge_game.get_active_balls():
 		if not child is MergeBall:
 			continue
 		var ball := child as MergeBall
-		if ball.merge_locked or ball.is_ice_frozen or ball.is_queued_for_deletion():
+		if ball.merge_locked or ball.is_queued_for_deletion():
 			continue
-		fallback.append(ball)
-		var displayed_level := ball.merge_level + 1
-		if displayed_level >= skill.target_min_level and displayed_level <= skill.target_max_level:
-			eligible.append(ball)
-	var pool := eligible if not eligible.is_empty() else fallback
-	pool.shuffle()
-	if eligible.is_empty():
-		pool.sort_custom(func(a: MergeBall, b: MergeBall) -> bool:
-			return a.merge_level > b.merge_level
-		)
+		if not ball.is_ice_frozen:
+			unfrozen.append(ball)
+		elif ball.ice_durability < skill.ice_durability:
+			damaged_frozen.append(ball)
+	var pool := _select_stage_pool(unfrozen, count)
+	if pool.is_empty():
+		pool = _select_stage_pool(damaged_frozen, count)
 	var result: Array[MergeBall] = []
 	for ball in pool:
 		result.append(ball)
 		if result.size() >= count:
 			break
 	return result
+
+
+func _select_stage_pool(candidates: Array[MergeBall], desired_count: int) -> Array[MergeBall]:
+	var selected: Array[MergeBall] = []
+	# Search strictly from the preferred minimum upward: e.g. 3 -> 4 -> 5 -> 6.
+	for candidate_level in range(skill.target_min_level, 12):
+		var at_level: Array[MergeBall] = []
+		for ball in candidates:
+			if ball.merge_level + 1 == candidate_level:
+				at_level.append(ball)
+		at_level.shuffle()
+		for ball in at_level:
+			selected.append(ball)
+			if selected.size() >= desired_count:
+				return selected
+	return selected
 
 
 func _get_frozen_balls() -> Array[MergeBall]:

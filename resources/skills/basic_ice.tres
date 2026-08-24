@@ -7,7 +7,6 @@ script = ExtResource("1")
 freeze_count = 1
 target_min_level = 1
 target_max_level = 3
-max_frozen_balls = 1
 ice_durability = 2
 target_highlight_duration = 0.25
 freeze_effect_duration = 0.3

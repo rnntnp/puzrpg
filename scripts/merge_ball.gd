@@ -194,12 +194,11 @@ func set_split_targeted(targeted: bool) -> void:
 
 
 func freeze_in_ice(durability: int) -> void:
-	if merge_locked or is_ice_frozen:
+	if merge_locked:
 		return
 	is_ice_frozen = true
 	ice_durability = maxi(1, durability)
-	ice_durability_label.text = str(ice_durability)
-	ice_durability_label.visible = true
+	_update_ice_durability_visual()
 	linear_velocity = Vector2.ZERO
 	angular_velocity = 0.0
 	freeze_mode = RigidBody2D.FREEZE_MODE_STATIC
@@ -211,7 +210,7 @@ func damage_ice(amount: int) -> void:
 	if not is_ice_frozen or amount <= 0:
 		return
 	ice_durability = maxi(0, ice_durability - amount)
-	ice_durability_label.text = str(ice_durability)
+	_update_ice_durability_visual()
 	print("[ICE DAMAGE] level=%d | remaining=%d" % [merge_level + 1, ice_durability])
 	if ice_durability <= 0:
 		break_ice()
@@ -238,6 +237,21 @@ func break_ice(play_effect := true) -> void:
 		tween.tween_property(self, "modulate", Color.WHITE, 0.25)
 	print("[ICE BREAK] level=%d" % (merge_level + 1))
 
+
+func _update_ice_durability_visual() -> void:
+	if not is_ice_frozen or ice_durability <= 0:
+		ice_durability_label.visible = false
+		return
+	var durability_color := Color("#d5b8ff")
+	if ice_durability == 2:
+		durability_color = Color("#9eeaff")
+	elif ice_durability == 1:
+		durability_color = Color("#ffbd69")
+	ice_durability_label.text = str(ice_durability)
+	ice_durability_label.add_theme_color_override("font_color", durability_color)
+	ice_durability_label.add_theme_color_override("font_outline_color", Color("#142238"))
+	ice_durability_label.visible = true
+
 func _draw() -> void:
 	var radius: float = ball_data.get_radius() if ball_data != null else 0.0
 	if ball_data == null or ball_data.show_placeholder_outline:
@@ -256,8 +270,18 @@ func _draw() -> void:
 	if split_targeted:
 		draw_arc(Vector2.ZERO, radius + 10.0, 0.0, TAU, 40, Color("#ffd166"), 5.0, true)
 	if is_ice_frozen:
-		draw_circle(Vector2.ZERO, radius + 5.0, Color(0.36, 0.82, 1.0, 0.38))
-		draw_arc(Vector2.ZERO, radius + 5.0, 0.0, TAU, 40, Color("#9eeaff"), 6.0, true)
+		var ice_fill := Color(0.45, 0.32, 0.95, 0.48)
+		var ice_ring := Color("#d5b8ff")
+		if ice_durability == 2:
+			ice_fill = Color(0.36, 0.82, 1.0, 0.38)
+			ice_ring = Color("#9eeaff")
+		elif ice_durability == 1:
+			ice_fill = Color(1.0, 0.58, 0.22, 0.38)
+			ice_ring = Color("#ffbd69")
+		draw_circle(Vector2.ZERO, radius + 5.0, ice_fill)
+		draw_arc(Vector2.ZERO, radius + 5.0, 0.0, TAU, 40, ice_ring, 7.0 if ice_durability >= 3 else 6.0, true)
+		if ice_durability >= 3:
+			draw_arc(Vector2.ZERO, radius + 11.0, -PI * 0.35, PI * 1.35, 40, Color("#8d6bff"), 3.0, true)
 	if is_enlarged:
 		draw_arc(Vector2.ZERO, radius + 7.0, 0.0, TAU, 40, Color("#ff9f43"), 6.0, true)
 	if is_heavy:

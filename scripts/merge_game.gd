@@ -180,11 +180,13 @@ func _apply_physics_data() -> void:
 	var wall_material := PhysicsMaterial.new()
 	wall_material.friction = physics_data.wall_friction
 	wall_material.bounce = physics_data.wall_bounce
+	wall_material.rough = true
 	left_wall.physics_material_override = wall_material
 	right_wall.physics_material_override = wall_material
 	var floor_material := PhysicsMaterial.new()
 	floor_material.friction = physics_data.floor_friction
 	floor_material.bounce = physics_data.floor_bounce
+	floor_material.rough = true
 	floor_body.physics_material_override = floor_material
 
 func can_accept_autoplay_drop() -> bool:
@@ -746,6 +748,10 @@ func _spawn_ball(at: Vector2, level: int, contact_sequence_id: int = -1):
 	ball.setup(level, physics_speed_multiplier)
 	ball.set_sealed_visual(sealed_stage_index >= 0 and ball.merge_level == sealed_stage_index)
 	if physics_data != null:
+		var ball_material := PhysicsMaterial.new()
+		ball_material.friction = physics_data.ball_friction
+		ball_material.rough = true
+		ball.physics_material_override = ball_material
 		ball.linear_damp = physics_data.ball_linear_damp
 		ball.angular_damp = physics_data.ball_angular_damp
 	_enable_ball_ccd_after_spawn(ball)

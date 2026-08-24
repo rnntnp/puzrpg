@@ -4,6 +4,7 @@ extends Control
 @export_file("*.tscn") var battle_scene_path := "res://scenes/main.tscn"
 
 const SWIPE_THRESHOLD := 65.0
+const PREVIEW_VERTICAL_OFFSET_PIXELS := -350.0
 
 @onready var content: Control = $Content
 @onready var level_name_label: Label = $Content/LevelName
@@ -156,6 +157,10 @@ func _update_preview_mask_mapping() -> void:
 		visible_offset.y = (1.0 - visible_scale.y) * 0.5
 	level_preview.material.set_shader_parameter("visible_uv_offset", visible_offset)
 	level_preview.material.set_shader_parameter("visible_uv_scale", visible_scale)
+	level_preview.material.set_shader_parameter(
+		"texture_uv_offset",
+		Vector2(0.0, PREVIEW_VERTICAL_OFFSET_PIXELS / texture_size.y)
+	)
 
 
 func _get_level_boss_sprite(level: Resource) -> Texture2D:

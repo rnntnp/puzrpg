@@ -2,6 +2,8 @@ class_name BallEvolutionStrip
 extends Panel
 
 const BallCatalogClass = preload("res://scripts/ball_catalog.gd")
+const BALL_VISUAL_SOURCE_SIZE := 418.0
+const EVOLUTION_TRACK_WIDTH := 40.0
 
 @onready var sequence: VBoxContainer = $Sequence
 
@@ -21,18 +23,22 @@ func _build_sequence() -> void:
 		sequence.add_child(_create_ball_icon(BallCatalogClass.get_ball(index), index, ball_count))
 
 
-func _create_ball_icon(data: Resource, index: int, ball_count: int) -> TextureRect:
-	var icon := TextureRect.new()
+func _create_ball_icon(data: Resource, index: int, ball_count: int) -> Control:
 	var size := lerpf(22.0, 40.0, float(index) / float(maxi(1, ball_count - 1)))
-	icon.custom_minimum_size = Vector2(size, size)
-	icon.texture = data.sprite
-	icon.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
-	icon.modulate = data.sprite_modulate
-	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	icon.tooltip_text = "%d단계 · 합성 점수 %d" % [data.level, data.merge_score]
-	return icon
+	var holder := Control.new()
+	holder.custom_minimum_size = Vector2(EVOLUTION_TRACK_WIDTH, size)
+	holder.mouse_filter = Control.MOUSE_FILTER_STOP
+	holder.tooltip_text = "%d단계 · 합성 점수 %d" % [data.level, data.merge_score]
+
+	var scene: PackedScene = data.visual_scene
+	if scene == null:
+		return holder
+	var visual_holder := Node2D.new()
+	visual_holder.position = Vector2(EVOLUTION_TRACK_WIDTH * 0.5, size * 0.5)
+	visual_holder.scale = Vector2.ONE * (size / BALL_VISUAL_SOURCE_SIZE)
+	holder.add_child(visual_holder)
+	visual_holder.add_child(scene.instantiate())
+	return holder
 
 
 func _create_arrow() -> Label:

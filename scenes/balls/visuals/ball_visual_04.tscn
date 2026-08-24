@@ -21,6 +21,7 @@ resource_local_to_scene = true
 shader = ExtResource("3_shape_mask_shader")
 shader_parameter/mask_offset_pixels = Vector2(0, 0)
 shader_parameter/mask_rotation = 0.0
+shader_parameter/mask_sprite_scale = Vector2(1, 1)
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_df660"]
 resource_local_to_scene = true
@@ -29,8 +30,8 @@ shader_parameter/shell_mask_texture = ExtResource("7_df660")
 shader_parameter/edge_clear_texel_width = 9.0
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_0o5xi"]
-radius = 88.0
-height = 373.992
+radius = 45.0
+height = 277.1785
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_jlkj4"]
 height = 36.0
@@ -64,14 +65,25 @@ scale = Vector2(1, 0.8803828)
 position = Vector2(15, -3)
 
 [node name="HitboxBody" parent="HitboxAuthoring" index="0"]
-position = Vector2(-14, 3)
+position = Vector2(56, -64)
+rotation = -0.80208755
 shape = SubResource("CapsuleShape2D_0o5xi")
 
-[node name="HitboxBody2" type="CollisionShape2D" parent="HitboxAuthoring" index="1" unique_id=1891924973]
-position = Vector2(-14, 3)
-rotation = 1.5940247
+[node name="HitboxBody3" type="CollisionShape2D" parent="HitboxAuthoring" index="1" unique_id=702891278]
+position = Vector2(-87, 69)
+rotation = -0.80208755
 shape = SubResource("CapsuleShape2D_0o5xi")
 
-[node name="HitboxLeftLobe" parent="HitboxAuthoring" index="2"]
+[node name="HitboxBody2" type="CollisionShape2D" parent="HitboxAuthoring" index="2" unique_id=1891924973]
+position = Vector2(-84, -64)
+rotation = 0.8237486
+shape = SubResource("CapsuleShape2D_0o5xi")
+
+[node name="HitboxBody4" type="CollisionShape2D" parent="HitboxAuthoring" index="3" unique_id=710651728]
+position = Vector2(53, 71)
+rotation = 0.8237486
+shape = SubResource("CapsuleShape2D_0o5xi")
+
+[node name="HitboxLeftLobe" parent="HitboxAuthoring" index="4"]
 position = Vector2(-15, 3)
 shape = SubResource("CapsuleShape2D_jlkj4")

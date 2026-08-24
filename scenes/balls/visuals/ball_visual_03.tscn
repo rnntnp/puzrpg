@@ -29,11 +29,12 @@ shader = ExtResource("4_3aon2")
 shader_parameter/shell_mask_texture = ExtResource("5_wb1id")
 shader_parameter/edge_clear_texel_width = 9.0
 
-[sub_resource type="ConvexPolygonShape2D" id="ConvexPolygonShape_heart"]
-points = PackedVector2Array(-150, -48, 157, -42, 175, 35, 139, 119, 78, 179, -2, 208, -78, 177, -133, 128, -175, 33)
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_fs1qp"]
+radius = 81.0
+height = 276.0
 
 [sub_resource type="CircleShape2D" id="CircleShape_heart_lobe"]
-radius = 97.812
+radius = 109.42281
 
 [node name="BallVisual03" unique_id=1362378674 instance=ExtResource("1_base")]
 tint_color = Color(0.9999998, 0.89372826, 0.56641656, 1)
@@ -43,7 +44,6 @@ outline_shape = 1
 modulate = Color(0.9999998, 0.89372826, 0.56641656, 1)
 
 [node name="ShellOutline" parent="." index="1"]
-z_index = -1
 material = SubResource("ShaderMaterial_wb1id")
 position = Vector2(0, -3)
 texture = ExtResource("6_heart_mask")
@@ -67,14 +67,21 @@ scale = Vector2(1, 0.8779905)
 position = Vector2(0, -51)
 
 [node name="HitboxBody" parent="HitboxAuthoring" index="0"]
-shape = SubResource("ConvexPolygonShape_heart")
+position = Vector2(-50.000004, 82)
+rotation = -0.8182958
+shape = SubResource("CapsuleShape2D_fs1qp")
 
-[node name="HitboxLeftLobe" parent="HitboxAuthoring" index="1"]
+[node name="HitboxBody2" type="CollisionShape2D" parent="HitboxAuthoring" index="1" unique_id=821854074]
+position = Vector2(49.999996, 81)
+rotation = 0.8185594
+shape = SubResource("CapsuleShape2D_fs1qp")
+
+[node name="HitboxLeftLobe" parent="HitboxAuthoring" index="2"]
 position = Vector2(-75.288, 13.57)
 shape = SubResource("CircleShape_heart_lobe")
 disabled = false
 
-[node name="HitboxRightLobe" parent="HitboxAuthoring" index="2"]
+[node name="HitboxRightLobe" parent="HitboxAuthoring" index="3"]
 position = Vector2(73.288, 12.57)
 shape = SubResource("CircleShape_heart_lobe")
 disabled = false

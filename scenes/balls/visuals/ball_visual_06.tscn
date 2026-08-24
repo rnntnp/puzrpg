@@ -30,9 +30,9 @@ shader = ExtResource("6_i1emw")
 shader_parameter/shell_mask_texture = ExtResource("7_nhikw")
 shader_parameter/edge_clear_texel_width = 9.0
 
-[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_nhikw"]
-radius = 53.151745
-height = 106.83178
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_6nx0a"]
+radius = 34.698914
+height = 231.38614
 
 [node name="BallVisual06" unique_id=639394593 instance=ExtResource("1_base")]
 tint_color = Color(0.84204525, 0.69722426, 1, 1)
@@ -68,54 +68,29 @@ position = Vector2(18, 0)
 rotation = -0.26731703
 
 [node name="HitboxBody" parent="HitboxAuthoring" index="0"]
-rotation = 0.024000354
-shape = null
+position = Vector2(93.12372, -63.662975)
+rotation = -0.6433581
+shape = SubResource("CapsuleShape2D_6nx0a")
 
-[node name="HitboxLeftLobe" parent="HitboxAuthoring" index="1"]
+[node name="HitboxBody2" type="CollisionShape2D" parent="HitboxAuthoring" index="1" unique_id=720131201]
+position = Vector2(-39.182514, -103.00839)
+rotation = 1.2857933
+shape = SubResource("CapsuleShape2D_6nx0a")
+
+[node name="HitboxBody3" type="CollisionShape2D" parent="HitboxAuthoring" index="2" unique_id=1113485453]
+position = Vector2(93.5984, 67.10695)
+rotation = 0.64821446
+shape = SubResource("CapsuleShape2D_6nx0a")
+
+[node name="HitboxBody4" type="CollisionShape2D" parent="HitboxAuthoring" index="3" unique_id=21908980]
+position = Vector2(-35.291153, 113.716896)
+rotation = -1.2860696
+shape = SubResource("CapsuleShape2D_6nx0a")
+
+[node name="HitboxBody5" type="CollisionShape2D" parent="HitboxAuthoring" index="4" unique_id=588355170]
+position = Vector2(-121.82544, 1.8874741)
+rotation = -3.1295788
+shape = SubResource("CapsuleShape2D_6nx0a")
+
+[node name="HitboxLeftLobe" parent="HitboxAuthoring" index="5"]
 position = Vector2(136.65372, -1.4249611)
-shape = SubResource("CapsuleShape2D_nhikw")
-
-[node name="HitboxLeftLobe2" type="CollisionShape2D" parent="HitboxAuthoring" index="2" unique_id=372464267]
-position = Vector2(42.2454, -123.639336)
-shape = SubResource("CapsuleShape2D_nhikw")
-disabled = true
-
-[node name="HitboxLeftLobe3" type="CollisionShape2D" parent="HitboxAuthoring" index="3" unique_id=321191185]
-position = Vector2(-109.99554, -75.15882)
-shape = SubResource("CapsuleShape2D_nhikw")
-disabled = true
-
-[node name="HitboxLeftLobe6" type="CollisionShape2D" parent="HitboxAuthoring" index="4" unique_id=954544615]
-position = Vector2(-92.614655, -2.5543957)
-shape = SubResource("CapsuleShape2D_nhikw")
-disabled = true
-
-[node name="HitboxLeftLobe7" type="CollisionShape2D" parent="HitboxAuthoring" index="5" unique_id=1999627437]
-position = Vector2(-28.861633, -76.33483)
-shape = SubResource("CapsuleShape2D_nhikw")
-disabled = true
-
-[node name="HitboxLeftLobe8" type="CollisionShape2D" parent="HitboxAuthoring" index="6" unique_id=277627435]
-position = Vector2(72.40908, -48.59963)
-shape = SubResource("CapsuleShape2D_nhikw")
-disabled = true
-
-[node name="HitboxLeftLobe9" type="CollisionShape2D" parent="HitboxAuthoring" index="7" unique_id=2046226989]
-position = Vector2(72.56395, 53.051613)
-shape = SubResource("CapsuleShape2D_nhikw")
-disabled = true
-
-[node name="HitboxLeftLobe10" type="CollisionShape2D" parent="HitboxAuthoring" index="8" unique_id=1138250587]
-position = Vector2(-27.446762, 77.50274)
-shape = SubResource("CapsuleShape2D_nhikw")
-disabled = true
-
-[node name="HitboxLeftLobe4" type="CollisionShape2D" parent="HitboxAuthoring" index="9" unique_id=1345740298]
-position = Vector2(-110.32449, 73.46771)
-shape = SubResource("CapsuleShape2D_nhikw")
-disabled = true
-
-[node name="HitboxLeftLobe5" type="CollisionShape2D" parent="HitboxAuthoring" index="10" unique_id=2038070947]
-position = Vector2(41.971725, 119.32465)
-shape = SubResource("CapsuleShape2D_nhikw")
-disabled = true

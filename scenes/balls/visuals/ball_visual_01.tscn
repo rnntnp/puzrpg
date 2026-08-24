@@ -2,12 +2,14 @@
 
 [ext_resource type="PackedScene" path="res://scenes/balls/visuals/ball_visual_base.tscn" id="1_base"]
 [ext_resource type="Shader" uid="uid://dyiql3rgv8fsw" path="res://shaders/ball_shell_outline.gdshader" id="2_3yywg"]
-[ext_resource type="Texture2D" uid="uid://dmtn6vucprc6y" path="res://assets/balls/generated/axolotl_only_ball_red_doteyes_rgba.png" id="2_atlas"]
+[ext_resource type="Texture2D" uid="uid://culabe2ccgxdr" path="res://assets/balls/generated/ball_01_axolotl_source.png" id="2_axolotl_source"]
 [ext_resource type="Shader" uid="uid://b3hciqwdmjwqs" path="res://shaders/ball_shell_shadow_inset.gdshader" id="4_tmdmu"]
 [ext_resource type="Texture2D" uid="uid://bwjasioimwasf" path="res://assets/balls/generated/orb_shell_candidates/candidate_06/orb_06_fill.png" id="5_kr6e7"]
-[ext_resource type="Texture2D" path="res://assets/balls/generated/ball_01_shell_axolotl_outline_mask.png" id="7_union_mask"]
+[ext_resource type="Texture2D" uid="uid://cv8knfe12gour" path="res://assets/balls/generated/ball_01_shell_axolotl_outline_mask.png" id="7_union_mask"]
+[ext_resource type="Shader" uid="uid://itru0tttro0a" path="res://shaders/ball_sprite_shape_mask.gdshader" id="8_shape_mask_shader"]
+[ext_resource type="Texture2D" uid="uid://byg7lppe12c4q" path="res://assets/balls/generated/ball_01_axolotl_shape_mask.png" id="9_axolotl_mask"]
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_3yywg"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_qnqti"]
 resource_local_to_scene = true
 shader = ExtResource("2_3yywg")
 shader_parameter/outline_color = Color(0.075, 0.1, 0.18, 1)
@@ -15,48 +17,66 @@ shader_parameter/outline_color_texel_width = 4.0
 shader_parameter/outline_total_texel_width = 6.0
 shader_parameter/outline_expand_texels = 6.0
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_tmdmu"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_fpmha"]
 resource_local_to_scene = true
 shader = ExtResource("2_3yywg")
-shader_parameter/outline_color = Color(0.3116533, 0.45606518, 0.5399999, 0.95)
-shader_parameter/outline_color_texel_width = 3.888372093023256
-shader_parameter/outline_total_texel_width = 5.832558139534884
+shader_parameter/outline_color = Color(0.5194222, 0.76010865, 0.8999999, 0.95)
+shader_parameter/outline_color_texel_width = 3.9263803680981595
+shader_parameter/outline_total_texel_width = 5.889570552147239
 shader_parameter/outline_expand_texels = 6.0
 
-[sub_resource type="AtlasTexture" id="Atlas"]
-atlas = ExtResource("2_atlas")
-region = Rect2(0, 0, 418, 418)
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_s8334"]
+resource_local_to_scene = true
+shader = ExtResource("8_shape_mask_shader")
+shader_parameter/mask_texture = ExtResource("9_axolotl_mask")
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_kr6e7"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_lh7js"]
 resource_local_to_scene = true
 shader = ExtResource("4_tmdmu")
 shader_parameter/shell_mask_texture = ExtResource("5_kr6e7")
 shader_parameter/edge_clear_texel_width = 9.0
 
-[sub_resource type="CircleShape2D" id="CircleShape_hitbox_local"]
-radius = 203.02217
+[sub_resource type="ConvexPolygonShape2D" id="ConvexPolygonShape_puffy_diamond"]
+points = PackedVector2Array(159.6, 5, 155.357, 23.937, 142.935, 50.17, 123.236, 78.073, 97.725, 104.75, 68.38, 127.942, 37.687, 145.85, 8.83, 157.143, -12, 161, -32.83, 157.143, -61.687, 145.85, -92.38, 127.942, -121.725, 104.75, -147.236, 78.073, -166.935, 50.17, -179.357, 23.937, -183.6, 5, -179.357, -13.937, -166.935, -40.17, -147.236, -68.073, -121.725, -94.75, -92.38, -117.942, -61.687, -135.85, -32.83, -147.143, -12, -151, 8.83, -147.143, 37.687, -135.85, 68.38, -117.942, 97.725, -94.75, 123.236, -68.073, 142.935, -40.17, 155.357, -13.937)
 
 [node name="BallVisual01" unique_id=557625348 instance=ExtResource("1_base")]
 tint_color = Color(0.57713574, 0.8445652, 0.99999994, 1)
 
 [node name="ShellBase" parent="." index="0"]
-visible = true
 modulate = Color(0.57713574, 0.8445652, 0.99999994, 1)
-material = SubResource("ShaderMaterial_3yywg")
+material = SubResource("ShaderMaterial_qnqti")
 
 [node name="ShellOutline" parent="." index="1"]
-material = SubResource("ShaderMaterial_tmdmu")
+material = SubResource("ShaderMaterial_fpmha")
+position = Vector2(16, 0)
 texture = ExtResource("7_union_mask")
 
 [node name="Axolotl" parent="." index="2"]
-position = Vector2(-19.49999, -68.50001)
-scale = Vector2(1.3755981, 1.3755981)
-texture = SubResource("Atlas")
+texture_filter = 3
+material = SubResource("ShaderMaterial_s8334")
+position = Vector2(1.5, -88.50003)
+scale = Vector2(1.6722488, 1.6722488)
+texture = ExtResource("2_axolotl_source")
 
 [node name="ShellShadow" parent="." index="3"]
 modulate = Color(0.21931158, 0.32093477, 0.37999997, 1)
-material = SubResource("ShaderMaterial_kr6e7")
+material = SubResource("ShaderMaterial_lh7js")
+position = Vector2(16, 0)
+
+[node name="ShellGloss" parent="." index="4"]
+position = Vector2(16, 15.5)
+scale = Vector2(1, 0.8875598)
+
+[node name="HitboxAuthoring" parent="." index="5"]
+position = Vector2(16, 0)
 
 [node name="HitboxBody" parent="HitboxAuthoring" index="0"]
-position = Vector2(-12, 5)
-shape = SubResource("CircleShape_hitbox_local")
+shape = SubResource("ConvexPolygonShape_puffy_diamond")
+
+[node name="HitboxLeftLobe" parent="HitboxAuthoring" index="1"]
+position = Vector2(-194.99998, -76)
+rotation = 0.43633232
+
+[node name="HitboxRightLobe" parent="HitboxAuthoring" index="2"]
+position = Vector2(-218, 60)
+rotation = -0.4537856

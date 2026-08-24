@@ -99,7 +99,7 @@ func _show_level(index: int, direction := 0) -> void:
 	viewed_level_index = index
 	var unlocked := GameSession.is_level_unlocked(index)
 	level_name_label.text = level.level_name
-	level_preview.texture = level.level_select_preview
+	level_preview.texture = level.battle_background if level.battle_background != null else level.level_select_preview
 	level_preview.visible = level_preview.texture != null
 	_update_preview_mask_mapping.call_deferred()
 	_update_level_info(level)

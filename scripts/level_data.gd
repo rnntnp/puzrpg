@@ -28,6 +28,8 @@ const TestGimmickDataClass = preload("res://scripts/test_gimmick_data.gd")
 @export_category("시작 연출")
 ## 첫 항목은 자동으로 페이드 인/아웃되며, 이후 항목은 클릭 또는 확인 키로 넘긴다.
 @export var opening_sequence: PackedStringArray = []
+## 로고 다음 페이지부터 순서대로 표시할 스토리 이미지다. 비어 있으면 기존 텍스트를 표시한다.
+@export var opening_story_images: Array[Texture2D] = []
 ## 스토리 컷씬이 끝나고 전투 화면 위에서 표시하는 조작 안내다.
 @export var tutorial_sequence: PackedStringArray = []
 ## 첫 드롭의 턴 처리 뒤에 표시하는 안내 문구다.

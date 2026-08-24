@@ -17,7 +17,7 @@ enum OutlineShape {
 		_apply_tint()
 @export_range(0.0, 16.0, 0.25) var outline_screen_width: float = 4.0
 @export_range(0.0, 16.0, 0.25) var inner_white_screen_width: float = 2.0
-@export_range(0.0, 0.9, 0.01) var outline_darkening: float = 0.28:
+@export_range(0.0, 0.9, 0.01) var outline_darkening: float = 0.1:
 	set(value):
 		outline_darkening = value
 		_apply_tint()
@@ -43,8 +43,6 @@ func _apply_tint() -> void:
 		shell_base.modulate = tint_color
 	if shell_outline != null and shell_outline.material is ShaderMaterial:
 		var color_darkening := outline_darkening
-		if outline_shape == OutlineShape.ELLIPSE:
-			color_darkening = minf(0.9, outline_darkening + 0.18)
 		var outline_color := tint_color.darkened(color_darkening)
 		outline_color.a = 0.95
 		(shell_outline.material as ShaderMaterial).set_shader_parameter("outline_color", outline_color)

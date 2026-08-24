@@ -7,7 +7,6 @@
 [ext_resource type="Resource" path="res://resources/characters/ice_monster_boss.tres" id="10_boss_enemy"]
 [ext_resource type="Script" uid="uid://duu5mev8uwp8d" path="res://scripts/character_data.gd" id="5_character_type"]
 [ext_resource type="Texture2D" uid="uid://bggrxc370bkk2" path="res://assets/backgrounds/stage_02_snowfield.png" id="6_background"]
-[ext_resource type="Texture2D" uid="uid://pqye012yii4x" path="res://assets/level_previews/level_02_preview.png" id="7_preview"]
 [ext_resource type="Texture2D" uid="uid://dp8jwduwehncv" path="res://assets/effects/generated/status_ice.png" id="8_gimmick"]
 
 [resource]
@@ -16,7 +15,6 @@ level_name = "2. 추운 설산"
 image_placeholder = "RED GATE
 LEVEL IMAGE"
 battle_background = ExtResource("6_background")
-level_select_preview = ExtResource("7_preview")
 recommended_ball_level = 6
 stage_gimmick_icon = ExtResource("8_gimmick")
 stage_gimmick_name = "빙결 지대"

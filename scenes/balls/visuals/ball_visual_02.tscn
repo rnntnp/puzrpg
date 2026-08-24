@@ -1,23 +1,26 @@
 [gd_scene format=3 uid="uid://buc7p2qv0iqnj"]
 
 [ext_resource type="PackedScene" path="res://scenes/balls/visuals/ball_visual_base.tscn" id="1_base"]
-[ext_resource type="Texture2D" uid="uid://dmtn6vucprc6y" path="res://assets/balls/generated/axolotl_only_ball_red_doteyes_rgba.png" id="2_atlas"]
+[ext_resource type="Texture2D" uid="uid://dxy44t2wwj24q" path="res://assets/balls/generated/ball_02_axolotl_source.png" id="2_axolotl_source"]
 [ext_resource type="Shader" uid="uid://dyiql3rgv8fsw" path="res://shaders/ball_shell_outline.gdshader" id="2_gjaer"]
-[ext_resource type="Texture2D" uid="uid://d3q822ttj26mk" path="res://assets/balls/generated/orb_outline_circle_mask.png" id="4_xtc6o"]
 [ext_resource type="Shader" uid="uid://b3hciqwdmjwqs" path="res://shaders/ball_shell_shadow_inset.gdshader" id="5_yfw66"]
 [ext_resource type="Texture2D" uid="uid://bwjasioimwasf" path="res://assets/balls/generated/orb_shell_candidates/candidate_06/orb_06_fill.png" id="6_xf3ux"]
+[ext_resource type="Shader" uid="uid://itru0tttro0a" path="res://shaders/ball_sprite_shape_mask.gdshader" id="7_shape_mask_shader"]
+[ext_resource type="Texture2D" uid="uid://d3q822ttj26mk" path="res://assets/balls/generated/orb_outline_circle_mask.png" id="9_shape_outline"]
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_fu226"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_xtc6o"]
 resource_local_to_scene = true
 shader = ExtResource("2_gjaer")
-shader_parameter/outline_color = Color(0.3797608, 0.5399999, 0.35458896, 0.95)
+shader_parameter/outline_color = Color(0.6329347, 0.8999999, 0.5909816, 0.95)
 shader_parameter/outline_color_texel_width = 3.888372093023256
 shader_parameter/outline_total_texel_width = 5.832558139534884
 shader_parameter/outline_expand_texels = 6.0
 
-[sub_resource type="AtlasTexture" id="Atlas"]
-atlas = ExtResource("2_atlas")
-region = Rect2(418, 0, 418, 418)
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_yfw66"]
+resource_local_to_scene = true
+shader = ExtResource("7_shape_mask_shader")
+shader_parameter/mask_offset_pixels = Vector2(0, 0)
+shader_parameter/mask_rotation = 0.0
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_wevyo"]
 resource_local_to_scene = true
@@ -27,7 +30,7 @@ shader_parameter/outline_color_texel_width = 4.0
 shader_parameter/outline_total_texel_width = 6.0
 shader_parameter/outline_expand_texels = 6.0
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_v6w4b"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_xf3ux"]
 resource_local_to_scene = true
 shader = ExtResource("5_yfw66")
 shader_parameter/shell_mask_texture = ExtResource("6_xf3ux")
@@ -43,30 +46,41 @@ tint_color = Color(0.7032608, 0.99999994, 0.65664625, 1)
 modulate = Color(0.7032608, 0.99999994, 0.65664625, 1)
 
 [node name="ShellOutline" parent="." index="1"]
-material = SubResource("ShaderMaterial_fu226")
+material = SubResource("ShaderMaterial_xtc6o")
+position = Vector2(17, 0)
 
 [node name="Axolotl" parent="." index="2"]
-position = Vector2(-13, -1.9999981)
-scale = Vector2(0.9138756, 0.9138756)
-texture = SubResource("Atlas")
+texture_filter = 3
+material = SubResource("ShaderMaterial_yfw66")
+position = Vector2(-1.4999919, -16.01871)
+scale = Vector2(1.0454545, 1.0431519)
+texture = ExtResource("2_axolotl_source")
 
 [node name="UnionOutline" type="CanvasGroup" parent="." index="3" unique_id=2001417805]
 z_index = 3
 material = SubResource("ShaderMaterial_wevyo")
+position = Vector2(17, 0)
 fit_margin = 18.0
 clear_margin = 18.0
 
 [node name="ShellMask" type="Sprite2D" parent="UnionOutline" index="0" unique_id=1698515827]
 texture_filter = 4
-texture = ExtResource("4_xtc6o")
+texture = ExtResource("9_shape_outline")
 
 [node name="AxolotlMask" type="Sprite2D" parent="UnionOutline" index="1" unique_id=1041888318]
 texture_filter = 2
 
 [node name="ShellShadow" parent="." index="4"]
 modulate = Color(0.2672391, 0.37999997, 0.24952558, 1)
-material = SubResource("ShaderMaterial_v6w4b")
+material = SubResource("ShaderMaterial_xf3ux")
+position = Vector2(17, 0)
+
+[node name="ShellGloss" parent="." index="5"]
+position = Vector2(17, 0)
+
+[node name="HitboxAuthoring" parent="." index="6"]
+visible = false
+position = Vector2(17, 0)
 
 [node name="HitboxBody" parent="HitboxAuthoring" index="0"]
-position = Vector2(-12, 5)
 shape = SubResource("CircleShape_hitbox_local")

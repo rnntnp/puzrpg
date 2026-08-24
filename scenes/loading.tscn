@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://b28a660bjqfrj"]
 
 [ext_resource type="Script" uid="uid://3sw04811ab8o" path="res://scripts/loading.gd" id="1_loading"]
-[ext_resource type="Texture2D" uid="uid://bnmnatwtg0u8g" path="res://assets/backgrounds/title.png" id="2_yc7uc"]
+[ext_resource type="Texture2D" path="res://assets/ui/loading_candidates/loading_transparent_balls_dawn_v10.png" id="2_yc7uc"]
 
 [node name="LoadingScreen" type="Control" unique_id=1986594117]
 layout_mode = 3
@@ -23,11 +23,15 @@ mouse_filter = 2
 color = Color(0.063, 0.094, 0.153, 1)
 
 [node name="TextureRect" type="TextureRect" parent="." unique_id=1450938267]
-layout_mode = 0
-offset_right = 718.1316
-offset_bottom = 1273.0
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 texture = ExtResource("2_yc7uc")
-expand_mode = 3
+expand_mode = 1
+stretch_mode = 6
 
 [node name="LoadingLabel" type="Label" parent="." unique_id=2078229902]
 layout_mode = 1

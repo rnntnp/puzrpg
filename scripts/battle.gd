@@ -168,7 +168,7 @@ func _start_battle() -> void:
 		var intro_sequence := StageIntroSequenceClass.new()
 		add_child(intro_sequence)
 		intro_sequence.sequence_finished.connect(_on_opening_sequence_finished)
-		intro_sequence.play_story(level_data.opening_sequence)
+		intro_sequence.play_story(level_data.opening_sequence, level_data.opening_story_images)
 		return
 	battle_running = true
 	merge_game.set_input_enabled(true)

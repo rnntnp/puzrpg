@@ -4,12 +4,13 @@
 [ext_resource type="Resource" uid="uid://dd8t0hxokj424" path="res://resources/characters/blue_fighter.tres" id="2_player"]
 [ext_resource type="Resource" uid="uid://bwjblomuukh5q" path="res://resources/characters/red_fighter.tres" id="3_enemy"]
 [ext_resource type="Script" uid="uid://duu5mev8uwp8d" path="res://scripts/character_data.gd" id="4_character_type"]
-[ext_resource type="Texture2D" uid="uid://dalchpagcqfma" path="res://assets/backgrounds/stage_01_moonlit_pond.png" id="5_background"]
-[ext_resource type="Texture2D" uid="uid://c0wjr5kpx22kk" path="res://assets/level_previews/level_01_preview.png" id="6_preview"]
+[ext_resource type="Texture2D" path="res://assets/backgrounds/stage_01_moonlit_pond_handdrawn_v4_clear.png" id="5_background"]
 [ext_resource type="Texture2D" uid="uid://diw8e6ahibw5" path="res://assets/effects/generated/status_attack.png" id="7_gimmick"]
 [ext_resource type="Texture2D" path="res://assets/backgrounds/stage_01_moonlit_pond_handdrawn_v4_clear_top.png" id="8_background_top"]
 [ext_resource type="Texture2D" path="res://assets/backgrounds/stage_01_moonlit_pond_handdrawn_v4_clear_middle.png" id="9_background_middle"]
 [ext_resource type="Texture2D" path="res://assets/backgrounds/stage_01_moonlit_pond_handdrawn_v4_clear_bottom.png" id="10_background_bottom"]
+[ext_resource type="Texture2D" path="res://assets/tutorial/stage_01_story_page_01.png" id="11_story_page_01"]
+[ext_resource type="Texture2D" path="res://assets/tutorial/stage_01_story_page_02.png" id="12_story_page_02"]
 
 [resource]
 script = ExtResource("1_level")
@@ -19,13 +20,13 @@ battle_background = ExtResource("5_background")
 battle_background_top = ExtResource("8_background_top")
 battle_background_middle = ExtResource("9_background_middle")
 battle_background_bottom = ExtResource("10_background_bottom")
-level_select_preview = ExtResource("6_preview")
 stage_gimmick_icon = ExtResource("7_gimmick")
 stage_gimmick_name = "일반 공격"
 reward_name = "연못 보물상자"
 player_character = ExtResource("2_player")
 enemies = Array[ExtResource("4_character_type")]([ExtResource("3_enemy")])
 opening_sequence = PackedStringArray("로고", "컷씬 1", "컷씬 2")
+opening_story_images = Array[Texture2D]([ExtResource("11_story_page_01"), ExtResource("12_story_page_02")])
 tutorial_sequence = PackedStringArray("적은 머리 위에 다음 행동과\n남은 턴 수를 보여줍니다.", "드롭 조작")
 tutorial_turn_message = "방울을 한 번 떨어뜨릴 때마다\n1턴이 진행됩니다."
 tutorial_evolution_messages = PackedStringArray("방울을 다른 방울 위에 떨어뜨리세요.", "같은 방울 두 개가 만나면 더 높은 방울로\n합성되고, 적을 공격합니다.")

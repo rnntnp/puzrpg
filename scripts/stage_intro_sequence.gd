@@ -10,6 +10,7 @@ const TutorialMouseCursorClass = preload("res://scripts/tutorial_mouse_cursor.gd
 const TutorialControlArrowClass = preload("res://scripts/tutorial_control_arrow.gd")
 
 var _pages: PackedStringArray = []
+var _story_images: Array[Texture2D] = []
 var _page_index := 0
 var _logo_first := false
 var _enemy_intent_tutorial := false
@@ -19,6 +20,7 @@ var _combo_tutorial := false
 var _control_center_x := 360.0
 var _backdrop: ColorRect
 var _label: Label
+var _story_image: TextureRect
 var _guide_panel: Panel
 var _guide_label: Label
 var _click_hint: Label
@@ -26,8 +28,9 @@ var _control_arrow: TutorialControlArrow
 var _mouse_cursor: TutorialMouseCursor
 
 
-func play_story(pages: PackedStringArray) -> void:
+func play_story(pages: PackedStringArray, story_images: Array[Texture2D] = []) -> void:
 	_logo_first = true
+	_story_images = story_images
 	_enemy_intent_tutorial = false
 	_turn_tutorial = false
 	_evolution_tutorial = false
@@ -99,6 +102,14 @@ func _build_overlay() -> void:
 	_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_backdrop.add_child(_label)
 
+	_story_image = TextureRect.new()
+	_story_image.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_story_image.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_story_image.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	_story_image.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_story_image.hide()
+	_backdrop.add_child(_story_image)
+
 	_guide_panel = Panel.new()
 	_guide_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_guide_panel.hide()
@@ -151,12 +162,15 @@ func _build_overlay() -> void:
 
 func _show_current_page() -> void:
 	_label.text = _pages[_page_index]
+	_story_image.hide()
 	if _logo_first and _page_index == 0:
 		_set_spotlight(false)
 		_guide_label.hide()
 		_reset_page_title_layout()
 		_click_hint.hide()
 		_play_logo()
+		return
+	if _logo_first and _show_story_image_page():
 		return
 	if _enemy_intent_tutorial and _page_index == 0:
 		_show_enemy_intent_tutorial()
@@ -182,6 +196,25 @@ func _show_current_page() -> void:
 	_label.show()
 	_click_hint.show()
 	_label.modulate.a = 1.0
+
+
+func _show_story_image_page() -> bool:
+	var image_index := _page_index - 1
+	if image_index < 0 or image_index >= _story_images.size():
+		return false
+	var texture := _story_images[image_index]
+	if texture == null:
+		return false
+	_set_spotlight(false)
+	_guide_label.hide()
+	_guide_panel.hide()
+	_control_arrow.hide()
+	_mouse_cursor.hide()
+	_label.hide()
+	_story_image.texture = texture
+	_story_image.show()
+	_click_hint.show()
+	return true
 
 
 func _show_enemy_intent_tutorial() -> void:

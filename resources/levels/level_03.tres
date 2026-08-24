@@ -5,7 +5,6 @@
 [ext_resource type="Resource" path="res://resources/characters/recovery_ingester.tres" id="3"]
 [ext_resource type="Script" uid="uid://duu5mev8uwp8d" path="res://scripts/character_data.gd" id="4"]
 [ext_resource type="Texture2D" uid="uid://c3vhyr1ewy74w" path="res://assets/backgrounds/cave_battle_background_inpainted.png" id="5"]
-[ext_resource type="Texture2D" uid="uid://cwbgknqvc1oe8" path="res://assets/level_previews/level_03_preview.png" id="6"]
 [ext_resource type="Texture2D" uid="uid://dy4hcy7jmubx2" path="res://assets/effects/generated/status_ingestion.png" id="7_gimmick"]
 
 [resource]
@@ -14,7 +13,6 @@ level_name = "3. 수정 동굴"
 image_placeholder = "ICE FIELD
 LEVEL IMAGE"
 battle_background = ExtResource("5")
-level_select_preview = ExtResource("6")
 recommended_ball_level = 7
 stage_gimmick_icon = ExtResource("7_gimmick")
 stage_gimmick_name = "포식 · 회복"

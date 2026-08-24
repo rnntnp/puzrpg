@@ -4,8 +4,7 @@
 [ext_resource type="Resource" uid="uid://dd8t0hxokj424" path="res://resources/characters/blue_fighter.tres" id="2_player"]
 [ext_resource type="Resource" uid="uid://bwjblomuukh5q" path="res://resources/characters/red_fighter.tres" id="3_enemy"]
 [ext_resource type="Script" uid="uid://duu5mev8uwp8d" path="res://scripts/character_data.gd" id="4_character_type"]
-[ext_resource type="Texture2D" uid="uid://dalchpagcqfma" path="res://assets/backgrounds/stage_01_moonlit_pond.png" id="5_background"]
-[ext_resource type="Texture2D" path="res://assets/backgrounds/stage_01_moonlit_pond_handdrawn_v4_clear.png" id="6_preview"]
+[ext_resource type="Texture2D" path="res://assets/backgrounds/stage_01_moonlit_pond_handdrawn_v4_clear.png" id="5_background"]
 [ext_resource type="Texture2D" uid="uid://diw8e6ahibw5w" path="res://assets/effects/generated/status_attack.png" id="7_gimmick"]
 [ext_resource type="Texture2D" path="res://assets/backgrounds/stage_01_moonlit_pond_handdrawn_v4_clear_top.png" id="8_background_top"]
 [ext_resource type="Texture2D" path="res://assets/backgrounds/stage_01_moonlit_pond_handdrawn_v4_clear_middle.png" id="9_background_middle"]
@@ -20,7 +19,6 @@ battle_background = ExtResource("5_background")
 battle_background_top = ExtResource("8_background_top")
 battle_background_middle = ExtResource("9_background_middle")
 battle_background_bottom = ExtResource("10_background_bottom")
-level_select_preview = ExtResource("6_preview")
 stage_gimmick_icon = ExtResource("7_gimmick")
 stage_gimmick_name = "일반 공격"
 reward_name = "연못 보물상자"

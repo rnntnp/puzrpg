@@ -152,9 +152,11 @@ func _copy_authored_hitboxes(authoring_root: StaticBody2D) -> bool:
 		var source := source_shapes[index]
 		var target := collision_shape if index == 0 else CollisionShape2D.new()
 		target.shape = source.shape.duplicate(true)
-		target.position = source.position * design_scale
-		target.rotation = source.rotation
-		target.scale = source.scale * design_scale
+		var runtime_transform := authoring_root.transform * source.transform
+		runtime_transform.origin *= design_scale
+		runtime_transform.x *= design_scale
+		runtime_transform.y *= design_scale
+		target.transform = runtime_transform
 		if index > 0:
 			target.set_meta(&"visual_hitbox", true)
 			add_child(target)
@@ -171,7 +173,7 @@ func _get_shape_extent(shape_node: CollisionShape2D) -> float:
 		return extent + (shape_node.shape as CircleShape2D).radius * maximum_scale
 	if shape_node.shape is ConvexPolygonShape2D:
 		for point in (shape_node.shape as ConvexPolygonShape2D).points:
-			extent = maxf(extent, (shape_node.position + point * shape_node.scale).length())
+			extent = maxf(extent, (shape_node.transform * point).length())
 	return extent
 
 

@@ -1,0 +1,9 @@
+[mcp_servers.godot_mcp_toolkit]
+command = "C:\\Windows\\System32\\cmd.exe"
+args = ["/d", "/s", "/c", "set \"PATH=C:\\Program Files\\nodejs;%PATH%\" && npx -y @npgamedev/godot-mcp-server"]
+cwd = "C:\\Users\\mycom\\Desktop\\github test\\크롬 등록용\\puzrpg"
+startup_timeout_sec = 30
+default_tools_approval_mode = "writes"
+
+[mcp_servers.godot_mcp_toolkit.env]
+GODOT_MCP_PROJECT_PATH = "C:\\Users\\mycom\\Desktop\\github test\\크롬 등록용\\puzrpg"

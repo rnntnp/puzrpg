@@ -25,6 +25,18 @@ const TestGimmickDataClass = preload("res://scripts/test_gimmick_data.gd")
 @export var player_character: CharacterDataClass
 @export var enemies: Array[CharacterDataClass] = []
 
+@export_category("시작 연출")
+## 첫 항목은 자동으로 페이드 인/아웃되며, 이후 항목은 클릭 또는 확인 키로 넘긴다.
+@export var opening_sequence: PackedStringArray = []
+## 스토리 컷씬이 끝나고 전투 화면 위에서 표시하는 조작 안내다.
+@export var tutorial_sequence: PackedStringArray = []
+## 첫 드롭의 턴 처리 뒤에 표시하는 안내 문구다.
+@export_multiline var tutorial_turn_message: String = ""
+## 적 공격을 본 뒤, 방울 진화표와 함께 표시하는 안내다.
+@export var tutorial_evolution_messages: PackedStringArray = []
+## 0은 표시 단계 1이다. 음수면 기존 랜덤 드롭 풀을 사용한다.
+@export_range(-1, 10, 1) var fixed_drop_level: int = -1
+
 @export_category("기믹 테스트")
 @export var is_gimmick_test_level := false
 @export var test_gimmick: TestGimmickDataClass

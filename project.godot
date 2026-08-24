@@ -19,6 +19,7 @@ config/icon="res://icon.svg"
 [autoload]
 
 GameSession="*res://scripts/game_session.gd"
+MCPRuntimeServer="*res://addons/godot_mcp_toolkit/runtime/mcp_runtime_server.gd"
 
 [display]
 
@@ -33,10 +34,20 @@ window/stretch/aspect="expand"
 
 movie_writer/movie_file="C:/Users/jaynap/Desktop/vids/001.avi"
 
+[editor_plugins]
+
+enabled=PackedStringArray("res://addons/godot_mcp_toolkit/plugin.cfg")
+
 [gui]
 
 theme/default_font_multichannel_signed_distance_field=true
 theme/custom="res://resources/themes/level_select_theme.tres"
+
+[mcp_toolkit]
+
+status="No .mcp.json found — use Project > Tools > MCP Toolkit > Write .mcp.json to create one.
+
+NODE.JS NOT FOUND — The MCP server bridge requires Node.js 22+. Download it from https://nodejs.org"
 
 [physics]
 

@@ -65,6 +65,8 @@ const TRAPDOOR_WALL_PATHS: Array[NodePath] = [^"LeftWallShape", ^"RightWallShape
 @export_range(1, 100, 1) var overflow_damage := 10
 var current_level := 0
 var next_level := 0
+var fixed_drop_level_index := -1
+var drop_position_locked := false
 var score := 0
 var can_drop := true
 var is_aiming := false
@@ -239,6 +241,43 @@ func spawn_one_way_platform(rect: Rect2, one_way_margin := 12.0) -> StaticBody2D
 
 func get_current_ball_level() -> int:
 	return current_level
+
+
+func get_drop_guide_global_x() -> float:
+	return to_global(Vector2(aim_x, drop_position_y)).x
+
+
+func set_fixed_drop_level(level_index: int) -> void:
+	fixed_drop_level_index = clampi(level_index, -1, max_level_index)
+	_reset_ball_queue()
+
+
+func set_drop_position_locked(locked: bool) -> void:
+	drop_position_locked = locked
+	if locked:
+		aim_x = (board_inner_left + board_inner_right) * 0.5
+	_update_preview_position()
+
+
+func clear_active_balls() -> void:
+	for child in balls.get_children():
+		if child is MergeBall:
+			(child as MergeBall).queue_free()
+
+
+func prepare_combo_demo_stack() -> void:
+	clear_active_balls()
+	var center_x: float = (board_inner_left + board_inner_right) * 0.5
+	var stage_five_radius: float = BallCatalogClass.get_ball(4).get_radius()
+	var next_y: float = board_inner_bottom - stage_five_radius
+	for level in range(4, -1, -1):
+		var ball: MergeBall = spawn_gimmick_ball(level, Vector2(center_x, next_y))
+		if ball != null:
+			ball.freeze = true
+			ball.sleeping = true
+		var current_radius: float = BallCatalogClass.get_ball(level).get_radius()
+		var upper_radius: float = BallCatalogClass.get_ball(level - 1).get_radius() if level > 0 else 0.0
+		next_y -= current_radius + upper_radius + 14.0
 
 
 func get_board_inner_bounds() -> Rect2:
@@ -615,6 +654,8 @@ func _handle_pointer_button(screen_position: Vector2, pressed: bool) -> void:
 		get_viewport().set_input_as_handled()
 
 func _update_aim(screen_position: Vector2) -> void:
+	if drop_position_locked:
+		return
 	var local := to_local(screen_position)
 	aim_x = _clamp_aim_x(local.x)
 	_update_preview_position()
@@ -745,6 +786,8 @@ func _reset_ball_queue() -> void:
 	_refresh_preview()
 
 func _random_drop_level() -> int:
+	if fixed_drop_level_index >= 0:
+		return fixed_drop_level_index
 	return randi_range(0, mini(4, max_level_index))
 
 func _refresh_preview() -> void:

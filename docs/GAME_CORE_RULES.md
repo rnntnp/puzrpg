@@ -137,13 +137,14 @@ These are not part of the numbered 1–50 test-mechanic sequence, but future dup
 
 ### Ice
 
-- Campaign level 2 contains a basic and an enhanced ice enemy.
-- On its action, the controller locks input, waits for board settlement, performs the enemy's normal damage, then freezes eligible balls.
+- Campaign level 2 contains a basic, enhanced, and boss ice enemy.
+- On its action, the controller locks input, performs the enemy's normal damage, then freezes eligible balls.
 - Frozen balls are static and cannot merge.
 - Every normal merge completion damages every frozen ball's ice by 1.
-- The basic Resource freezes 1 ball, allows 1 frozen ball, and uses durability 2.
-- The enhanced Resource freezes 2 balls, allows 2 frozen balls, and currently also uses durability 2.
-- No third ice boss is registered in campaign level 2. Any PDF boss behavior remains design intent, not runtime truth.
+- The basic Resource has 400 HP, attacks for 5 every 4 completed player turns, freezes 1 ball, prioritizes displayed stages 1–3, and uses durability 2.
+- The enhanced Resource has 600 HP, attacks for 5 every 5 completed player turns, freezes 2 balls, prioritizes displayed stages 2–4, and uses durability 2.
+- The boss has 800 HP, attacks for 7 every 4 completed player turns, freezes 2 balls, prioritizes displayed stages 3–5, and uses durability 3.
+- There is no frozen-ball cap. Targets are searched in strict displayed-stage order starting at the configured preferred minimum (for example, 3 → 4 → 5 → 6), so the remaining slots are filled by the next stage rather than by skipping ahead. If no unfrozen target is found, a frozen ball below that enemy's configured ice durability is re-frozen and restored to full durability.
 
 ### Ingestion
 
@@ -189,7 +190,7 @@ The following are intentionally not harmonized by guesswork:
 | Result velocity | New result has no inherited average source velocity | Older design notes describe inherited/averaged motion | Runtime wins until redesign |
 | Player skill gauge | No generic runtime implementation found | Common PDF includes a skill gauge | Unresolved / not implemented |
 | Generic attack queue | No dedicated queue; delayed projectiles are independent | Common PDF describes an attack queue | Unresolved / not implemented |
-| Ice boss | Two ice enemies registered | Ice PDF includes a boss phase | Design intent only |
+| Ice boss | Three ice enemies are registered; the boss freezes two balls with durability 3 and has no frozen-ball cap | Ice PDF includes a boss phase | Runtime wins; any differing PDF boss behavior is design intent only |
 | Ingestion variants | One recovery variant registered | Ingestion PDF describes additional variants | Design intent only |
 
 Changing one of these requires an explicit core-rule decision and an update to this table, affected code, and related mechanics.

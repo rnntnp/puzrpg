@@ -54,7 +54,7 @@ Primary runtime evidence: `scripts/merge_game.gd`, `scripts/merge_ball.gd`, and 
 - A level may lower its maximum through `LevelData.max_ball_level`.
 - A normal random drop is uniformly selected from indices `0..min(4, max_level_index)`: displayed stages 1 through 5 when the level maximum allows them.
 - `BallData` owns the ball's stage metadata, sprite, circle collision shape, glow, and `merge_score`.
-- The current ball shape enum only supports circles.
+- Stages use circle collision by default. Displayed stage 3 is the explicit exception: it uses a heart outline and a compound dynamic hitbox made from one convex lower body plus two circular upper lobes.
 - Runtime base mass is derived from radius: `max(1.0, radius / 20.0)`. It is not stored independently in `BallData`.
 - `LevelData.ball_physics_speed` is applied as `gravity_scale = physics_speed²`.
 - Stage-specific radius and score values live in `resources/balls/ball_01.tres` through `ball_11.tres`.

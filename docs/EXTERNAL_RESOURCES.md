@@ -4,15 +4,16 @@ Keep this list limited to external resources that are currently referenced by th
 
 ## Audio
 
-### Calm River Ambience Loop
+### Marimba Game Music Playful Tropical Jungle Puzzle
 
-- Project file: `assets/audio/bgm/calm_river_ambience_loop.mp3`
-- Runtime use: looping gameplay background ambience
-- Creator: SoundsForYou
-- Source: https://pixabay.com/sound-effects/nature-calm-river-ambience-loop-125071/
+- Project file: `assets/audio/bgm/marimba_game_music_playful_tropical_jungle_puzzle.mp3`
+- Runtime use: looping gameplay background music
+- Creator: Denis-Pavlov-Music
+- Source: https://pixabay.com/music/video-games-marimba-game-music-playful-tropical-jungle-puzzle-399759/
 - License: Pixabay Content License
 - License text: https://pixabay.com/service/license-summary/
 - Attribution required: no
+- Content ID: registered; gameplay videos may receive a non-blocking copyright notice
 
 ### Bubble Pop 05
 

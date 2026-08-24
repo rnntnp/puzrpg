@@ -37,6 +37,7 @@ var curse_preview := false
 var rewind_turns := 0
 var bumper_cooldown_until_msec := 0
 var danger_marked := false
+var _hitbox_radius := 0.0
 
 func _ready() -> void:
 	body_entered.connect(_on_body_entered)
@@ -44,9 +45,9 @@ func _ready() -> void:
 func setup(level: int, physics_speed: float = 1.0) -> void:
 	merge_level = clampi(level, 0, BallCatalogClass.get_max_level_index())
 	ball_data = BallCatalogClass.get_ball(merge_level)
-	collision_shape.shape = ball_data.collision_shape
 	var diameter: float = ball_data.get_radius() * 2.0
-	_setup_visual(diameter)
+	var visual := _setup_visual(diameter)
+	_setup_collision_shape(visual)
 	glow_aura.setup(
 		ball_data.get_radius() * ball_data.glow_radius_scale,
 		ball_data.glow_color,
@@ -59,15 +60,15 @@ func setup(level: int, physics_speed: float = 1.0) -> void:
 	queue_redraw()
 
 
-func _setup_visual(diameter: float) -> void:
+func _setup_visual(diameter: float) -> Node2D:
 	for child in visual_container.get_children():
 		child.queue_free()
 	var scene: PackedScene = ball_data.visual_scene if ball_data.visual_scene != null else LEGACY_VISUAL_SCENE
-	var visual := scene.instantiate()
+	var visual := scene.instantiate() as Node2D
 	visual_container.add_child(visual)
 	visual_container.scale = Vector2.ONE * (diameter / VISUAL_DESIGN_SIZE)
 	if ball_data.visual_scene != null:
-		return
+		return visual
 	# 아직 전용 비주얼 씬이 없는 10·11단계의 호환 표시.
 	var axolotl := visual.get_node_or_null("Axolotl") as Sprite2D
 	var shell_base := visual.get_node_or_null("ShellBase") as Sprite2D
@@ -82,6 +83,7 @@ func _setup_visual(diameter: float) -> void:
 		shell_base.modulate = ball_data.glow_color
 	if shell_shadow != null:
 		shell_shadow.modulate = ball_data.glow_color.darkened(0.62)
+	return visual
 
 
 func set_play_area_bounds(left: float, right: float, bottom: float) -> void:
@@ -123,7 +125,61 @@ func lock_for_merge() -> void:
 
 
 func get_radius() -> float:
-	return (ball_data.get_radius() * absf(scale.x)) if ball_data != null else 0.0
+	return _hitbox_radius * absf(scale.x)
+
+
+func _setup_collision_shape(visual: Node2D) -> void:
+	for child in get_children():
+		if child is CollisionShape2D and child != collision_shape and child.has_meta(&"visual_hitbox"):
+			child.queue_free()
+	var authoring_root := visual.get_node_or_null("HitboxAuthoring") as StaticBody2D
+	if authoring_root != null and _copy_authored_hitboxes(authoring_root):
+		return
+	_setup_fallback_collision_shape()
+
+
+func _copy_authored_hitboxes(authoring_root: StaticBody2D) -> bool:
+	var source_shapes: Array[CollisionShape2D] = []
+	for child in authoring_root.get_children():
+		if child is CollisionShape2D and not (child as CollisionShape2D).disabled and (child as CollisionShape2D).shape != null:
+			source_shapes.append(child as CollisionShape2D)
+	if source_shapes.is_empty():
+		return false
+	var design_scale := visual_container.scale.x
+	_hitbox_radius = 0.0
+	for index in source_shapes.size():
+		var source := source_shapes[index]
+		var target := collision_shape if index == 0 else CollisionShape2D.new()
+		target.shape = source.shape.duplicate(true)
+		target.position = source.position * design_scale
+		target.rotation = source.rotation
+		target.scale = source.scale * design_scale
+		if index > 0:
+			target.set_meta(&"visual_hitbox", true)
+			add_child(target)
+		_hitbox_radius = maxf(_hitbox_radius, _get_shape_extent(target))
+	authoring_root.process_mode = Node.PROCESS_MODE_DISABLED
+	authoring_root.visible = false
+	return true
+
+
+func _get_shape_extent(shape_node: CollisionShape2D) -> float:
+	var extent := shape_node.position.length()
+	var maximum_scale := maxf(absf(shape_node.scale.x), absf(shape_node.scale.y))
+	if shape_node.shape is CircleShape2D:
+		return extent + (shape_node.shape as CircleShape2D).radius * maximum_scale
+	if shape_node.shape is ConvexPolygonShape2D:
+		for point in (shape_node.shape as ConvexPolygonShape2D).points:
+			extent = maxf(extent, (shape_node.position + point * shape_node.scale).length())
+	return extent
+
+
+func _setup_fallback_collision_shape() -> void:
+	_hitbox_radius = ball_data.get_hitbox_radius()
+	var runtime_collision_shape: Shape2D = ball_data.collision_shape.duplicate()
+	if runtime_collision_shape is CircleShape2D:
+		(runtime_collision_shape as CircleShape2D).radius = _hitbox_radius
+	collision_shape.shape = runtime_collision_shape
 
 
 func set_enlarged(enabled: bool, multiplier := 1.5, duration := 0.25) -> void:

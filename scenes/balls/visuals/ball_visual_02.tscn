@@ -7,6 +7,9 @@
 atlas = ExtResource("2_atlas")
 region = Rect2(418, 0, 418, 418)
 
+[sub_resource type="CircleShape2D" id="CircleShape_hitbox_local"]
+radius = 203.02217
+
 [node name="BallVisual02" unique_id=1728199311 instance=ExtResource("1_base")]
 tint_color = Color(0.7032608, 0.99999994, 0.65664625, 1)
 
@@ -20,3 +23,8 @@ texture = SubResource("Atlas")
 
 [node name="ShellShadow" parent="." index="2"]
 modulate = Color(0.2672391, 0.37999997, 0.24952558, 1)
+[node name="HitboxBody" parent="HitboxAuthoring" index="0"]
+position = Vector2(-12, 5)
+shape = SubResource("CircleShape_hitbox_local")
+
+[editable path="HitboxAuthoring"]

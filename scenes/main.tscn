@@ -15,6 +15,18 @@
 [ext_resource type="Script" uid="uid://fj4dw46p7gwd" path="res://scripts/test_gimmick_controller.gd" id="12_gimmick_controller"]
 [ext_resource type="Script" uid="uid://ck6ggsqikukgw" path="res://scripts/layered_battle_background.gd" id="12_layered_background"]
 
+[sub_resource type="Gradient" id="Gradient_top_center_shadow"]
+offsets = PackedFloat32Array(0, 0.42, 1)
+colors = PackedColorArray(0, 0, 0, 0.58, 0, 0, 0, 0.34, 0, 0, 0, 0)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture_top_center_shadow"]
+gradient = SubResource("Gradient_top_center_shadow")
+width = 360
+height = 120
+fill = 1
+fill_from = Vector2(0.5, 0.5)
+fill_to = Vector2(1, 0.5)
+
 [node name="Battle" type="Node2D" unique_id=1064943574]
 script = ExtResource("1")
 
@@ -78,6 +90,17 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
+[node name="TopCenterShadow" type="TextureRect" parent="UI"]
+layout_mode = 0
+offset_left = 180.0
+offset_top = -14.0
+offset_right = 540.0
+offset_bottom = 106.0
+mouse_filter = 2
+texture = SubResource("GradientTexture_top_center_shadow")
+expand_mode = 1
+stretch_mode = 5
+
 [node name="Title" type="Label" parent="UI" unique_id=13781482]
 layout_mode = 0
 offset_top = 10.0
@@ -108,18 +131,18 @@ offset_bottom = 86.0
 theme_override_colors/font_color = Color(1, 0.82, 0.4, 1)
 theme_override_fonts/font = ExtResource("5_eb6dy")
 theme_override_font_sizes/font_size = 19
-text = "자동 전투 중"
+text = ""
 horizontal_alignment = 1
 
 [node name="EnemyProgress" type="Label" parent="UI" unique_id=2098800966]
 layout_mode = 0
-offset_top = 88.0
+offset_top = 54.0
 offset_right = 720.0
-offset_bottom = 116.0
-theme_override_colors/font_color = Color(0.72, 0.78, 0.86, 1)
+offset_bottom = 86.0
+theme_override_colors/font_color = Color(1, 0.82, 0.4, 1)
 theme_override_fonts/font = ExtResource("5_eb6dy")
-theme_override_font_sizes/font_size = 16
-text = "적 1 / 1"
+theme_override_font_sizes/font_size = 19
+text = "적 1/1"
 horizontal_alignment = 1
 
 [node name="LeftHealthBar" parent="UI" unique_id=1196444105 instance=ExtResource("11_health_bar")]

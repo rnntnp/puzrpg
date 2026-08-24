@@ -1,4 +1,4 @@
-[gd_scene load_steps=9 format=3]
+[gd_scene load_steps=11 format=3]
 
 [ext_resource type="Texture2D" path="res://assets/balls/generated/orb_shell_candidates/candidate_06/orb_06_fill.png" id="1_fill"]
 [ext_resource type="Texture2D" path="res://assets/balls/generated/orb_shell_candidates/candidate_06/orb_06_shadow.png" id="2_shadow"]
@@ -6,6 +6,7 @@
 [ext_resource type="Script" path="res://scripts/ball_visual.gd" id="4_script"]
 [ext_resource type="Shader" path="res://shaders/ball_shell_outline.gdshader" id="5_outline_shader"]
 [ext_resource type="Shader" path="res://shaders/ball_shell_shadow_inset.gdshader" id="6_shadow_inset_shader"]
+[ext_resource type="Texture2D" path="res://assets/balls/generated/orb_outline_circle_mask.png" id="7_circle_mask"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_shell_outline"]
 resource_local_to_scene = true
@@ -17,6 +18,9 @@ shader = ExtResource("6_shadow_inset_shader")
 shader_parameter/shell_mask_texture = ExtResource("1_fill")
 shader_parameter/edge_clear_texel_width = 9.0
 
+[sub_resource type="CircleShape2D" id="CircleShape_hitbox"]
+radius = 188.1
+
 [node name="BallVisualBase" type="Node2D"]
 script = ExtResource("4_script")
 
@@ -27,10 +31,10 @@ texture_filter = 4
 texture = ExtResource("1_fill")
 
 [node name="ShellOutline" type="Sprite2D" parent="."]
-z_index = -1
+z_index = 3
 material = SubResource("ShaderMaterial_shell_outline")
 texture_filter = 4
-texture = ExtResource("1_fill")
+texture = ExtResource("7_circle_mask")
 
 [node name="Axolotl" type="Sprite2D" parent="."]
 texture_filter = 2
@@ -45,3 +49,16 @@ texture = ExtResource("2_shadow")
 z_index = 2
 texture_filter = 4
 texture = ExtResource("3_gloss")
+
+[node name="HitboxAuthoring" type="StaticBody2D" parent="."]
+collision_layer = 0
+collision_mask = 0
+
+[node name="HitboxBody" type="CollisionShape2D" parent="HitboxAuthoring"]
+shape = SubResource("CircleShape_hitbox")
+
+[node name="HitboxLeftLobe" type="CollisionShape2D" parent="HitboxAuthoring"]
+disabled = true
+
+[node name="HitboxRightLobe" type="CollisionShape2D" parent="HitboxAuthoring"]
+disabled = true

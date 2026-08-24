@@ -11,7 +11,7 @@
 [ext_resource type="Script" uid="uid://b81dh2hb63rrl" path="res://scripts/gimmick_overlay.gd" id="9_gimmick_overlay"]
 [ext_resource type="AudioStream" path="res://assets/audio/sfx/bubble_pop_05.mp3" id="10_merge_sfx"]
 [ext_resource type="AudioStream" path="res://assets/audio/sfx/drop_002.ogg" id="11_landing_sfx"]
-[ext_resource type="AudioStream" path="res://assets/audio/bgm/calm_river_ambience_loop.mp3" id="12_river_bgm"]
+[ext_resource type="AudioStream" path="res://assets/audio/bgm/marimba_game_music_playful_tropical_jungle_puzzle.mp3" id="12_bgm"]
 
 [sub_resource type="RectangleShape2D" id="wall"]
 size = Vector2(6, 869.5)
@@ -41,9 +41,9 @@ max_polyphony = 8
 stream = ExtResource("11_landing_sfx")
 volume_db = -6.0
 
-[node name="RiverAmbience" type="AudioStreamPlayer" parent="."]
-stream = ExtResource("12_river_bgm")
-volume_db = -8.0
+[node name="BackgroundMusic" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("12_bgm")
+volume_db = -12.0
 
 [node name="ComboTestScenario" type="Node" parent="." unique_id=1519166100]
 script = ExtResource("4")

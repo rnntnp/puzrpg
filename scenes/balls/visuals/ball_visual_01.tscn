@@ -6,23 +6,34 @@
 [ext_resource type="Shader" uid="uid://b3hciqwdmjwqs" path="res://shaders/ball_shell_shadow_inset.gdshader" id="4_tmdmu"]
 [ext_resource type="Texture2D" uid="uid://bwjasioimwasf" path="res://assets/balls/generated/orb_shell_candidates/candidate_06/orb_06_fill.png" id="5_kr6e7"]
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_qnqti"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_3yywg"]
 resource_local_to_scene = true
 shader = ExtResource("2_3yywg")
 shader_parameter/outline_color = Color(0.075, 0.1, 0.18, 1)
-shader_parameter/outline_texel_width = 4.0
-shader_parameter/shell_center_texels = Vector2(196, 210)
-shader_parameter/shell_radius_texels = Vector2(179, 187)
+shader_parameter/outline_color_texel_width = 4.0
+shader_parameter/outline_total_texel_width = 6.0
+shader_parameter/outline_expand_texels = 6.0
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_tmdmu"]
+resource_local_to_scene = true
+shader = ExtResource("2_3yywg")
+shader_parameter/outline_color = Color(0.3116533, 0.45606518, 0.5399999, 0.95)
+shader_parameter/outline_color_texel_width = 3.888372093023256
+shader_parameter/outline_total_texel_width = 5.832558139534884
+shader_parameter/outline_expand_texels = 6.0
 
 [sub_resource type="AtlasTexture" id="Atlas"]
 atlas = ExtResource("2_atlas")
 region = Rect2(0, 0, 418, 418)
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_fpmha"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_kr6e7"]
 resource_local_to_scene = true
 shader = ExtResource("4_tmdmu")
 shader_parameter/shell_mask_texture = ExtResource("5_kr6e7")
 shader_parameter/edge_clear_texel_width = 9.0
+
+[sub_resource type="CircleShape2D" id="CircleShape_hitbox_local"]
+radius = 203.02217
 
 [node name="BallVisual01" unique_id=557625348 instance=ExtResource("1_base")]
 tint_color = Color(0.57713574, 0.8445652, 0.99999994, 1)
@@ -30,13 +41,20 @@ tint_color = Color(0.57713574, 0.8445652, 0.99999994, 1)
 [node name="ShellBase" parent="." index="0"]
 visible = true
 modulate = Color(0.57713574, 0.8445652, 0.99999994, 1)
-material = SubResource("ShaderMaterial_qnqti")
+material = SubResource("ShaderMaterial_3yywg")
 
-[node name="Axolotl" parent="." index="1"]
+[node name="ShellOutline" parent="." index="1"]
+material = SubResource("ShaderMaterial_tmdmu")
+
+[node name="Axolotl" parent="." index="2"]
 position = Vector2(-20.5, -25.5)
 scale = Vector2(0.9114832, 0.9114832)
 texture = SubResource("Atlas")
 
-[node name="ShellShadow" parent="." index="2"]
+[node name="ShellShadow" parent="." index="3"]
 modulate = Color(0.21931158, 0.32093477, 0.37999997, 1)
-material = SubResource("ShaderMaterial_fpmha")
+material = SubResource("ShaderMaterial_kr6e7")
+
+[node name="HitboxBody" parent="HitboxAuthoring" index="0"]
+position = Vector2(-12, 5)
+shape = SubResource("CircleShape_hitbox_local")

@@ -3,6 +3,7 @@ extends Resource
 
 enum BallShape {
 	CIRCLE,
+	HEART,
 }
 
 @export_category("기본 정보")
@@ -20,6 +21,7 @@ enum BallShape {
 
 @export_category("물리")
 @export var collision_shape: Shape2D
+@export_range(0.5, 1.2, 0.01) var hitbox_scale: float = 0.9
 
 @export_category("머지")
 @export_range(0, 99999, 1) var merge_score: int = 10
@@ -29,3 +31,7 @@ func get_radius() -> float:
 	if collision_shape is CircleShape2D:
 		return (collision_shape as CircleShape2D).radius
 	return 0.0
+
+
+func get_hitbox_radius() -> float:
+	return get_radius() * hitbox_scale

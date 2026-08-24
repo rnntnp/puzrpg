@@ -47,7 +47,7 @@ const TRAPDOOR_WALL_PATHS: Array[NodePath] = [^"LeftWallShape", ^"RightWallShape
 @onready var merge_hit_stop = $MergeHitStop
 @onready var merge_sfx: AudioStreamPlayer = $MergeSfx
 @onready var landing_sfx: AudioStreamPlayer = $LandingSfx
-@onready var river_ambience: AudioStreamPlayer = $RiverAmbience
+@onready var background_music: AudioStreamPlayer = $BackgroundMusic
 @onready var left_wall: StaticBody2D = $LeftWall
 @onready var right_wall: StaticBody2D = $RightWall
 @onready var floor_body: StaticBody2D = $Floor
@@ -115,8 +115,8 @@ var trapdoor_enabled := false
 var active_gimmick_tweens: Array[Tween] = []
 
 func _ready() -> void:
-	river_ambience.stream.set("loop", true)
-	river_ambience.play()
+	background_music.stream.set("loop", true)
+	background_music.play()
 	_sync_board_geometry_from_collisions()
 	_base_left_wall_transform = left_wall.transform
 	_base_right_wall_transform = right_wall.transform

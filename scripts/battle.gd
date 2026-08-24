@@ -133,7 +133,7 @@ func _load_enemy(index: int) -> void:
 	right_bar.fill_color = enemy_data.health_bar_color
 	right_bar.queue_redraw()
 	enemy_drop_count = 0
-	enemy_progress_label.text = "적 %d / %d" % [index + 1, level_data.enemies.size()]
+	enemy_progress_label.text = "적 %d/%d" % [index + 1, level_data.enemies.size()]
 	monster_action_controller.configure(
 		self, right_fighter, left_fighter, merge_game,
 		right_status_effects, skill_durability_label
@@ -172,7 +172,7 @@ func _start_battle() -> void:
 		return
 	battle_running = true
 	merge_game.set_input_enabled(true)
-	status_label.text = "전투 중"
+	status_label.text = ""
 	status_label.modulate = Color.WHITE
 	_start_tutorial_sequence()
 

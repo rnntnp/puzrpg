@@ -35,3 +35,14 @@ Keep this list limited to external resources that are currently referenced by th
 - License: Creative Commons CC0 1.0
 - License text: https://creativecommons.org/publicdomain/zero/1.0/
 - Attribution required: no
+
+### click_003
+
+- Project file: `assets/audio/sfx/ui_click_003.ogg`
+- Runtime use: shared click sound for enabled UI buttons
+- Pack: Kenney Interface Sounds
+- Creator: Kenney
+- Source: https://kenney.nl/assets/interface-sounds
+- License: Creative Commons CC0 1.0
+- License text: https://creativecommons.org/publicdomain/zero/1.0/
+- Attribution required: no

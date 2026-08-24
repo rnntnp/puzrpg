@@ -5,6 +5,7 @@
 [ext_resource type="Texture2D" uid="uid://dmtn6vucprc6y" path="res://assets/balls/generated/axolotl_only_ball_red_doteyes_rgba.png" id="2_atlas"]
 [ext_resource type="Shader" uid="uid://b3hciqwdmjwqs" path="res://shaders/ball_shell_shadow_inset.gdshader" id="4_tmdmu"]
 [ext_resource type="Texture2D" uid="uid://bwjasioimwasf" path="res://assets/balls/generated/orb_shell_candidates/candidate_06/orb_06_fill.png" id="5_kr6e7"]
+[ext_resource type="Texture2D" path="res://assets/balls/generated/ball_01_shell_axolotl_outline_mask.png" id="7_union_mask"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_3yywg"]
 resource_local_to_scene = true
@@ -45,10 +46,11 @@ material = SubResource("ShaderMaterial_3yywg")
 
 [node name="ShellOutline" parent="." index="1"]
 material = SubResource("ShaderMaterial_tmdmu")
+texture = ExtResource("7_union_mask")
 
 [node name="Axolotl" parent="." index="2"]
-position = Vector2(-20.5, -25.5)
-scale = Vector2(0.9114832, 0.9114832)
+position = Vector2(-19.49999, -68.50001)
+scale = Vector2(1.3755981, 1.3755981)
 texture = SubResource("Atlas")
 
 [node name="ShellShadow" parent="." index="3"]

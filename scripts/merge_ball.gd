@@ -7,6 +7,7 @@ signal first_contact(ball: MergeBall)
 const BallCatalogClass = preload("res://scripts/ball_catalog.gd")
 const LEGACY_VISUAL_SCENE := preload("res://scenes/balls/visuals/ball_visual_base.tscn")
 const VISUAL_DESIGN_SIZE := 418.0
+const FLOOR_RECOVERY_MARGIN := 4.0
 @onready var visual_container: Node2D = $VisualContainer
 @onready var glow_aura = $GlowAura
 @onready var collision_shape: CollisionShape2D = $CollisionShape2D
@@ -110,7 +111,7 @@ func _integrate_forces(state: PhysicsDirectBodyState2D) -> void:
 		velocity.x = minf(0.0, velocity.x)
 	# 정상적인 벽 접촉은 StaticBody2D에 맡기고, 실제 관통 때만 복구한다.
 	if vertical_floor_bound_enabled:
-		var maximum_y := floor_bound_bottom - radius
+		var maximum_y := floor_bound_bottom - radius + FLOOR_RECOVERY_MARGIN
 		if transform.origin.y > maximum_y:
 			transform.origin.y = maximum_y
 			velocity.y = minf(0.0, velocity.y)

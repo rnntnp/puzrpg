@@ -1,5 +1,7 @@
 extends Node
 
+signal money_changed(amount: int)
+
 const DEFAULT_LEVEL_PATH := "res://resources/levels/tutorial_temp.tres"
 const LevelDataClass = preload("res://scripts/level_data.gd")
 const PROGRESS_SAVE_PATH := "user://progress.cfg"
@@ -14,6 +16,7 @@ var last_battle_won := false
 var last_result_title := ""
 var developer_autoplay_enabled := false
 var developer_combo_test_requested := false
+var money := 12450
 
 
 func _ready() -> void:
@@ -80,6 +83,7 @@ func select_level(index: int) -> bool:
 func _load_progress() -> void:
 	var config := ConfigFile.new()
 	if config.load(PROGRESS_SAVE_PATH) == OK:
+		money = maxi(0, int(config.get_value("progress", "money", 12450)))
 		highest_completed_level_index = clampi(
 			int(config.get_value("progress", "highest_completed", -1)),
 			-1,
@@ -99,7 +103,29 @@ func _save_progress() -> void:
 	var config := ConfigFile.new()
 	config.set_value("progress", "highest_completed", highest_completed_level_index)
 	config.set_value("progress", "selected_level", selected_level_index)
+	config.set_value("progress", "money", money)
 	config.save(PROGRESS_SAVE_PATH)
+
+
+func get_money() -> int:
+	return money
+
+
+func add_money(amount: int) -> void:
+	if amount <= 0:
+		return
+	money += amount
+	_save_progress()
+	money_changed.emit(money)
+
+
+func spend_money(amount: int) -> bool:
+	if amount < 0 or money < amount:
+		return false
+	money -= amount
+	_save_progress()
+	money_changed.emit(money)
+	return true
 
 
 func request_combo_test() -> void:

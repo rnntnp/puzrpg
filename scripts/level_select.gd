@@ -19,12 +19,10 @@ const SWIPE_THRESHOLD := 65.0
 @onready var next_button: Button = $NextButton
 @onready var page_label: Label = $PageLabel
 @onready var swipe_hint: Label = $SwipeHint
-@onready var recommended_level_value: Label = $Content/InfoCardLeft/Value
-@onready var enemy_turn_value: Label = $Content/InfoCardLeft2/Value
-@onready var gimmick_value: Label = $Content/InfoCardLeft3/Value
-@onready var gimmick_icon: TextureRect = $Content/InfoCardLeft3/Icon
-@onready var reward_value: Label = $Content/RewardPanel/Value
-@onready var all_levels_button: Button = $AllLevelsButton
+@onready var money_value: Label = $MoneyDisplay/Value
+@onready var gimmick_value: Label = $Content/InfoCardLeft/Value
+@onready var gimmick_icon: TextureRect = $Content/InfoCardLeft/Icon
+@onready var reward_value: Label = $Content/InfoCardLeft3/Value
 
 var viewed_level_index := 0
 var pointer_start := Vector2.ZERO
@@ -44,7 +42,8 @@ func _ready() -> void:
 	autoplay_button.pressed.connect(_on_autoplay_button_pressed)
 	combo_test_button.visible = OS.is_debug_build()
 	combo_test_button.pressed.connect(_on_combo_test_button_pressed)
-	all_levels_button.pressed.connect(_show_all_levels)
+	GameSession.money_changed.connect(_update_money_display)
+	_update_money_display(GameSession.get_money())
 	_show_level(viewed_level_index)
 	_play_swipe_hint()
 	if GameSession.developer_autoplay_enabled:
@@ -123,14 +122,19 @@ func _show_level(index: int, direction := 0) -> void:
 
 
 func _update_level_info(level: LevelData) -> void:
-	recommended_level_value.text = "Lv. %d" % level.recommended_ball_level
-	var attack_turns := 0
-	if not level.enemies.is_empty() and level.enemies.front() != null:
-		attack_turns = level.enemies.front().enemy_attack_drop_interval
-	enemy_turn_value.text = "%d턴" % attack_turns if attack_turns > 0 else "-"
 	gimmick_value.text = level.stage_gimmick_name
 	gimmick_icon.texture = level.stage_gimmick_icon
 	reward_value.text = level.reward_name
+
+
+func _update_money_display(amount: int) -> void:
+	var digits := str(maxi(0, amount))
+	var formatted := ""
+	for index in digits.length():
+		if index > 0 and (digits.length() - index) % 3 == 0:
+			formatted += ","
+		formatted += digits[index]
+	money_value.text = formatted
 
 
 func _update_preview_mask_mapping() -> void:

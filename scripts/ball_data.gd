@@ -15,6 +15,7 @@ enum BallShape {
 @export var show_placeholder_outline: bool = true
 @export var glow_color: Color = Color(0.55, 0.8, 1.0, 1.0)
 @export_range(0.0, 1.0, 0.05) var glow_strength: float = 0.4
+@export_range(0.5, 1.5, 0.05) var glow_radius_scale: float = 1.0
 
 @export_category("물리")
 @export var collision_shape: Shape2D

@@ -15,4 +15,7 @@ export_credentials.cfg
 data_*/
 mono_crash.*.json
 .mcp/
-/tmp/Godot*/
+
+# Local scratch files and generated release artifacts
+/tmp/
+/build/

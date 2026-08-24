@@ -9,6 +9,9 @@
 [ext_resource type="Script" uid="uid://8qiwn1gfogtj" path="res://scripts/danger_line.gd" id="7_danger_line"]
 [ext_resource type="PackedScene" uid="uid://cpcwk31ftbu6k" path="res://scenes/next_preview_panel.tscn" id="8_next_panel"]
 [ext_resource type="Script" uid="uid://b81dh2hb63rrl" path="res://scripts/gimmick_overlay.gd" id="9_gimmick_overlay"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/bubble_pop_05.mp3" id="10_merge_sfx"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/drop_002.ogg" id="11_landing_sfx"]
+[ext_resource type="AudioStream" path="res://assets/audio/bgm/calm_river_ambience_loop.mp3" id="12_river_bgm"]
 
 [sub_resource type="RectangleShape2D" id="wall"]
 size = Vector2(6, 869.5)
@@ -28,6 +31,19 @@ physics_data = ExtResource("5_physics")
 
 [node name="MergeHitStop" type="Node" parent="." unique_id=1497298764]
 script = ExtResource("3")
+
+[node name="MergeSfx" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("10_merge_sfx")
+volume_db = -3.0
+max_polyphony = 8
+
+[node name="LandingSfx" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("11_landing_sfx")
+volume_db = -6.0
+
+[node name="RiverAmbience" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("12_river_bgm")
+volume_db = -14.0
 
 [node name="ComboTestScenario" type="Node" parent="." unique_id=1519166100]
 script = ExtResource("4")

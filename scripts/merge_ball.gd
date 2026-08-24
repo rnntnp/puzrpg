@@ -6,6 +6,9 @@ signal first_contact(ball: MergeBall)
 
 const BallCatalogClass = preload("res://scripts/ball_catalog.gd")
 @onready var sprite: Sprite2D = $Sprite2D
+@onready var shell_base: Sprite2D = $ShellBase
+@onready var shell_shadow: Sprite2D = $ShellShadow
+@onready var shell_gloss: Sprite2D = $ShellGloss
 @onready var glow_aura = $GlowAura
 @onready var collision_shape: CollisionShape2D = $CollisionShape2D
 @onready var ice_durability_label: Label = $IceDurabilityLabel
@@ -49,7 +52,20 @@ func setup(level: int, physics_speed: float = 1.0) -> void:
 	var texture_size := sprite.texture.get_size() if sprite.texture != null else Vector2.ONE
 	var diameter: float = ball_data.get_radius() * 2.0
 	sprite.scale = Vector2(diameter / texture_size.x, diameter / texture_size.y)
-	glow_aura.setup(ball_data.get_radius(), ball_data.glow_color, ball_data.glow_strength)
+	var shell_size := shell_base.texture.get_size()
+	shell_base.scale = Vector2(diameter / shell_size.x, diameter / shell_size.y)
+	shell_base.modulate = ball_data.glow_color
+	var shadow_size := shell_shadow.texture.get_size()
+	shell_shadow.scale = Vector2(diameter / shadow_size.x, diameter / shadow_size.y)
+	shell_shadow.modulate = ball_data.glow_color.darkened(0.62)
+	var gloss_size := shell_gloss.texture.get_size()
+	shell_gloss.scale = Vector2(diameter / gloss_size.x, diameter / gloss_size.y)
+	shell_gloss.modulate = Color.WHITE
+	glow_aura.setup(
+		ball_data.get_radius() * ball_data.glow_radius_scale,
+		ball_data.glow_color,
+		ball_data.glow_strength
+	)
 	base_mass = maxf(1.0, ball_data.get_radius() / 20.0)
 	mass = base_mass
 	# 자유 낙하 시간은 중력의 제곱근에 반비례하므로 배속의 제곱을 적용한다.

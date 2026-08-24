@@ -31,6 +31,8 @@ const COMBO_SETTLE_MSEC := 500
 const COMBO_MAX_WAIT_MSEC := 4000
 const MERGE_ATTACK_DELAY := 0.25
 const MERGE_PUSH_RADIUS := 260.0
+const MERGE_PITCH_SEMITONES_PER_COMBO := 2
+const MERGE_PITCH_MAX_SEMITONES := 12
 const TRAPDOOR_WALL_PATHS: Array[NodePath] = [^"LeftWallShape", ^"RightWallShape"]
 
 @onready var balls: Node2D = $Balls
@@ -43,6 +45,9 @@ const TRAPDOOR_WALL_PATHS: Array[NodePath] = [^"LeftWallShape", ^"RightWallShape
 @onready var combo_label: Label = $ComboLabel
 @onready var autoplay_bot = $MergeAutoplayBot
 @onready var merge_hit_stop = $MergeHitStop
+@onready var merge_sfx: AudioStreamPlayer = $MergeSfx
+@onready var landing_sfx: AudioStreamPlayer = $LandingSfx
+@onready var river_ambience: AudioStreamPlayer = $RiverAmbience
 @onready var left_wall: StaticBody2D = $LeftWall
 @onready var right_wall: StaticBody2D = $RightWall
 @onready var floor_body: StaticBody2D = $Floor
@@ -110,6 +115,8 @@ var trapdoor_enabled := false
 var active_gimmick_tweens: Array[Tween] = []
 
 func _ready() -> void:
+	river_ambience.stream.set("loop", true)
+	river_ambience.play()
 	_sync_board_geometry_from_collisions()
 	_base_left_wall_transform = left_wall.transform
 	_base_right_wall_transform = right_wall.transform
@@ -764,6 +771,7 @@ func _on_dropped_ball_first_contact(_ball: MergeBall, sequence_id: int, original
 	if sequence_id != drop_sequence_id or is_game_over:
 		return
 	dropped_ball_has_landed = true
+	landing_sfx.play()
 	player_ball_landed.emit(_ball.merge_level, original_drop_x)
 	if not input_locked:
 		can_drop = true
@@ -847,7 +855,7 @@ func _on_merge_requested(first, second) -> void:
 		level, level, level + 1, earned_points,
 		str(drop_sequence_active), combo_count, combo_points
 	])
-	call_deferred("_spawn_merged_ball", at, level, carries_ingestion_target)
+	call_deferred("_spawn_merged_ball", at, level, carries_ingestion_target, attack_combo_count)
 
 
 func _spawn_merge_burst(at: Vector2, data: Resource, merge_combo_count: int) -> void:
@@ -856,16 +864,38 @@ func _spawn_merge_burst(at: Vector2, data: Resource, merge_combo_count: int) -> 
 	burst.play(at, data.glow_color, data.get_radius(), merge_combo_count, data.level)
 
 
-func _spawn_merged_ball(at: Vector2, level: int, carries_ingestion_target: bool = false) -> void:
+func _spawn_merged_ball(
+	at: Vector2,
+	level: int,
+	carries_ingestion_target: bool = false,
+	merge_combo_count: int = 1
+) -> void:
 	var merged_ball = _spawn_ball(at, level)
 	if carries_ingestion_target and is_instance_valid(merged_ball):
 		merged_ball.set_ingestion_marked(true)
 		ingestion_target_replaced.emit(merged_ball)
 	if is_instance_valid(merged_ball):
+		_play_merge_sfx(merge_combo_count)
 		merge_completed.emit(merged_ball)
 	if not is_instance_valid(merged_ball) or merge_push_force <= 0.0:
 		return
 	_apply_merge_push(at, merged_ball)
+
+
+func _play_merge_sfx(merge_combo_count: int) -> void:
+	var player := AudioStreamPlayer.new()
+	player.stream = merge_sfx.stream
+	player.volume_db = merge_sfx.volume_db
+	var semitones := mini(
+		maxi(merge_combo_count - 1, 0) * MERGE_PITCH_SEMITONES_PER_COMBO,
+		MERGE_PITCH_MAX_SEMITONES
+	)
+	player.pitch_scale = pow(2.0, float(semitones) / 12.0)
+	add_child(player)
+	player.finished.connect(player.queue_free)
+	# The 1.104 s source waveform stays flat until about 0.176 s. Keep a
+	# few milliseconds of lead-in so the first transient is not clipped.
+	player.play(0.17)
 
 
 func _apply_merge_push(origin: Vector2, merged_ball: MergeBall) -> void:

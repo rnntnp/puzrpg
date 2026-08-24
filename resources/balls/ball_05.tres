@@ -1,7 +1,11 @@
 [gd_resource type="Resource" script_class="BallData" format=3 uid="uid://6y44o511t346"]
 
 [ext_resource type="Script" uid="uid://cpjm025ca6ujc" path="res://scripts/ball_data.gd" id="1"]
-[ext_resource type="Texture2D" uid="uid://dkcudek742lqp" path="res://assets/balls/generated/ball_red.png" id="2"]
+[ext_resource type="Texture2D" path="res://assets/balls/generated/axolotl_only_ball_red_doteyes_rgba.png" id="2"]
+
+[sub_resource type="AtlasTexture" id="Atlas"]
+atlas = ExtResource("2")
+region = Rect2(418, 418, 418, 418)
 
 [sub_resource type="CircleShape2D" id="Circle"]
 radius = 52.0
@@ -9,9 +13,10 @@ radius = 52.0
 [resource]
 script = ExtResource("1")
 level = 5
-sprite = ExtResource("2")
+sprite = SubResource("Atlas")
 show_placeholder_outline = false
 glow_color = Color(1, 0.16, 0.42, 1)
 glow_strength = 0.52
+glow_radius_scale = 0.9
 collision_shape = SubResource("Circle")
 merge_score = 40

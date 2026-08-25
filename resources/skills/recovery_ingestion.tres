@@ -4,7 +4,7 @@
 
 [resource]
 script = ExtResource("1")
-telegraph_turns = 2
+telegraph_turns = 1
 durability = 20
 durability_increase_per_use = 10
 maximum_durability = 50

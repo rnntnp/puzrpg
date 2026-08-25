@@ -636,7 +636,7 @@ func animate_ball_consumption(ball: MergeBall, target_global_position: Vector2, 
 	return true
 
 
-func return_ingested_ball_to_board(level: int) -> MergeBall:
+func return_ingested_ball_to_board(level: int, source_global_position := Vector2.INF) -> MergeBall:
 	var safe_level := clampi(level, 0, max_level_index)
 	var ball_data = BallCatalogClass.get_ball(safe_level)
 	var radius := 26.0
@@ -647,7 +647,41 @@ func return_ingested_ball_to_board(level: int) -> MergeBall:
 	var spawn_x := (minimum_x + maximum_x) * 0.5
 	if minimum_x < maximum_x:
 		spawn_x = randf_range(minimum_x, maximum_x)
-	return _spawn_ball(Vector2(spawn_x, drop_position_y), safe_level) as MergeBall
+	var landing_position := Vector2(spawn_x, drop_position_y + radius)
+	if not source_global_position.is_finite():
+		return _spawn_ball(landing_position, safe_level) as MergeBall
+	var source_position := to_local(source_global_position)
+	var ball := _spawn_ball(source_position, safe_level) as MergeBall
+	if not is_instance_valid(ball):
+		return null
+	ball.merge_locked = true
+	ball.freeze = true
+	ball.collision_layer = 0
+	ball.collision_mask = 0
+	ball.z_index = 200
+	ball.scale = Vector2.ONE * 0.18
+	var control_position := (source_position + landing_position) * 0.5 + Vector2(0.0, -105.0)
+	var tween := create_tween().set_parallel(true)
+	tween.tween_method(func(weight: float) -> void:
+		if is_instance_valid(ball):
+			var first_leg := source_position.lerp(control_position, weight)
+			var second_leg := control_position.lerp(landing_position, weight)
+			ball.position = first_leg.lerp(second_leg, weight)
+	, 0.0, 1.0, 0.58).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	tween.tween_property(ball, "scale", Vector2.ONE, 0.58).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	tween.tween_property(ball, "rotation", ball.rotation - TAU * 0.7, 0.58)
+	tween.finished.connect(func() -> void:
+		if not is_instance_valid(ball):
+			return
+		ball.merge_locked = false
+		ball.collision_layer = 1
+		ball.collision_mask = 1
+		ball.z_index = 0
+		ball.freeze = false
+		ball.sleeping = false
+		ball.linear_velocity = Vector2(0.0, 35.0)
+	)
+	return ball
 
 func configure(
 	time_limit: float,

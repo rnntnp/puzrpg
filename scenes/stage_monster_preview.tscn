@@ -1,23 +1,23 @@
 [gd_scene format=3 uid="uid://cfgqgnw2kvrip"]
 
 [ext_resource type="Script" uid="uid://c4ipgqjh5mxnv" path="res://scripts/stage_monster_preview.gd" id="1_script"]
-[ext_resource type="Resource" uid="uid://bsud55pwothis" path="res://resources/characters/ice_monster.tres" id="3_253iy"]
+[ext_resource type="Resource" uid="uid://d07vqu8ieij2s" path="res://resources/characters/ice_monster_boss.tres" id="3_253iy"]
 [ext_resource type="Resource" uid="uid://cr32kqamgs0q2" path="res://resources/levels/level_02.tres" id="4_stage"]
 [ext_resource type="Texture2D" uid="uid://b6wwa4mjehm65" path="res://assets/backgrounds/stage_02_snow_mountain_handdrawn_v1.png" id="4_v3ffy"]
 [ext_resource type="Texture2D" uid="uid://dxaaqi3bqq7vn" path="res://assets/backgrounds/stage_02_snow_mountain_handdrawn_v1_top.png" id="5_1cd48"]
 [ext_resource type="Texture2D" uid="uid://cttm1ykgcaigh" path="res://assets/backgrounds/stage_02_snow_mountain_handdrawn_v1_middle.png" id="6_m3nnr"]
 [ext_resource type="Shader" uid="uid://d4knouww648y4" path="res://shaders/character_white_outline.gdshader" id="6_outline"]
 [ext_resource type="Texture2D" uid="uid://dov8n81jvn133" path="res://assets/backgrounds/stage_02_snow_mountain_handdrawn_v1_bottom.png" id="7_kdg1h"]
-[ext_resource type="Texture2D" uid="uid://bowbm3vyx8fxn" path="res://assets/characters/generated/ice_yeti_regular_flat.png" id="9_mly8x"]
+[ext_resource type="Texture2D" uid="uid://bnfu7ipmy81cl" path="res://assets/characters/generated/ice_yeti_final_boss_flat.png" id="9_mly8x"]
 [ext_resource type="PackedScene" uid="uid://idr4ll5kki3x" path="res://scenes/water_health_bar.tscn" id="10_health"]
 [ext_resource type="FontFile" uid="uid://op5qpjre8dba" path="res://assets/fonts/nanum_square_round/NanumSquareRoundEB.ttf" id="11_font"]
 [ext_resource type="Texture2D" uid="uid://dp8jwduwehncv" path="res://assets/effects/generated/status_ice.png" id="12_253iy"]
 [ext_resource type="Texture2D" uid="uid://bcj4dsy0y2nn0" path="res://assets/effects/generated/status_attack_simple.png" id="12_attack"]
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_253iy"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_w0bqi"]
 shader = ExtResource("6_outline")
 shader_parameter/outline_color = Color(1, 1, 1, 1)
-shader_parameter/outline_size = 12.495238378961616
+shader_parameter/outline_size = 11.942856973369107
 shader_parameter/outer_fade_color = Color(0, 0, 0, 0)
 shader_parameter/outer_fade_size = 0.0
 
@@ -99,9 +99,9 @@ position = Vector2(529, 300)
 scale = Vector2(1.5, 1.5)
 
 [node name="Sprite2D" type="Sprite2D" parent="MonsterOrigin" unique_id=936766054]
-material = SubResource("ShaderMaterial_253iy")
+material = SubResource("ShaderMaterial_w0bqi")
 position = Vector2(0, 10)
-scale = Vector2(0.16006097, 0.16006097)
+scale = Vector2(0.16746412, 0.16746412)
 texture = ExtResource("9_mly8x")
 
 [node name="PreviewUI" type="Control" parent="." unique_id=1147534596]
@@ -136,7 +136,7 @@ theme_override_colors/font_outline_color = Color(0.04, 0.08, 0.18, 1)
 theme_override_constants/outline_size = 5
 theme_override_fonts/font = ExtResource("11_font")
 theme_override_font_sizes/font_size = 19
-text = "적 1/3"
+text = "적 3/3"
 horizontal_alignment = 1
 vertical_alignment = 1
 
@@ -164,7 +164,7 @@ theme_override_colors/font_outline_color = Color(0.04, 0.08, 0.18, 1)
 theme_override_constants/outline_size = 4
 theme_override_fonts/font = ExtResource("11_font")
 theme_override_font_sizes/font_size = 16
-text = "설원 설인"
+text = "설원 설인 대장"
 horizontal_alignment = 2
 
 [node name="PlayerHealthBar" parent="PreviewUI" unique_id=745544167 instance=ExtResource("10_health")]
@@ -180,7 +180,7 @@ offset_left = 390.0
 offset_top = 108.0
 offset_right = 680.0
 offset_bottom = 175.0
-fill_color = Color(0.6130624, 0.7521825, 0.9739663, 1)
+fill_color = Color(0.38, 0.7, 0.96, 1)
 right_aligned = true
 
 [node name="PlayerStatusEffects" type="Control" parent="PreviewUI" unique_id=376101247]

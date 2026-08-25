@@ -47,6 +47,7 @@ func set_health(health: int, maximum: int) -> void:
 	_refresh_value_text()
 	_refresh_fill_size()
 	_refresh_damage_preview()
+	_refresh_durability()
 
 
 func set_predicted_damage(amount: int) -> void:
@@ -75,17 +76,11 @@ func clear_durability() -> void:
 
 func _refresh_value_text() -> void:
 	if is_instance_valid(value_label):
-		if durability_active:
-			value_label.text = "내구도 %d / %d" % [current_durability, maximum_durability]
-		else:
-			value_label.text = "%d / %d" % [current_health, maximum_health]
+		value_label.text = "%d / %d" % [current_health, maximum_health]
 
 
 func _refresh_fill_size() -> void:
 	if not is_instance_valid(full_health_fill):
-		return
-	if durability_active:
-		full_health_fill.visible = false
 		return
 	var health_ratio := clampf(float(current_health) / float(maximum_health), 0.0, 1.0)
 	full_health_fill.visible = health_ratio > 0.0
@@ -118,16 +113,28 @@ func _refresh_damage_preview() -> void:
 
 
 func _refresh_durability() -> void:
-	if not is_instance_valid(durability_fill):
+	if not is_instance_valid(durability_fill) or not is_instance_valid(full_health_fill):
 		return
-	durability_fill.visible = durability_active and current_durability > 0
-	_refresh_fill_size()
+	var visible_durability := mini(current_durability, current_health)
+	durability_fill.visible = durability_active and visible_durability > 0 and current_health > 0
 	if not durability_fill.visible:
 		return
-	var durability_ratio := clampf(
-		float(current_durability) / float(maximum_durability), 0.0, 1.0
+	var current_ratio := clampf(float(current_health) / float(maximum_health), 0.0, 1.0)
+	var remaining_ratio := clampf(
+		float(current_health - visible_durability) / float(maximum_health), 0.0, 1.0
 	)
-	durability_fill.size = Vector2(_full_fill_size.x * durability_ratio, _full_fill_size.y)
+	durability_fill.position = Vector2(
+		full_health_fill.position.x + _full_fill_size.x * remaining_ratio,
+		full_health_fill.position.y
+	)
+	durability_fill.size = Vector2(
+		_full_fill_size.x * (current_ratio - remaining_ratio),
+		_full_fill_size.y
+	)
+	_refresh_durability_style(
+		remaining_ratio <= 0.0001,
+		current_ratio >= 0.9999
+	)
 
 func _refresh_fill_style() -> void:
 	if not is_instance_valid(full_health_fill):
@@ -149,3 +156,14 @@ func _refresh_damage_preview_style(round_left := false, round_right := false) ->
 	style.corner_radius_top_right = 9 if round_right else 0
 	style.corner_radius_bottom_right = 9 if round_right else 0
 	damage_preview_fill.add_theme_stylebox_override("panel", style)
+
+
+func _refresh_durability_style(round_left := false, round_right := false) -> void:
+	if not is_instance_valid(durability_fill):
+		return
+	var style := durability_fill.get_theme_stylebox("panel").duplicate() as StyleBoxFlat
+	style.corner_radius_top_left = 9 if round_left else 0
+	style.corner_radius_bottom_left = 9 if round_left else 0
+	style.corner_radius_top_right = 9 if round_right else 0
+	style.corner_radius_bottom_right = 9 if round_right else 0
+	durability_fill.add_theme_stylebox_override("panel", style)

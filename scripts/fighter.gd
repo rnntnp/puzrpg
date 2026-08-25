@@ -28,6 +28,8 @@ var enemy_attack_drop_interval: int:
 func _ready() -> void:
 	base_scale = scale
 	assert(character_data != null, "%s에 CharacterData가 지정되지 않았습니다." % name)
+	if character_sprite.material != null:
+		character_sprite.material = character_sprite.material.duplicate()
 	_apply_character_visual()
 	reset()
 
@@ -45,6 +47,10 @@ func _apply_character_visual() -> void:
 		return
 	color = character_data.display_color
 	character_sprite.modulate = character_data.display_color * character_data.sprite_modulate
+	character_sprite.position = Vector2(
+		character_data.sprite_horizontal_offset,
+		character_data.sprite_height_offset
+	)
 	_apply_current_texture()
 	# Polygon2D는 스프라이트가 없는 데이터의 예비 표시로만 사용한다.
 	polygon = PackedVector2Array() if character_sprite.visible else PackedVector2Array([
@@ -94,6 +100,16 @@ func _apply_current_texture() -> void:
 			character_data.sprite_size.x / texture_size.x,
 			character_data.sprite_size.y / texture_size.y
 		)
+		_apply_screen_space_outline()
+
+
+func _apply_screen_space_outline() -> void:
+	if not (character_sprite.material is ShaderMaterial):
+		return
+	var global_sprite_scale := character_sprite.get_global_transform_with_canvas().get_scale().abs()
+	var average_scale := maxf((global_sprite_scale.x + global_sprite_scale.y) * 0.5, 0.001)
+	var source_pixel_width := character_data.outline_screen_size / average_scale
+	(character_sprite.material as ShaderMaterial).set_shader_parameter("outline_size", source_pixel_width)
 
 
 func reset() -> void:

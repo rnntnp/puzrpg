@@ -1,9 +1,9 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene format=3 uid="uid://dpinp4nk5tmv2"]
 
-[ext_resource type="Script" path="res://scripts/status_effect_bar.gd" id="1"]
+[ext_resource type="Script" uid="uid://bpd3sq4xb2s7y" path="res://scripts/status_effect_bar.gd" id="1"]
 
-[node name="StatusEffectBar" type="HBoxContainer"]
+[node name="StatusEffectBar" type="HBoxContainer" unique_id=1745330034]
 offset_right = 290.0
 offset_bottom = 48.0
-theme_override_constants/separation = 8
+theme_override_constants/separation = 30
 script = ExtResource("1")

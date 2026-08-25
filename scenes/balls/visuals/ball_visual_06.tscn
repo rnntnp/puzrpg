@@ -34,7 +34,7 @@ shader_parameter/edge_clear_texel_width = 9.0
 radius = 52.999985
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_rnwhy"]
-radius = 155.12895
+radius = 151.58493
 
 [node name="BallVisual06" unique_id=639394593 instance=ExtResource("1_base")]
 tint_color = Color(0.84204525, 0.69722426, 1, 1)
@@ -95,5 +95,5 @@ rotation = -0.6433581
 shape = SubResource("CircleShape2D_6nx0a")
 
 [node name="HitboxLeftLobe" parent="HitboxAuthoring" index="5"]
-position = Vector2(-3.4217358, 1.1365323)
+position = Vector2(-1.3085785, -6.5793314)
 shape = SubResource("CircleShape2D_rnwhy")

@@ -11,6 +11,8 @@ const StageIntroSequenceClass = preload("res://scripts/stage_intro_sequence.gd")
 
 @onready var left_fighter: Fighter = $UI/LeftFighter
 @onready var right_fighter: Fighter = $UI/RightFighter
+@onready var left_fighter_shadow: Polygon2D = $UI/LeftFighterShadow
+@onready var right_fighter_shadow: Polygon2D = $UI/RightFighterShadow
 @onready var left_bar: WaterHealthBarClass = $UI/LeftHealthBar
 @onready var right_bar: WaterHealthBarClass = $UI/RightHealthBar
 @onready var title_label: Label = $UI/Title
@@ -106,6 +108,7 @@ func _load_level() -> void:
 	if level_data.battle_background != null:
 		background_artwork.texture = level_data.battle_background
 	left_fighter.set_character_data(level_data.player_character)
+	_apply_shadow_scale(left_fighter_shadow, level_data.player_character)
 	_load_enemy(current_enemy_index)
 	merge_game.configure(
 		level_data.ball_drop_time_limit,
@@ -130,6 +133,7 @@ func _load_enemy(index: int) -> void:
 		enemy_data.attack_power = level_data.test_gimmick.normal_attack_damage
 		enemy_data.enemy_attack_drop_interval = level_data.test_gimmick.action_interval
 	right_fighter.set_character_data(enemy_data)
+	_apply_shadow_scale(right_fighter_shadow, enemy_data)
 	right_bar.fill_color = enemy_data.health_bar_color
 	right_bar.queue_redraw()
 	enemy_drop_count = 0
@@ -137,6 +141,15 @@ func _load_enemy(index: int) -> void:
 	monster_action_controller.configure(
 		self, right_fighter, left_fighter, merge_game,
 		right_status_effects, skill_durability_label
+	)
+
+
+func _apply_shadow_scale(shadow: Polygon2D, character) -> void:
+	if shadow == null or character == null:
+		return
+	shadow.scale = Vector2(
+		maxf(character.shadow_scale.x, 0.0),
+		maxf(character.shadow_scale.y, 0.0)
 	)
 
 

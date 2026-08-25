@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" uid="uid://duu5mev8uwp8d" path="res://scripts/character_data.gd" id="1"]
 [ext_resource type="Resource" path="res://resources/skills/basic_ice.tres" id="2"]
-[ext_resource type="Texture2D" uid="uid://v6qf4vu17fi1" path="res://assets/characters/generated/ice_yeti_boss.png" id="3_sprite"]
+[ext_resource type="Texture2D" uid="uid://bowbm3vyx8fxn" path="res://assets/characters/generated/ice_yeti_regular_flat.png" id="3_sprite"]
 
 [resource]
 script = ExtResource("1")
@@ -10,6 +10,8 @@ display_name = "설원 설인"
 health_bar_color = Color(0.6130624, 0.7521825, 0.9739663, 1)
 sprite = ExtResource("3_sprite")
 sprite_size = Vector2(210, 210)
+sprite_height_offset = 10.0
+shadow_scale = Vector2(2, 1.5)
 max_health = 400
 attack_power = 5
 enemy_attack_drop_interval = 4

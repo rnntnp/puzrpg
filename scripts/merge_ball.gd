@@ -39,6 +39,10 @@ var rewind_turns := 0
 var bumper_cooldown_until_msec := 0
 var danger_marked := false
 var _hitbox_radius := 0.0
+var sleep_assist_enabled := false
+var sleep_assist_settle_time := 0.35
+var sleep_assist_linear_speed := 4.0
+var _sleep_assist_still_time := 0.0
 
 func _ready() -> void:
 	body_entered.connect(_on_body_entered)
@@ -94,6 +98,13 @@ func set_play_area_bounds(left: float, right: float, bottom: float) -> void:
 	horizontal_bounds_enabled = right > left
 
 
+func configure_sleep_assist(enabled: bool, settle_time: float, linear_speed: float) -> void:
+	sleep_assist_enabled = enabled
+	sleep_assist_settle_time = maxf(0.0, settle_time)
+	sleep_assist_linear_speed = maxf(0.0, linear_speed)
+	_sleep_assist_still_time = 0.0
+
+
 func _integrate_forces(state: PhysicsDirectBodyState2D) -> void:
 	if not horizontal_bounds_enabled or merge_locked:
 		return
@@ -117,6 +128,23 @@ func _integrate_forces(state: PhysicsDirectBodyState2D) -> void:
 			velocity.y = minf(0.0, velocity.y)
 	state.transform = transform
 	state.linear_velocity = velocity
+	_update_sleep_assist(state)
+
+
+func _update_sleep_assist(state: PhysicsDirectBodyState2D) -> void:
+	if not sleep_assist_enabled or is_ice_frozen or freeze:
+		_sleep_assist_still_time = 0.0
+		return
+	var is_slow := state.linear_velocity.length() <= sleep_assist_linear_speed
+	if state.get_contact_count() <= 0 or not is_slow:
+		_sleep_assist_still_time = 0.0
+		return
+	_sleep_assist_still_time += state.step
+	if _sleep_assist_still_time < sleep_assist_settle_time:
+		return
+	state.linear_velocity = Vector2.ZERO
+	state.angular_velocity = 0.0
+	state.sleeping = true
 
 func lock_for_merge() -> void:
 	merge_locked = true

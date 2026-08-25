@@ -1,7 +1,7 @@
 shader_type canvas_item;
 
 uniform vec4 outline_color : source_color = vec4(1.0, 1.0, 1.0, 1.0);
-uniform float outline_size : hint_range(0.0, 12.0, 0.5) = 4.0;
+uniform float outline_size : hint_range(0.0, 32.0, 0.5) = 4.0;
 uniform vec4 outer_fade_color : source_color = vec4(0.0, 0.0, 0.0, 0.0);
 uniform float outer_fade_size : hint_range(0.0, 16.0, 0.5) = 0.0;
 

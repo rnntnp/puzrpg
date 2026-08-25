@@ -754,6 +754,11 @@ func _spawn_ball(at: Vector2, level: int, contact_sequence_id: int = -1):
 		ball.physics_material_override = ball_material
 		ball.linear_damp = physics_data.ball_linear_damp
 		ball.angular_damp = physics_data.ball_angular_damp
+		ball.configure_sleep_assist(
+			physics_data.sleep_assist_enabled,
+			physics_data.sleep_assist_settle_time,
+			physics_data.sleep_assist_linear_speed
+		)
 	_enable_ball_ccd_after_spawn(ball)
 	var global_left := to_global(Vector2(board_inner_left, 0.0)).x
 	var global_right := to_global(Vector2(board_inner_right, 0.0)).x

@@ -14,6 +14,7 @@ var skill_button: PlayerSkillButton
 var skill_data: PlayerSkillData
 var gauge_current := 0
 var configured := false
+var tutorial_skill_enabled := false
 
 
 func configure(
@@ -49,6 +50,17 @@ func set_enemy(enemy_fighter: Fighter) -> void:
 
 func on_enemy_defeated() -> void:
 	enemy = null
+
+
+func fill_gauge_for_tutorial() -> void:
+	if not configured or skill_data == null:
+		return
+	gauge_current = skill_data.gauge_max
+	_update_gauge_ui()
+
+
+func set_tutorial_skill_enabled(enabled: bool) -> void:
+	tutorial_skill_enabled = enabled
 
 
 func cleanup() -> void:
@@ -97,7 +109,7 @@ func _can_use_skill() -> bool:
 		and enemy.is_alive()
 		and battle.battle_running
 		and not battle.level_finished
-		and merge_game.can_accept_autoplay_drop()
+		and (merge_game.can_accept_autoplay_drop() or tutorial_skill_enabled)
 		and is_instance_valid(weakness_host)
 		and weakness_host.has_method("add_weakness_turns")
 	)

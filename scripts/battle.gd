@@ -21,11 +21,13 @@ const StageIntroSequenceClass = preload("res://scripts/stage_intro_sequence.gd")
 @onready var left_status_effects: StatusEffectBar = $UI/LeftStatusEffects
 @onready var right_status_effects: StatusEffectBar = $UI/RightStatusEffects
 @onready var skill_durability_label: Label = $UI/SkillDurabilityLabel
+@onready var player_skill_button: PlayerSkillButton = $UI/PlayerSkillButton
 @onready var gimmick_action_label: Label = $UI/GimmickActionLabel
 @onready var gimmick_detail_label: Label = $UI/GimmickDetailLabel
 @onready var background_artwork: TextureRect = $BackgroundArtwork
 @onready var layered_background: LayeredBattleBackground = $LayeredBackground
 @onready var monster_action_controller = $MonsterActionController
+@onready var player_skill_controller: PlayerSkillController = $PlayerSkillController
 @onready var merge_game = $MergeGame
 @onready var exit_button: Button = $UI/ExitButton
 @onready var exit_confirmation_overlay: Control = $ExitConfirmationLayer/ExitConfirmationOverlay
@@ -119,6 +121,9 @@ func _load_level() -> void:
 		background_artwork.texture = level_data.battle_background
 	left_fighter.set_character_data(level_data.player_character)
 	_apply_shadow_visual(left_fighter_shadow, left_fighter, level_data.player_character)
+	player_skill_controller.configure(
+		self, left_fighter, merge_game, monster_action_controller, player_skill_button
+	)
 	_load_enemy(current_enemy_index)
 	merge_game.configure(
 		level_data.ball_drop_time_limit,
@@ -152,6 +157,7 @@ func _load_enemy(index: int) -> void:
 		self, right_fighter, left_fighter, merge_game,
 		right_status_effects, skill_durability_label
 	)
+	player_skill_controller.set_enemy(right_fighter)
 
 
 func _apply_shadow_visual(shadow: Polygon2D, fighter: Fighter, character) -> void:
@@ -481,6 +487,7 @@ func _on_fighter_defeated(fighter: Fighter) -> void:
 		GameSession.set_battle_result(false, "%s 도전 실패" % level_data.level_name)
 		get_tree().change_scene_to_file("res://scenes/battle_result.tscn")
 		return
+	player_skill_controller.on_enemy_defeated()
 	monster_action_controller.on_enemy_defeated()
 
 	current_enemy_index += 1

@@ -91,6 +91,9 @@ extends Resource
 @export_range(0, 9999, 1) var attack_power: int = 10
 @export_range(1, 20, 1) var enemy_attack_drop_interval: int = 3
 
+@export_category("플레이어 스킬")
+@export var player_skill: Resource
+
 @export_category("몬스터 스킬")
 @export var ingestion_skill: Resource
 @export var ice_skill: Resource

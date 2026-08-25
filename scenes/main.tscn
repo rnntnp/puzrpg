@@ -1,4 +1,4 @@
-[gd_scene format=3 uid="uid://67v0ma41cql"]
+[gd_scene load_steps=20 format=3 uid="uid://67v0ma41cql"]
 
 [ext_resource type="Script" uid="uid://qu1wuofvy7va" path="res://scripts/battle.gd" id="1"]
 [ext_resource type="PackedScene" path="res://scenes/fighter.tscn" id="2"]
@@ -14,8 +14,10 @@
 [ext_resource type="PackedScene" uid="uid://idr4ll5kki3x" path="res://scenes/water_health_bar.tscn" id="11_health_bar"]
 [ext_resource type="Script" uid="uid://fj4dw46p7gwd" path="res://scripts/test_gimmick_controller.gd" id="12_gimmick_controller"]
 [ext_resource type="Script" uid="uid://ck6ggsqikukgw" path="res://scripts/layered_battle_background.gd" id="12_layered_background"]
-[ext_resource type="AudioStream" uid="uid://b0cgh0r51vg7h" path="res://assets/audio/sfx/enemy_hit_cute.wav" id="13_enemy_hit_sfx"]
-[ext_resource type="AudioStream" uid="uid://3lweonpl7yrp" path="res://assets/audio/sfx/player_hit_cute.wav" id="14_player_hit_sfx"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/enemy_hit_cute.wav" id="13_enemy_hit_sfx"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/player_hit_cute.wav" id="14_player_hit_sfx"]
+[ext_resource type="Script" path="res://scripts/player_skill_controller.gd" id="15_player_skill_controller"]
+[ext_resource type="PackedScene" path="res://scenes/player_skill_button.tscn" id="16_player_skill_button"]
 
 [sub_resource type="Gradient" id="Gradient_top_center_shadow"]
 offsets = PackedFloat32Array(0, 0.42, 1)
@@ -137,6 +139,9 @@ max_polyphony = 4
 
 [node name="MonsterActionController" type="Node" parent="." unique_id=1522200351]
 script = ExtResource("8")
+
+[node name="PlayerSkillController" type="Node" parent="."]
+script = ExtResource("15_player_skill_controller")
 
 [node name="IceSkillController" type="Node" parent="MonsterActionController" unique_id=1773554680]
 script = ExtResource("9")
@@ -352,6 +357,13 @@ offset_top = 151.0
 offset_right = 642.0
 offset_bottom = 199.0
 alignment = 1
+
+[node name="PlayerSkillButton" parent="UI" instance=ExtResource("16_player_skill_button")]
+layout_mode = 0
+offset_left = 143.0
+offset_top = 160.0
+offset_right = 219.0
+offset_bottom = 236.0
 
 [node name="BallEvolutionStrip" parent="UI" unique_id=1201681759 instance=ExtResource("7")]
 layout_mode = 0

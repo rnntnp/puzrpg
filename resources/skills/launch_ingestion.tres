@@ -12,5 +12,4 @@ maximum_durability = 70
 response_turns = 4
 heal_amount = 0
 launch_damage = 10
-interrupted_damage_multiplier = 1.3
 interrupted_debuff_turns = 2

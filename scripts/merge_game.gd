@@ -16,6 +16,7 @@ signal ingestion_target_replaced(ball: MergeBall)
 signal ice_telegraph_merge_resolved(result_ball: MergeBall, source_ids: Array[int], marked_source_count: int)
 signal merge_completed(merged_ball: MergeBall)
 signal merge_registered(result_level: int, origin: Vector2, chain_index: int, source_ids: Array[int], involved_cursed: bool)
+signal player_merge_registered(base_points: int, result_level: int)
 signal player_ball_landed(level: int, drop_x: float)
 signal external_merge_damage_requested(
 	damage: int,
@@ -915,6 +916,8 @@ func _on_merge_requested(first, second) -> void:
 		combo_points += earned_points
 		last_merge_msec = Time.get_ticks_msec()
 		attack_combo_count = combo_count
+	if not is_external_merge:
+		player_merge_registered.emit(earned_points, level)
 	merge_registered.emit(level, at, attack_combo_count, source_ids, involved_cursed)
 	_spawn_merge_burst(at, merged_ball_data, attack_combo_count)
 	var merge_damage := _calculate_merge_damage(earned_points, attack_combo_count)

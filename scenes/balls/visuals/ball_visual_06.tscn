@@ -30,9 +30,11 @@ shader = ExtResource("6_i1emw")
 shader_parameter/shell_mask_texture = ExtResource("7_nhikw")
 shader_parameter/edge_clear_texel_width = 9.0
 
-[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_6nx0a"]
-radius = 34.698914
-height = 231.38614
+[sub_resource type="CircleShape2D" id="CircleShape2D_6nx0a"]
+radius = 52.999985
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_rnwhy"]
+radius = 155.12895
 
 [node name="BallVisual06" unique_id=639394593 instance=ExtResource("1_base")]
 tint_color = Color(0.84204525, 0.69722426, 1, 1)
@@ -68,29 +70,30 @@ position = Vector2(18, 0)
 rotation = -0.26731703
 
 [node name="HitboxBody" parent="HitboxAuthoring" index="0"]
-position = Vector2(93.12372, -63.662975)
+position = Vector2(40.02148, -108.2741)
 rotation = -0.6433581
-shape = SubResource("CapsuleShape2D_6nx0a")
+shape = SubResource("CircleShape2D_6nx0a")
 
-[node name="HitboxBody2" type="CollisionShape2D" parent="HitboxAuthoring" index="1" unique_id=720131201]
-position = Vector2(-39.182514, -103.00839)
-rotation = 1.2857933
-shape = SubResource("CapsuleShape2D_6nx0a")
+[node name="HitboxBody2" type="CollisionShape2D" parent="HitboxAuthoring" index="1" unique_id=675832015]
+position = Vector2(-101.578384, -68.25563)
+rotation = -0.6433581
+shape = SubResource("CircleShape2D_6nx0a")
 
-[node name="HitboxBody3" type="CollisionShape2D" parent="HitboxAuthoring" index="2" unique_id=1113485453]
-position = Vector2(93.5984, 67.10695)
-rotation = 0.64821446
-shape = SubResource("CapsuleShape2D_6nx0a")
+[node name="HitboxBody3" type="CollisionShape2D" parent="HitboxAuthoring" index="2" unique_id=560393077]
+position = Vector2(-100.75963, 68.82948)
+rotation = -0.6433581
+shape = SubResource("CircleShape2D_6nx0a")
 
-[node name="HitboxBody4" type="CollisionShape2D" parent="HitboxAuthoring" index="3" unique_id=21908980]
-position = Vector2(-35.291153, 113.716896)
-rotation = -1.2860696
-shape = SubResource("CapsuleShape2D_6nx0a")
+[node name="HitboxBody4" type="CollisionShape2D" parent="HitboxAuthoring" index="3" unique_id=9280687]
+position = Vector2(36.27693, 113.617714)
+rotation = -0.6433581
+shape = SubResource("CircleShape2D_6nx0a")
 
-[node name="HitboxBody5" type="CollisionShape2D" parent="HitboxAuthoring" index="4" unique_id=588355170]
-position = Vector2(-121.82544, 1.8874741)
-rotation = -3.1295788
-shape = SubResource("CapsuleShape2D_6nx0a")
+[node name="HitboxBody5" type="CollisionShape2D" parent="HitboxAuthoring" index="4" unique_id=717819382]
+position = Vector2(123.92645, 1.7983856)
+rotation = -0.6433581
+shape = SubResource("CircleShape2D_6nx0a")
 
 [node name="HitboxLeftLobe" parent="HitboxAuthoring" index="5"]
-position = Vector2(136.65372, -1.4249611)
+position = Vector2(-3.4217358, 1.1365323)
+shape = SubResource("CircleShape2D_rnwhy")

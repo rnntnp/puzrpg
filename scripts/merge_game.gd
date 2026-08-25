@@ -757,7 +757,7 @@ func _spawn_ball(at: Vector2, level: int, contact_sequence_id: int = -1):
 		ball.configure_sleep_assist(
 			physics_data.sleep_assist_enabled,
 			physics_data.sleep_assist_settle_time,
-			physics_data.sleep_assist_linear_speed
+			physics_data.sleep_assist_max_displacement
 		)
 	_enable_ball_ccd_after_spawn(ball)
 	var global_left := to_global(Vector2(board_inner_left, 0.0)).x

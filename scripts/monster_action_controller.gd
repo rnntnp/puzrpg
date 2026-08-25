@@ -62,6 +62,7 @@ func configure(
 	vulnerable_turns = 0
 	status_effects.clear_effects()
 	durability_label.visible = false
+	battle.clear_player_damage_preview()
 	using_test_gimmick = battle.level_data != null and battle.level_data.test_gimmick != null
 	if using_test_gimmick:
 		test_gimmick_controller.configure(battle, enemy, player, merge_game, battle.level_data.test_gimmick)
@@ -88,6 +89,7 @@ func on_ball_dropped() -> void:
 			if ice_skill != null:
 				_run_ice_turn()
 				return
+			battle.clear_player_damage_preview()
 			enemy.attack(player)
 			if skill == null:
 				_enter_normal_attack()
@@ -147,12 +149,14 @@ func _enter_normal_attack() -> void:
 	status_effects.remove_effect(IngestionEffect.effect_id)
 	status_effects.remove_effect(IceEffect.effect_id)
 	status_effects.set_effect(EnemyAttackEffect, remaining_turns)
+	battle.show_player_damage_preview(enemy.attack_power)
 	if ice_skill != null:
 		status_effects.set_effect(IceEffect, remaining_turns)
 	durability_label.visible = false
 
 
 func _enter_ingestion_telegraph() -> void:
+	battle.clear_player_damage_preview()
 	state = State.INGESTION_TELEGRAPH
 	enemy.set_visual_override(enemy.character_data.ingestion_telegraph_sprite)
 	remaining_turns = skill.telegraph_turns
@@ -285,6 +289,7 @@ func _run_ice_turn() -> void:
 	merge_game.set_input_enabled(false)
 	if not is_instance_valid(enemy) or not enemy.is_alive() or not player.is_alive():
 		return
+	battle.clear_player_damage_preview()
 	enemy.attack(player)
 	if not player.is_alive():
 		return

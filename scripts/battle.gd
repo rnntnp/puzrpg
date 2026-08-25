@@ -28,6 +28,8 @@ const StageIntroSequenceClass = preload("res://scripts/stage_intro_sequence.gd")
 @onready var monster_action_controller = $MonsterActionController
 @onready var merge_game = $MergeGame
 @onready var exit_button: Button = $UI/ExitButton
+@onready var enemy_hit_sfx: AudioStreamPlayer = $EnemyHitSfx
+@onready var player_hit_sfx: AudioStreamPlayer = $PlayerHitSfx
 
 var level_data: LevelDataClass
 var current_enemy_index := 0
@@ -55,6 +57,8 @@ func _ready() -> void:
 	exit_button.pressed.connect(_show_exit_confirmation)
 	left_fighter.health_changed.connect(_on_left_health_changed)
 	right_fighter.health_changed.connect(_on_right_health_changed)
+	left_fighter.damage_received.connect(_on_player_damage_received)
+	right_fighter.damage_received.connect(_on_enemy_damage_received)
 	left_fighter.defeated.connect(_on_fighter_defeated)
 	right_fighter.defeated.connect(_on_fighter_defeated)
 	merge_game.game_over.connect(_on_merge_game_over)
@@ -237,6 +241,22 @@ func _on_left_health_changed(health: int, maximum: int) -> void:
 
 func _on_right_health_changed(health: int, maximum: int) -> void:
 	right_bar.set_health(health, maximum)
+
+
+func _on_player_damage_received(_amount: int) -> void:
+	player_hit_sfx.play()
+
+
+func _on_enemy_damage_received(_amount: int) -> void:
+	enemy_hit_sfx.play()
+
+
+func show_player_damage_preview(damage: int) -> void:
+	left_bar.set_predicted_damage(damage)
+
+
+func clear_player_damage_preview() -> void:
+	left_bar.clear_predicted_damage()
 
 
 func _on_ball_dropped() -> void:

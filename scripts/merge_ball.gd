@@ -40,9 +40,11 @@ var bumper_cooldown_until_msec := 0
 var danger_marked := false
 var _hitbox_radius := 0.0
 var sleep_assist_enabled := false
-var sleep_assist_settle_time := 0.35
-var sleep_assist_linear_speed := 4.0
-var _sleep_assist_still_time := 0.0
+var sleep_assist_settle_time := 1.5
+var sleep_assist_max_displacement := 1.5
+var _sleep_assist_sample_position := Vector2.ZERO
+var _sleep_assist_sample_time := 0.0
+var _sleep_assist_sample_active := false
 
 func _ready() -> void:
 	body_entered.connect(_on_body_entered)
@@ -98,11 +100,11 @@ func set_play_area_bounds(left: float, right: float, bottom: float) -> void:
 	horizontal_bounds_enabled = right > left
 
 
-func configure_sleep_assist(enabled: bool, settle_time: float, linear_speed: float) -> void:
+func configure_sleep_assist(enabled: bool, settle_time: float, max_displacement: float) -> void:
 	sleep_assist_enabled = enabled
 	sleep_assist_settle_time = maxf(0.0, settle_time)
-	sleep_assist_linear_speed = maxf(0.0, linear_speed)
-	_sleep_assist_still_time = 0.0
+	sleep_assist_max_displacement = maxf(0.0, max_displacement)
+	_reset_sleep_assist_sample()
 
 
 func _integrate_forces(state: PhysicsDirectBodyState2D) -> void:
@@ -133,18 +135,34 @@ func _integrate_forces(state: PhysicsDirectBodyState2D) -> void:
 
 func _update_sleep_assist(state: PhysicsDirectBodyState2D) -> void:
 	if not sleep_assist_enabled or is_ice_frozen or freeze:
-		_sleep_assist_still_time = 0.0
+		_reset_sleep_assist_sample()
 		return
-	var is_slow := state.linear_velocity.length() <= sleep_assist_linear_speed
-	if state.get_contact_count() <= 0 or not is_slow:
-		_sleep_assist_still_time = 0.0
+	if state.get_contact_count() <= 0:
+		_reset_sleep_assist_sample()
 		return
-	_sleep_assist_still_time += state.step
-	if _sleep_assist_still_time < sleep_assist_settle_time:
+	var current_position := state.transform.origin
+	if not _sleep_assist_sample_active:
+		_sleep_assist_sample_position = current_position
+		_sleep_assist_sample_time = 0.0
+		_sleep_assist_sample_active = true
+		return
+	if current_position.distance_to(_sleep_assist_sample_position) > sleep_assist_max_displacement:
+		_sleep_assist_sample_position = current_position
+		_sleep_assist_sample_time = 0.0
+		return
+	_sleep_assist_sample_time += state.step
+	if _sleep_assist_sample_time < sleep_assist_settle_time:
 		return
 	state.linear_velocity = Vector2.ZERO
 	state.angular_velocity = 0.0
 	state.sleeping = true
+	_reset_sleep_assist_sample()
+
+
+func _reset_sleep_assist_sample() -> void:
+	_sleep_assist_sample_position = Vector2.ZERO
+	_sleep_assist_sample_time = 0.0
+	_sleep_assist_sample_active = false
 
 func lock_for_merge() -> void:
 	merge_locked = true

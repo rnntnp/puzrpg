@@ -4,6 +4,7 @@ extends Polygon2D
 const CharacterDataClass = preload("res://scripts/character_data.gd")
 
 signal health_changed(current_health: int, max_health: int)
+signal damage_received(amount: int)
 signal defeated(fighter: Fighter)
 
 @export var character_data: CharacterDataClass
@@ -133,8 +134,12 @@ func attack_with_damage(target: Fighter, damage: int) -> void:
 func take_damage(amount: int) -> void:
 	if not is_alive():
 		return
+	var previous_health := current_health
 	current_health = max(0, current_health - max(0, amount))
+	var applied_damage := previous_health - current_health
 	health_changed.emit(current_health, max_health)
+	if applied_damage > 0:
+		damage_received.emit(applied_damage)
 	if current_health == 0:
 		defeated.emit(self)
 	else:

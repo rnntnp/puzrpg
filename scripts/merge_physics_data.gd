@@ -20,7 +20,8 @@ extends Resource
 @export_range(0.0, 10.0, 0.1) var ball_angular_damp: float = 4.0
 
 @export_category("Sleep Assist")
-## 접촉한 공이 충분히 느린 상태를 유지하면 물리적으로 잠들게 해 잔떨림을 멈춘다.
+## 접촉한 공의 위치가 측정 시간 동안 거의 변하지 않으면 잠들게 해 잔떨림을 멈춘다.
 @export var sleep_assist_enabled := true
-@export_range(0.0, 2.0, 0.05) var sleep_assist_settle_time := 0.35
-@export_range(0.0, 20.0, 0.5) var sleep_assist_linear_speed := 4.0
+@export_range(0.0, 3.0, 0.05) var sleep_assist_settle_time := 1.5
+## 측정 시작 위치에서 이 거리(px) 안에 계속 머문 공만 잠든다.
+@export_range(0.0, 10.0, 0.1) var sleep_assist_max_displacement := 1.5

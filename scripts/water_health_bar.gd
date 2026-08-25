@@ -95,6 +95,7 @@ func _refresh_fill_size() -> void:
 	if not full_health_fill.visible:
 		return
 	full_health_fill.size = Vector2(_full_fill_size.x * health_ratio, _full_fill_size.y)
+	_refresh_fill_style(durability_active and current_durability > 0)
 
 
 func _animate_health_ratio(target_ratio: float) -> void:
@@ -137,40 +138,40 @@ func _refresh_damage_preview() -> void:
 	)
 	_refresh_damage_preview_style(
 		remaining_ratio <= 0.0001,
-		current_ratio >= 0.9999
+		true
 	)
 
 
 func _refresh_durability() -> void:
 	if not is_instance_valid(durability_fill) or not is_instance_valid(full_health_fill):
 		return
-	var visible_durability := mini(current_durability, current_health)
-	durability_fill.visible = durability_active and visible_durability > 0 and current_health > 0
+	durability_fill.visible = durability_active and current_durability > 0
+	_refresh_fill_size()
 	if not durability_fill.visible:
 		return
-	var current_ratio := clampf(float(current_health) / float(maximum_health), 0.0, 1.0)
-	var remaining_ratio := clampf(
-		float(current_health - visible_durability) / float(maximum_health), 0.0, 1.0
-	)
+	var health_ratio := clampf(_displayed_health_ratio, 0.0, 1.0)
+	var durability_ratio := float(current_durability) / float(maximum_health)
 	durability_fill.position = Vector2(
-		full_health_fill.position.x + _full_fill_size.x * remaining_ratio,
+		full_health_fill.position.x + _full_fill_size.x * health_ratio,
 		full_health_fill.position.y
 	)
 	durability_fill.size = Vector2(
-		_full_fill_size.x * (current_ratio - remaining_ratio),
+		_full_fill_size.x * durability_ratio,
 		_full_fill_size.y
 	)
 	_refresh_durability_style(
-		remaining_ratio <= 0.0001,
-		current_ratio >= 0.9999
+		health_ratio <= 0.0001,
+		true
 	)
 
-func _refresh_fill_style() -> void:
+func _refresh_fill_style(flatten_right := false) -> void:
 	if not is_instance_valid(full_health_fill):
 		return
 	var style := full_health_fill.get_theme_stylebox("panel").duplicate() as StyleBoxFlat
 	style.bg_color = Color(fill_color, 0.94)
 	style.border_color = fill_color.lightened(0.20)
+	style.corner_radius_top_right = 0 if flatten_right else 9
+	style.corner_radius_bottom_right = 0 if flatten_right else 9
 	full_health_fill.add_theme_stylebox_override("panel", style)
 
 

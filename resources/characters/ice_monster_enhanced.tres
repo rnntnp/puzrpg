@@ -1,7 +1,7 @@
 [gd_resource type="Resource" script_class="CharacterData" format=3 uid="uid://vj6xbbyn4q28"]
 
 [ext_resource type="Script" uid="uid://duu5mev8uwp8d" path="res://scripts/character_data.gd" id="1"]
-[ext_resource type="Resource" path="res://resources/skills/enhanced_ice.tres" id="2"]
+[ext_resource type="Resource" uid="uid://c78l7w4mqi6rd" path="res://resources/skills/enhanced_ice.tres" id="2"]
 [ext_resource type="Texture2D" uid="uid://c0u1fh2wnelen" path="res://assets/characters/generated/ice_yeti_boss_flat.png" id="3_sprite"]
 
 [resource]

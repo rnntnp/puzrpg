@@ -9,6 +9,7 @@ enum State {
 
 const EnemyAttackEffect: StatusEffectData = preload("res://resources/effects/enemy_attack_countdown.tres")
 const IngestionEffect: StatusEffectData = preload("res://resources/effects/ingestion_countdown.tres")
+const IngestionLaunchEffect: StatusEffectData = preload("res://resources/effects/ingestion_launch_countdown.tres")
 const IngestionHealEffect: StatusEffectData = preload("res://resources/effects/ingestion_heal_countdown.tres")
 const IngestionDurabilityEffect: StatusEffectData = preload("res://resources/effects/ingestion_durability.tres")
 const WeaknessEffect: StatusEffectData = preload("res://resources/effects/ingestion_vulnerable.tres")
@@ -296,7 +297,7 @@ func _execute_ingestion() -> void:
 		active_launch_damage = 0
 	ingestion_executions += 1
 	if active_ingestion_is_launch:
-		status_effects.set_effect(IngestionEffect, remaining_turns)
+		status_effects.set_effect(IngestionLaunchEffect, remaining_turns)
 	else:
 		status_effects.remove_effect(IngestionEffect.effect_id)
 		status_effects.set_effect(IngestionHealEffect, remaining_turns)
@@ -464,7 +465,7 @@ func _get_ice_no_target_damage() -> int:
 
 
 func _get_active_ingestion_effect() -> StatusEffectData:
-	return IngestionEffect if active_ingestion_is_launch else IngestionHealEffect
+	return IngestionLaunchEffect if active_ingestion_is_launch else IngestionHealEffect
 
 
 func _update_ingestion_telegraph_visual() -> void:

@@ -45,6 +45,16 @@ func get_last_battle_level() -> LevelDataClass:
 	return level
 
 
+func prepare_last_battle_retry() -> bool:
+	if not ResourceLoader.exists(last_battle_level_path):
+		return false
+	current_level_path = last_battle_level_path
+	var level_index := level_paths.find(last_battle_level_path)
+	if level_index >= 0:
+		selected_level_index = level_index
+	return true
+
+
 func get_current_level() -> LevelDataClass:
 	var level := load(current_level_path) as LevelDataClass
 	if level == null:

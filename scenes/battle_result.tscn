@@ -1,9 +1,11 @@
-[gd_scene load_steps=14 format=3]
+[gd_scene format=3 uid="uid://igkqr55521fl"]
 
-[ext_resource type="Script" path="res://scripts/battle_result.gd" id="1_result"]
+[ext_resource type="Script" uid="uid://cnnlojhtarlg0" path="res://scripts/battle_result.gd" id="1_result"]
 [ext_resource type="Theme" path="res://resources/themes/level_select_theme.tres" id="2_theme"]
-[ext_resource type="FontFile" path="res://assets/fonts/nanum_square_round/NanumSquareRoundEB.ttf" id="3_font"]
-[ext_resource type="Texture2D" path="res://assets/backgrounds/stage_01_moonlit_pond_handdrawn_v4_clear.png" id="4_fallback_background"]
+[ext_resource type="FontFile" uid="uid://op5qpjre8dba" path="res://assets/fonts/nanum_square_round/NanumSquareRoundEB.ttf" id="3_font"]
+[ext_resource type="Texture2D" uid="uid://6s4f4ytdwfk0" path="res://assets/backgrounds/stage_01_moonlit_pond_handdrawn_v4_clear.png" id="4_fallback_background"]
+[ext_resource type="Texture2D" uid="uid://dl5rgfbubimw" path="res://assets/ui/results/open_reward_chest_pond.png" id="5_open_chest"]
+[ext_resource type="Texture2D" uid="uid://dxfc48nhk0ky2" path="res://assets/ui/level_select_casual/money_coin_axolotl.png" id="6_flk2c"]
 
 [sub_resource type="Gradient" id="Gradient_victory_glow"]
 offsets = PackedFloat32Array(0, 0.35, 0.72, 1)
@@ -55,32 +57,35 @@ corner_radius_top_right = 30
 corner_radius_bottom_right = 30
 corner_radius_bottom_left = 30
 
+[sub_resource type="StyleBoxFlat" id="StatsPanelStyle"]
+bg_color = Color(1, 0.95, 0.84, 0.98)
+border_width_left = 6
+border_width_top = 6
+border_width_right = 6
+border_width_bottom = 6
+border_color = Color(0.08, 0.17, 0.28, 1)
+corner_radius_top_left = 34
+corner_radius_top_right = 34
+corner_radius_bottom_right = 34
+corner_radius_bottom_left = 34
+shadow_color = Color(0.04, 0.1, 0.2, 0.3)
+shadow_size = 7
+shadow_offset = Vector2(0, 6)
+
 [sub_resource type="StyleBoxFlat" id="MainPanel"]
 bg_color = Color(0.72, 0.96, 0.91, 0.92)
-border_width_left = 7
-border_width_top = 7
-border_width_right = 7
-border_width_bottom = 7
+border_width_left = 6
+border_width_top = 6
+border_width_right = 6
+border_width_bottom = 6
 border_color = Color(0.08, 0.17, 0.28, 1)
-corner_radius_top_left = 38
-corner_radius_top_right = 38
-corner_radius_bottom_right = 38
-corner_radius_bottom_left = 38
-shadow_color = Color(0.02, 0.06, 0.15, 0.35)
-shadow_size = 10
-shadow_offset = Vector2(0, 7)
-
-[sub_resource type="StyleBoxFlat" id="InfoPanel"]
-bg_color = Color(1, 0.95, 0.84, 0.98)
-border_width_left = 4
-border_width_top = 4
-border_width_right = 4
-border_width_bottom = 4
-border_color = Color(0.13, 0.21, 0.3, 1)
-corner_radius_top_left = 24
-corner_radius_top_right = 24
-corner_radius_bottom_right = 24
-corner_radius_bottom_left = 24
+corner_radius_top_left = 34
+corner_radius_top_right = 34
+corner_radius_bottom_right = 34
+corner_radius_bottom_left = 34
+shadow_color = Color(0.04, 0.1, 0.2, 0.3)
+shadow_size = 7
+shadow_offset = Vector2(0, 6)
 
 [sub_resource type="StyleBoxFlat" id="StartPanel"]
 bg_color = Color(1, 0.49, 0.43, 1)
@@ -97,7 +102,22 @@ shadow_color = Color(0.04, 0.1, 0.2, 0.3)
 shadow_size = 7
 shadow_offset = Vector2(0, 6)
 
-[node name="BattleResult" type="Control"]
+[sub_resource type="StyleBoxFlat" id="RetryPanel"]
+bg_color = Color(0.24, 0.68, 0.72, 1)
+border_width_left = 6
+border_width_top = 6
+border_width_right = 6
+border_width_bottom = 6
+border_color = Color(0.13, 0.21, 0.3, 1)
+corner_radius_top_left = 34
+corner_radius_top_right = 34
+corner_radius_bottom_right = 34
+corner_radius_bottom_left = 34
+shadow_color = Color(0.04, 0.1, 0.2, 0.3)
+shadow_size = 7
+shadow_offset = Vector2(0, 6)
+
+[node name="BattleResult" type="Control" unique_id=1820163509]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -107,7 +127,7 @@ grow_vertical = 2
 theme = ExtResource("2_theme")
 script = ExtResource("1_result")
 
-[node name="Background" type="TextureRect" parent="."]
+[node name="Background" type="TextureRect" parent="." unique_id=2019623743]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -119,7 +139,7 @@ texture = ExtResource("4_fallback_background")
 expand_mode = 1
 stretch_mode = 6
 
-[node name="BackgroundWash" type="ColorRect" parent="."]
+[node name="BackgroundWash" type="ColorRect" parent="." unique_id=2002573961]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -129,7 +149,8 @@ grow_vertical = 2
 mouse_filter = 2
 color = Color(0.5, 0.82, 0.88, 0.16)
 
-[node name="VictoryGlowEffect" type="TextureRect" parent="."]
+[node name="VictoryGlowEffect" type="TextureRect" parent="." unique_id=2055548006]
+layout_mode = 0
 offset_left = 80.0
 offset_top = 205.0
 offset_right = 640.0
@@ -138,15 +159,17 @@ mouse_filter = 2
 texture = SubResource("GradientTexture_victory_glow")
 expand_mode = 1
 
-[node name="DefeatTopGradientEffect" type="TextureRect" parent="."]
+[node name="DefeatTopGradientEffect" type="TextureRect" parent="." unique_id=1928840669]
 visible = false
+layout_mode = 0
 offset_right = 720.0
 offset_bottom = 720.0
 mouse_filter = 2
 texture = SubResource("GradientTexture_defeat_top")
 expand_mode = 1
 
-[node name="HeaderFrame" type="Panel" parent="."]
+[node name="HeaderFrame" type="Panel" parent="." unique_id=191892220]
+layout_mode = 0
 offset_left = 42.0
 offset_top = 55.0
 offset_right = 678.0
@@ -154,7 +177,7 @@ offset_bottom = 207.0
 mouse_filter = 2
 theme_override_styles/panel = SubResource("HeaderPanel")
 
-[node name="ResultLabel" type="Label" parent="HeaderFrame"]
+[node name="ResultLabel" type="Label" parent="HeaderFrame" unique_id=1664942777]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -167,7 +190,8 @@ text = "스테이지 클리어!"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="StageTitleFrame" type="Panel" parent="."]
+[node name="StageTitleFrame" type="Panel" parent="." unique_id=82515689]
+layout_mode = 0
 offset_left = 105.0
 offset_top = 215.0
 offset_right = 615.0
@@ -175,7 +199,7 @@ offset_bottom = 289.0
 mouse_filter = 2
 theme_override_styles/panel = SubResource("TitlePanel")
 
-[node name="StageNameLabel" type="Label" parent="StageTitleFrame"]
+[node name="StageNameLabel" type="Label" parent="StageTitleFrame" unique_id=581560110]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -189,7 +213,8 @@ text = "스테이지"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="CharacterSprite" type="TextureRect" parent="."]
+[node name="CharacterSprite" type="TextureRect" parent="." unique_id=2126775768]
+layout_mode = 0
 offset_left = 115.0
 offset_top = 275.0
 offset_right = 605.0
@@ -198,70 +223,29 @@ mouse_filter = 2
 expand_mode = 1
 stretch_mode = 5
 
-[node name="RewardPanel" type="Panel" parent="."]
-offset_left = 54.0
+[node name="StatsPanel" type="Panel" parent="." unique_id=200484028]
+layout_mode = 0
+offset_left = 92.0
 offset_top = 738.0
-offset_right = 666.0
-offset_bottom = 897.0
+offset_right = 628.0
+offset_bottom = 878.0
 mouse_filter = 2
-theme_override_styles/panel = SubResource("MainPanel")
+theme_override_styles/panel = SubResource("StatsPanelStyle")
 
-[node name="Title" type="Label" parent="RewardPanel"]
-offset_left = 24.0
-offset_top = 20.0
-offset_right = 588.0
-offset_bottom = 57.0
-theme_override_colors/font_color = Color(0.045, 0.13, 0.29, 1)
-theme_override_fonts/font = ExtResource("3_font")
-theme_override_font_sizes/font_size = 21
-text = "획득 골드"
-horizontal_alignment = 1
-vertical_alignment = 1
-
-[node name="CoinIcon" type="Label" parent="RewardPanel"]
-offset_left = 95.0
-offset_top = 59.0
-offset_right = 205.0
-offset_bottom = 135.0
-theme_override_colors/font_color = Color(0.91, 0.57, 0.08, 1)
-theme_override_fonts/font = ExtResource("3_font")
-theme_override_font_sizes/font_size = 54
-text = "●"
-horizontal_alignment = 1
-vertical_alignment = 1
-
-[node name="GoldValue" type="Label" parent="RewardPanel"]
-offset_left = 210.0
-offset_top = 54.0
-offset_right = 510.0
-offset_bottom = 138.0
-theme_override_colors/font_color = Color(0.07, 0.3, 0.67, 1)
-theme_override_fonts/font = ExtResource("3_font")
-theme_override_font_sizes/font_size = 48
-text = "+150"
-horizontal_alignment = 1
-vertical_alignment = 1
-
-[node name="StatsPanel" type="Panel" parent="."]
-offset_left = 54.0
-offset_top = 915.0
-offset_right = 666.0
-offset_bottom = 1055.0
-mouse_filter = 2
-theme_override_styles/panel = SubResource("InfoPanel")
-
-[node name="Divider" type="ColorRect" parent="StatsPanel"]
-offset_left = 304.0
+[node name="Divider" type="ColorRect" parent="StatsPanel" unique_id=1617838262]
+layout_mode = 0
+offset_left = 266.0
 offset_top = 24.0
-offset_right = 308.0
+offset_right = 270.0
 offset_bottom = 116.0
 mouse_filter = 2
 color = Color(0.13, 0.21, 0.3, 0.22)
 
-[node name="MaxComboTitle" type="Label" parent="StatsPanel"]
+[node name="MaxComboTitle" type="Label" parent="StatsPanel" unique_id=1117896753]
+layout_mode = 0
 offset_left = 16.0
 offset_top = 19.0
-offset_right = 294.0
+offset_right = 256.0
 offset_bottom = 49.0
 theme_override_colors/font_color = Color(0.045, 0.13, 0.29, 1)
 theme_override_fonts/font = ExtResource("3_font")
@@ -269,10 +253,11 @@ theme_override_font_sizes/font_size = 18
 text = "최대 콤보"
 horizontal_alignment = 1
 
-[node name="MaxComboValue" type="Label" parent="StatsPanel"]
+[node name="MaxComboValue" type="Label" parent="StatsPanel" unique_id=273095375]
+layout_mode = 0
 offset_left = 16.0
 offset_top = 51.0
-offset_right = 294.0
+offset_right = 256.0
 offset_bottom = 112.0
 theme_override_colors/font_color = Color(0.07, 0.3, 0.67, 1)
 theme_override_fonts/font = ExtResource("3_font")
@@ -281,10 +266,11 @@ text = "×12"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="DamageTitle" type="Label" parent="StatsPanel"]
-offset_left = 318.0
+[node name="DamageTitle" type="Label" parent="StatsPanel" unique_id=351766085]
+layout_mode = 0
+offset_left = 280.0
 offset_top = 19.0
-offset_right = 596.0
+offset_right = 520.0
 offset_bottom = 49.0
 theme_override_colors/font_color = Color(0.045, 0.13, 0.29, 1)
 theme_override_fonts/font = ExtResource("3_font")
@@ -292,10 +278,11 @@ theme_override_font_sizes/font_size = 18
 text = "가한 데미지"
 horizontal_alignment = 1
 
-[node name="DamageValue" type="Label" parent="StatsPanel"]
-offset_left = 318.0
+[node name="DamageValue" type="Label" parent="StatsPanel" unique_id=605764225]
+layout_mode = 0
+offset_left = 280.0
 offset_top = 51.0
-offset_right = 596.0
+offset_right = 520.0
 offset_bottom = 112.0
 theme_override_colors/font_color = Color(0.07, 0.3, 0.67, 1)
 theme_override_fonts/font = ExtResource("3_font")
@@ -304,17 +291,113 @@ text = "12,430"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="LevelSelectButton" type="Button" parent="."]
+[node name="RewardPanel" type="Panel" parent="." unique_id=550343170]
+layout_mode = 0
 offset_left = 92.0
-offset_top = 1080.0
+offset_top = 900.0
 offset_right = 628.0
-offset_bottom = 1202.0
+offset_bottom = 1022.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("MainPanel")
+
+[node name="Title" type="Label" parent="RewardPanel" unique_id=2093474388]
+layout_mode = 0
+offset_left = 24.0
+offset_top = 14.0
+offset_right = 512.0
+offset_bottom = 46.0
+theme_override_colors/font_color = Color(0.045, 0.13, 0.29, 1)
+theme_override_fonts/font = ExtResource("3_font")
+theme_override_font_sizes/font_size = 21
+text = "획득 골드"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="OpenChest" type="TextureRect" parent="RewardPanel" unique_id=1304473301]
+layout_mode = 0
+offset_left = 329.0
+offset_top = -62.0
+offset_right = 543.1754
+offset_bottom = 128.0
+mouse_filter = 2
+texture = ExtResource("5_open_chest")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="OpenChest2" type="TextureRect" parent="RewardPanel" unique_id=260089714]
+layout_mode = 0
+offset_left = 143.03583
+offset_top = 31.0
+offset_right = 228.706
+offset_bottom = 107.0
+mouse_filter = 2
+texture = ExtResource("6_flk2c")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="GoldValue" type="Label" parent="RewardPanel" unique_id=1476248793]
+layout_mode = 0
+offset_left = -1.0
+offset_top = 40.0
+offset_right = 535.0
+offset_bottom = 110.0
+theme_override_colors/font_color = Color(0.07, 0.3, 0.67, 1)
+theme_override_fonts/font = ExtResource("3_font")
+theme_override_font_sizes/font_size = 42
+text = "150"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="LevelSelectButton" type="Button" parent="." unique_id=1669418777]
+layout_mode = 0
+offset_left = 92.0
+offset_top = 1042.0
+offset_right = 628.0
+offset_bottom = 1164.0
 focus_mode = 0
 mouse_default_cursor_shape = 2
 theme_override_colors/font_color = Color(1, 1, 1, 1)
 theme_override_fonts/font = ExtResource("3_font")
 theme_override_font_sizes/font_size = 34
 theme_override_styles/normal = SubResource("StartPanel")
-theme_override_styles/hover = SubResource("StartPanel")
 theme_override_styles/pressed = SubResource("StartPanel")
+theme_override_styles/hover = SubResource("StartPanel")
 text = "레벨 선택"
+
+[node name="RetryButton" type="Button" parent="." unique_id=110735970]
+visible = false
+layout_mode = 0
+offset_left = 92.0
+offset_top = 900.0
+offset_right = 628.0
+offset_bottom = 1022.0
+focus_mode = 0
+mouse_default_cursor_shape = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_fonts/font = ExtResource("3_font")
+theme_override_font_sizes/font_size = 34
+theme_override_styles/normal = SubResource("RetryPanel")
+theme_override_styles/pressed = SubResource("RetryPanel")
+theme_override_styles/hover = SubResource("RetryPanel")
+text = "다시하기"
+
+[node name="DebugPreviewBar" type="HBoxContainer" parent="." unique_id=917712982]
+z_index = 20
+layout_mode = 0
+offset_left = 188.0
+offset_top = 8.0
+offset_right = 532.0
+offset_bottom = 48.0
+theme_override_constants/separation = 8
+
+[node name="VictoryButton" type="Button" parent="DebugPreviewBar" unique_id=1549067108]
+custom_minimum_size = Vector2(168, 40)
+layout_mode = 2
+theme_override_font_sizes/font_size = 17
+text = "성공 화면"
+
+[node name="DefeatButton" type="Button" parent="DebugPreviewBar" unique_id=703130886]
+custom_minimum_size = Vector2(168, 40)
+layout_mode = 2
+theme_override_font_sizes/font_size = 17
+text = "실패 화면"

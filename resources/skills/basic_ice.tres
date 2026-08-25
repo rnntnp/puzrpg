@@ -1,16 +1,9 @@
-[gd_resource type="Resource" script_class="IceSkillData" load_steps=2 format=3]
+[gd_resource type="Resource" script_class="IceSkillData" format=3 uid="uid://ckiie51y3jtmq"]
 
-[ext_resource type="Script" path="res://scripts/ice_skill_data.gd" id="1"]
+[ext_resource type="Script" uid="uid://cbglq6f7j381t" path="res://scripts/ice_skill_data.gd" id="1"]
 
 [resource]
 script = ExtResource("1")
-freeze_count = 1
-target_min_level = 1
-target_max_level = 3
-ice_action_interval = 3
 random_primary_candidate_count = 6
-ice_durability = 2
 target_highlight_duration = 0.65
-freeze_effect_duration = 0.3
 deals_direct_damage = false
-no_target_damage_multiplier = 1.5

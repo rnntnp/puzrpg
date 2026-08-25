@@ -112,7 +112,7 @@ func _load_level() -> void:
 	if level_data.battle_background != null:
 		background_artwork.texture = level_data.battle_background
 	left_fighter.set_character_data(level_data.player_character)
-	_apply_shadow_scale(left_fighter_shadow, level_data.player_character)
+	_apply_shadow_visual(left_fighter_shadow, left_fighter, level_data.player_character)
 	_load_enemy(current_enemy_index)
 	merge_game.configure(
 		level_data.ball_drop_time_limit,
@@ -137,7 +137,7 @@ func _load_enemy(index: int) -> void:
 		enemy_data.attack_power = level_data.test_gimmick.normal_attack_damage
 		enemy_data.enemy_attack_drop_interval = level_data.test_gimmick.action_interval
 	right_fighter.set_character_data(enemy_data)
-	_apply_shadow_scale(right_fighter_shadow, enemy_data)
+	_apply_shadow_visual(right_fighter_shadow, right_fighter, enemy_data)
 	right_bar.fill_color = enemy_data.health_bar_color
 	right_bar.queue_redraw()
 	enemy_drop_count = 0
@@ -148,9 +148,10 @@ func _load_enemy(index: int) -> void:
 	)
 
 
-func _apply_shadow_scale(shadow: Polygon2D, character) -> void:
-	if shadow == null or character == null:
+func _apply_shadow_visual(shadow: Polygon2D, fighter: Fighter, character) -> void:
+	if shadow == null or fighter == null or character == null:
 		return
+	shadow.position = fighter.position + character.shadow_offset
 	shadow.scale = Vector2(
 		maxf(character.shadow_scale.x, 0.0),
 		maxf(character.shadow_scale.y, 0.0)

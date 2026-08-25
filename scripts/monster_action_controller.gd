@@ -166,7 +166,10 @@ func on_enemy_defeated() -> void:
 	enemy.clear_visual_override()
 	enemy.hide_ingestion_glow()
 	if swallowed_ball_level >= 0:
-		merge_game.return_ingested_ball_to_board(swallowed_ball_level)
+		merge_game.return_ingested_ball_to_board(
+			swallowed_ball_level,
+			enemy.get_ingestion_mouth_global_position()
+		)
 		battle.play_ingestion_spit_sfx()
 	_state_version += 1
 	_clear_target()
@@ -263,7 +266,10 @@ func _execute_ingestion() -> void:
 func _interrupt_ingestion() -> void:
 	_state_version += 1
 	if swallowed_ball_level >= 0:
-		merge_game.return_ingested_ball_to_board(swallowed_ball_level)
+		merge_game.return_ingested_ball_to_board(
+			swallowed_ball_level,
+			enemy.get_ingestion_mouth_global_position()
+		)
 		battle.play_ingestion_spit_sfx()
 		swallowed_ball_level = -1
 	add_weakness_turns(skill.interrupted_debuff_turns)

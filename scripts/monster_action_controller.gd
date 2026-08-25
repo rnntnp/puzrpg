@@ -40,6 +40,7 @@ var swallowed_ball_level := -1
 var target_ball: MergeBall
 var vulnerable_turns := 0
 var _state_version := 0
+var next_action_is_ice := false
 
 
 func configure(
@@ -60,6 +61,7 @@ func configure(
 	durability_bar = durability_ui
 	skill = enemy.character_data.ingestion_skill as IngestionSkillData
 	ice_skill = enemy.character_data.ice_skill as IceSkillDataClass
+	next_action_is_ice = ice_skill != null and ice_skill.starts_with_ice_action
 	ice_controller = get_node("IceSkillController") as IceSkillControllerClass
 	test_gimmick_controller = get_node("TestGimmickController") as TestGimmickController
 	ice_controller.configure(merge_game, ice_skill, enemy)
@@ -100,18 +102,24 @@ func on_ball_dropped() -> void:
 	remaining_turns = maxi(0, remaining_turns - 1)
 	_update_ui()
 	if remaining_turns > 0:
-		if ice_skill != null and remaining_turns == 1:
+		if ice_skill != null and next_action_is_ice and remaining_turns == 1:
 			var target_count := ice_controller.begin_telegraph()
-			var has_full_target_count := target_count >= ice_skill.freeze_count
-			battle.show_player_damage_preview(
-				enemy.attack_power if has_full_target_count else _get_ice_no_target_damage()
-			)
+			if ice_skill.deals_direct_damage:
+				var has_full_target_count := target_count >= ice_skill.freeze_count
+				battle.show_player_damage_preview(
+					enemy.attack_power if has_full_target_count else _get_ice_no_target_damage()
+				)
+			else:
+				battle.clear_player_damage_preview()
 		return
 
 	match state:
 		State.NORMAL_ATTACK:
 			if ice_skill != null:
-				_run_ice_turn()
+				if next_action_is_ice:
+					_run_ice_turn()
+				else:
+					_run_ice_normal_attack()
 				return
 			battle.clear_player_damage_preview()
 			enemy.attack(player)
@@ -123,6 +131,13 @@ func on_ball_dropped() -> void:
 			_execute_ingestion()
 		State.INGESTION_RESPONSE:
 			_schedule_ingestion_success()
+
+
+func on_player_ball_started() -> void:
+	if using_test_gimmick or ice_skill == null or state != State.NORMAL_ATTACK:
+		return
+	if next_action_is_ice and remaining_turns == 1:
+		merge_game.set_input_enabled(false)
 
 
 func route_player_damage(damage: int, merge_result_level_index := -1, combo_count := 1, merge_origin := Vector2.ZERO) -> int:
@@ -173,24 +188,35 @@ func on_enemy_defeated() -> void:
 	status_effects.clear_effects()
 	applied_status_effects.clear_effects()
 	durability_bar.clear_durability()
+
+
+func on_enemy_defeat_started() -> void:
+	_state_version += 1
 	if ice_controller != null:
-		ice_controller.clear_all_ice()
+		ice_controller.cancel_pending_on_enemy_defeat()
 
 
 func _enter_normal_attack() -> void:
 	enemy.clear_visual_override()
 	enemy.hide_ingestion_glow()
 	state = State.NORMAL_ATTACK
-	remaining_turns = enemy.enemy_attack_drop_interval
+	remaining_turns = (
+		ice_skill.ice_action_interval
+		if ice_skill != null and next_action_is_ice
+		else enemy.enemy_attack_drop_interval
+	)
 	current_durability = 0
 	status_effects.remove_effect(IngestionEffect.effect_id)
-	status_effects.remove_effect(IceEffect.effect_id)
-	status_effects.set_effect(EnemyAttackEffect, remaining_turns)
-	battle.show_player_damage_preview(enemy.attack_power)
-	if ice_skill != null:
+	if ice_skill != null and next_action_is_ice:
+		status_effects.remove_effect(EnemyAttackEffect.effect_id)
 		status_effects.set_effect(IceEffect, remaining_turns)
+		battle.clear_player_damage_preview()
 		if remaining_turns == 1:
 			ice_controller.begin_telegraph()
+	else:
+		status_effects.remove_effect(IceEffect.effect_id)
+		status_effects.set_effect(EnemyAttackEffect, remaining_turns)
+		battle.show_player_damage_preview(enemy.attack_power)
 	durability_bar.clear_durability()
 	applied_status_effects.remove_effect(IngestionDurabilityEffect.effect_id)
 
@@ -351,9 +377,12 @@ func _on_target_replaced(ball: MergeBall) -> void:
 func _update_ui() -> void:
 	match state:
 		State.NORMAL_ATTACK:
-			status_effects.set_effect(EnemyAttackEffect, remaining_turns)
-			if ice_skill != null:
+			if ice_skill != null and next_action_is_ice:
+				status_effects.remove_effect(EnemyAttackEffect.effect_id)
 				status_effects.set_effect(IceEffect, remaining_turns)
+			else:
+				status_effects.remove_effect(IceEffect.effect_id)
+				status_effects.set_effect(EnemyAttackEffect, remaining_turns)
 		State.INGESTION_TELEGRAPH, State.INGESTION_RESPONSE:
 			status_effects.set_effect(IngestionEffect, remaining_turns)
 	if state == State.INGESTION_RESPONSE:
@@ -362,24 +391,38 @@ func _update_ui() -> void:
 
 func _run_ice_turn() -> void:
 	_state_version += 1
+	var action_version := _state_version
 	merge_game.set_input_enabled(false)
 	if not is_instance_valid(enemy) or not enemy.is_alive() or not player.is_alive():
 		return
 	battle.clear_player_damage_preview()
-	enemy.attack(player)
-	if not player.is_alive():
-		return
+	if ice_skill.deals_direct_damage:
+		enemy.attack(player)
+		if not player.is_alive():
+			return
 	var frozen_count: int = await ice_controller.execute_telegraphed()
-	if frozen_count < ice_skill.freeze_count:
+	if action_version != _state_version:
+		return
+	if ice_skill.deals_direct_damage and frozen_count < ice_skill.freeze_count:
 		var enhanced_damage := _get_ice_no_target_damage()
 		var bonus_damage := maxi(0, enhanced_damage - enemy.attack_power)
 		if bonus_damage > 0 and player.is_alive():
 			player.take_damage(bonus_damage)
+	next_action_is_ice = false
 	_enter_normal_attack()
 	if enemy.is_alive() and player.is_alive():
 		merge_game.set_input_enabled(true)
 		battle.status_label.text = "전투 중"
 		battle.status_label.modulate = Color.WHITE
+
+
+func _run_ice_normal_attack() -> void:
+	battle.clear_player_damage_preview()
+	enemy.attack(player)
+	if not enemy.is_alive() or not player.is_alive():
+		return
+	next_action_is_ice = true
+	_enter_normal_attack()
 
 
 func _get_ice_no_target_damage() -> int:

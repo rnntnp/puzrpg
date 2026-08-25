@@ -374,6 +374,7 @@ func _on_enemy_intent_tutorial_finished() -> void:
 
 
 func _on_tutorial_ball_dropped() -> void:
+	monster_action_controller.on_player_ball_started()
 	if tutorial_combo_demo_active:
 		_hide_drop_prompt()
 		merge_game.set_input_enabled(false)
@@ -586,6 +587,8 @@ func _on_fighter_defeated(fighter: Fighter) -> void:
 	battle_running = false
 	merge_game.set_input_enabled(false)
 	status_label.text = "적 처치!" if fighter == right_fighter else "전투 패배"
+	if fighter == right_fighter:
+		monster_action_controller.on_enemy_defeat_started()
 	await fighter.play_defeat_animation()
 	if fighter == left_fighter:
 		GameSession.set_battle_result(false, "%s 도전 실패" % level_data.level_name)

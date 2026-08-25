@@ -866,7 +866,13 @@ func _refresh_preview() -> void:
 	next_panel.set_preview_data(BallCatalogClass.get_ball(next_level))
 
 func _on_merge_requested(first, second) -> void:
-	if first.merge_locked or second.merge_locked or first.merge_level >= max_level_index:
+	if (
+		first.merge_locked
+		or second.merge_locked
+		or first.ice_cast_reserved
+		or second.ice_cast_reserved
+		or first.merge_level >= max_level_index
+	):
 		return
 	if sealed_stage_index >= 0 and first.merge_level == sealed_stage_index:
 		return
@@ -965,7 +971,6 @@ func _spawn_merged_ball(
 		merged_ball.set_ingestion_marked(true)
 		ingestion_target_replaced.emit(merged_ball)
 	if ice_target_count > 0 and is_instance_valid(merged_ball):
-		merged_ball.set_ice_targeted(true)
 		ice_telegraph_merge_resolved.emit(merged_ball, source_ids, ice_target_count)
 	if is_instance_valid(merged_ball):
 		_play_merge_sfx(merge_combo_count)
@@ -1109,7 +1114,7 @@ func _update_drop_preview_visibility() -> void:
 	preview_holder.visible = should_show
 
 func _calculate_merge_damage(base_points: int, count: int) -> int:
-	var multiplier := 1.0 + 0.5 * float(count - 1)
+	var multiplier := minf(2.0, 1.0 + 0.25 * float(count - 1))
 	return roundi(float(base_points) * multiplier)
 
 func _emit_merge_attack_after_delay(

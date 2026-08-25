@@ -284,8 +284,12 @@ func has_landed() -> bool:
 	return _has_contacted
 
 
-func set_ingestion_marked(marked: bool) -> void:
+func set_ingestion_marked(marked: bool, effect_color := Color("#c477ff")) -> void:
 	ingestion_marked = marked
+	if visual_container.get_child_count() > 0:
+		var visual := visual_container.get_child(0)
+		if visual != null and visual.has_method("set_targeted_visual"):
+			visual.call("set_targeted_visual", marked, effect_color)
 	queue_redraw()
 
 
@@ -418,13 +422,6 @@ func _draw() -> void:
 	var radius: float = ball_data.get_radius() if ball_data != null else 0.0
 	if ball_data == null or ball_data.show_placeholder_outline:
 		draw_arc(Vector2.ZERO, radius - 3.0, 0.0, TAU, 40, Color("#162033"), 5.0, true)
-	if ingestion_marked:
-		draw_arc(Vector2.ZERO, radius + 8.0, 0.0, TAU, 40, Color("#c477ff"), 6.0, true)
-		draw_colored_polygon(PackedVector2Array([
-			Vector2(0, -radius - 18.0),
-			Vector2(-9.0, -radius - 33.0),
-			Vector2(9.0, -radius - 33.0),
-		]), Color("#e0a6ff"))
 	if danger_marked:
 		draw_arc(Vector2.ZERO, radius + 12.0, 0.0, TAU, 40, Color("#ff4d5f"), 7.0, true)
 	if split_targeted:

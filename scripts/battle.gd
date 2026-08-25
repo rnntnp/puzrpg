@@ -20,7 +20,7 @@ const StageIntroSequenceClass = preload("res://scripts/stage_intro_sequence.gd")
 @onready var enemy_progress_label: Label = $UI/EnemyProgress
 @onready var left_status_effects: StatusEffectBar = $UI/LeftStatusEffects
 @onready var right_status_effects: StatusEffectBar = $UI/RightStatusEffects
-@onready var skill_durability_label: Label = $UI/SkillDurabilityLabel
+@onready var right_applied_status_effects: StatusEffectBar = $UI/RightAppliedStatusEffects
 @onready var player_skill_button: PlayerSkillButton = $UI/PlayerSkillButton
 @onready var gimmick_action_label: Label = $UI/GimmickActionLabel
 @onready var gimmick_detail_label: Label = $UI/GimmickDetailLabel
@@ -35,6 +35,8 @@ const StageIntroSequenceClass = preload("res://scripts/stage_intro_sequence.gd")
 @onready var exit_confirm_button: Button = $ExitConfirmationLayer/ExitConfirmationOverlay/Dialog/Margin/Content/Buttons/ConfirmButton
 @onready var enemy_hit_sfx: AudioStreamPlayer = $EnemyHitSfx
 @onready var player_hit_sfx: AudioStreamPlayer = $PlayerHitSfx
+@onready var ingestion_swallow_sfx: AudioStreamPlayer = $IngestionSwallowSfx
+@onready var ingestion_spit_sfx: AudioStreamPlayer = $IngestionSpitSfx
 
 var level_data: LevelDataClass
 var current_enemy_index := 0
@@ -158,7 +160,7 @@ func _load_enemy(index: int) -> void:
 	enemy_progress_label.text = "적 %d/%d" % [index + 1, level_data.enemies.size()]
 	monster_action_controller.configure(
 		self, right_fighter, left_fighter, merge_game,
-		right_status_effects, skill_durability_label
+		right_status_effects, right_applied_status_effects, right_bar
 	)
 	player_skill_controller.set_enemy(right_fighter)
 
@@ -280,6 +282,14 @@ func show_player_damage_preview(damage: int) -> void:
 
 func clear_player_damage_preview() -> void:
 	left_bar.clear_predicted_damage()
+
+
+func play_ingestion_swallow_sfx() -> void:
+	ingestion_swallow_sfx.play()
+
+
+func play_ingestion_spit_sfx() -> void:
+	ingestion_spit_sfx.play()
 
 
 func _on_ball_dropped() -> void:

@@ -9,7 +9,7 @@
 [resource]
 script = ExtResource("1")
 display_name = "수정 포식 두꺼비"
-health_bar_color = Color(0.64, 0.16, 0.1, 1)
+health_bar_color = Color(0.52, 0.78, 0.2, 1)
 sprite = ExtResource("3_normal")
 ingestion_telegraph_sprite = ExtResource("4_telegraph")
 ingestion_swallowed_sprite = ExtResource("5_swallowed")

@@ -12,6 +12,7 @@ func set_effect(data: StatusEffectData, remaining_turns: int) -> void:
 	icon_rect.texture = data.icon
 	icon_rect.modulate = data.icon_modulate
 	tooltip_text = data.display_name
+	turn_label.visible = data.show_turns
 	set_remaining_turns(remaining_turns)
 
 

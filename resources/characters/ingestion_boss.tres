@@ -9,7 +9,7 @@
 [resource]
 script = ExtResource("1")
 display_name = "수정 포식 군주"
-health_bar_color = Color(0.58, 0.16, 0.72, 1)
+health_bar_color = Color(0.68, 0.2, 0.45, 1)
 sprite = ExtResource("3_normal")
 ingestion_telegraph_sprite = ExtResource("4_telegraph")
 ingestion_swallowed_sprite = ExtResource("5_swallowed")

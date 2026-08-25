@@ -1,4 +1,4 @@
-[gd_scene load_steps=20 format=3 uid="uid://67v0ma41cql"]
+[gd_scene load_steps=22 format=3 uid="uid://67v0ma41cql"]
 
 [ext_resource type="Script" uid="uid://qu1wuofvy7va" path="res://scripts/battle.gd" id="1"]
 [ext_resource type="PackedScene" path="res://scenes/fighter.tscn" id="2"]
@@ -18,6 +18,8 @@
 [ext_resource type="AudioStream" path="res://assets/audio/sfx/player_hit_cute.wav" id="14_player_hit_sfx"]
 [ext_resource type="Script" path="res://scripts/player_skill_controller.gd" id="15_player_skill_controller"]
 [ext_resource type="PackedScene" path="res://scenes/player_skill_button.tscn" id="16_player_skill_button"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/bubble_pop_05.mp3" id="17_ingestion_swallow_sfx"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/drop_002.ogg" id="18_ingestion_spit_sfx"]
 
 [sub_resource type="Gradient" id="Gradient_top_center_shadow"]
 offsets = PackedFloat32Array(0, 0.42, 1)
@@ -137,6 +139,16 @@ stream = ExtResource("14_player_hit_sfx")
 volume_db = -5.0
 max_polyphony = 4
 
+[node name="IngestionSwallowSfx" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("17_ingestion_swallow_sfx")
+volume_db = -4.0
+pitch_scale = 0.82
+
+[node name="IngestionSpitSfx" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("18_ingestion_spit_sfx")
+volume_db = -4.0
+pitch_scale = 1.18
+
 [node name="MonsterActionController" type="Node" parent="." unique_id=1522200351]
 script = ExtResource("8")
 
@@ -240,9 +252,9 @@ text = "나가기"
 
 [node name="StatusLabel" type="Label" parent="UI" unique_id=1796290971]
 layout_mode = 0
-offset_top = 54.0
+offset_top = 80.0
 offset_right = 720.0
-offset_bottom = 86.0
+offset_bottom = 106.0
 theme_override_colors/font_color = Color(1, 0.82, 0.4, 1)
 theme_override_fonts/font = ExtResource("5_eb6dy")
 theme_override_font_sizes/font_size = 19
@@ -279,18 +291,6 @@ fill_color = Color(0.72, 0.22, 0.88, 1)
 accent_color = Color(0.74, 0.73, 1, 1)
 heart_color = Color(0.88, 0.48, 1, 1)
 right_aligned = true
-
-[node name="SkillDurabilityLabel" type="Label" parent="UI" unique_id=492750425]
-visible = false
-layout_mode = 0
-offset_left = 390.0
-offset_top = 225.0
-offset_right = 680.0
-offset_bottom = 251.0
-theme_override_colors/font_color = Color(0.86, 0.65, 1, 1)
-theme_override_font_sizes/font_size = 15
-text = "포식 내구도 7 / 7"
-horizontal_alignment = 2
 
 [node name="GimmickActionLabel" type="Label" parent="UI" unique_id=1345510197]
 visible = false
@@ -356,6 +356,14 @@ offset_left = 390.0
 offset_top = 151.0
 offset_right = 642.0
 offset_bottom = 199.0
+alignment = 1
+
+[node name="RightAppliedStatusEffects" parent="UI" instance=ExtResource("6")]
+layout_mode = 0
+offset_left = 390.0
+offset_top = 286.0
+offset_right = 642.0
+offset_bottom = 334.0
 alignment = 1
 
 [node name="PlayerSkillButton" parent="UI" instance=ExtResource("16_player_skill_button")]

@@ -7,7 +7,7 @@
 [ext_resource type="Texture2D" uid="uid://cyp3ox6awb7vi" path="res://assets/ui/level_select_extracted/main_panel.png" id="6_main_card"]
 [ext_resource type="Texture2D" uid="uid://dvtlcl8ib1u01" path="res://icon.svg" id="7_rovvv"]
 [ext_resource type="Texture2D" uid="uid://c5cp11m7js8sc" path="res://assets/ui/level_select_extracted/nav_arrow_left.png" id="8_nav"]
-[ext_resource type="Texture2D" path="res://assets/ui/level_select_casual/level_select_pond_background.png" id="10_background"]
+[ext_resource type="Texture2D" uid="uid://mxhtorak2cuf" path="res://assets/ui/level_select_casual/level_select_pond_background.png" id="10_background"]
 [ext_resource type="Material" path="res://resources/materials/level_preview_mask_material.tres" id="14_preview_mask"]
 [ext_resource type="Texture2D" uid="uid://j08g6fp5qsiq" path="res://assets/ui/level_select_icons/enemy_turn.png" id="16_enemy_turn"]
 [ext_resource type="Texture2D" uid="uid://diw8e6ahibw5w" path="res://assets/effects/generated/status_attack.png" id="17_gimmick"]
@@ -226,18 +226,18 @@ color = Color(0.025, 0.39, 0.5, 1)
 [node name="HeaderFrame" type="Panel" parent="." unique_id=1910389212]
 layout_mode = 0
 offset_left = 42.0
-offset_top = 78.0
+offset_top = 103.0
 offset_right = 678.0
-offset_bottom = 214.0
+offset_bottom = 239.0
 mouse_filter = 2
 theme_override_styles/panel = SubResource("HeaderPanel")
 
 [node name="TopBarTitle" type="Label" parent="." unique_id=1890184946]
 layout_mode = 0
 offset_left = 86.0
-offset_top = 103.0
+offset_top = 128.0
 offset_right = 630.0
-offset_bottom = 190.0
+offset_bottom = 215.0
 theme_override_colors/font_color = Color(0.08, 0.16, 0.24, 1)
 theme_override_fonts/font = ExtResource("5_rovvv")
 theme_override_font_sizes/font_size = 57
@@ -265,25 +265,26 @@ layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_top = 150.0
+offset_top = 147.0
+offset_bottom = -3.0
 grow_horizontal = 2
 grow_vertical = 2
 
 [node name="MainPanelFrame" type="Panel" parent="Content" unique_id=682239811]
 layout_mode = 0
 offset_left = 24.0
-offset_top = 64.0
+offset_top = 110.0
 offset_right = 696.0
-offset_bottom = 978.0
+offset_bottom = 1024.0
 mouse_filter = 2
 theme_override_styles/panel = SubResource("MainPanel")
 
 [node name="LevelImage" type="Panel" parent="Content" unique_id=1478702818]
 layout_mode = 0
 offset_left = 78.0
-offset_top = 242.0
+offset_top = 288.0
 offset_right = 642.0
-offset_bottom = 662.0
+offset_bottom = 708.0
 theme_override_styles/panel = SubResource("ImagePanel")
 
 [node name="CommonFrame" type="TextureRect" parent="Content/LevelImage" unique_id=1191364191]
@@ -381,17 +382,17 @@ vertical_alignment = 1
 [node name="StageTitleFrame" type="Panel" parent="Content" unique_id=1615142417]
 layout_mode = 0
 offset_left = 58.0
-offset_top = 68.0
+offset_top = 98.0
 offset_right = 662.0
-offset_bottom = 208.0
+offset_bottom = 238.0
 mouse_filter = 2
 theme_override_styles/panel = SubResource("TitlePanel")
 
 [node name="LevelName" type="Label" parent="Content" unique_id=732506202]
 layout_mode = 0
-offset_top = 96.0
+offset_top = 126.0
 offset_right = 720.0
-offset_bottom = 176.0
+offset_bottom = 206.0
 theme_override_colors/font_color = Color(0.045, 0.13, 0.29, 1)
 theme_override_fonts/font = ExtResource("5_rovvv")
 theme_override_font_sizes/font_size = 44
@@ -402,18 +403,18 @@ vertical_alignment = 1
 [node name="InfoCardLeft" type="Panel" parent="Content" unique_id=1055374800]
 layout_mode = 0
 offset_left = 78.0
-offset_top = 680.0
+offset_top = 726.0
 offset_right = 352.0
-offset_bottom = 875.0
+offset_bottom = 921.0
 mouse_filter = 2
 theme_override_styles/panel = SubResource("InfoPanel")
 
 [node name="Title" type="Label" parent="Content/InfoCardLeft" unique_id=1421378644]
 layout_mode = 0
 offset_left = 8.0
-offset_top = 37.0
+offset_top = 24.0
 offset_right = 266.0
-offset_bottom = 63.0
+offset_bottom = 50.0
 theme_override_colors/font_color = Color(0.045, 0.13, 0.29, 1)
 theme_override_fonts/font = ExtResource("5_rovvv")
 theme_override_font_sizes/font_size = 17
@@ -436,9 +437,9 @@ stretch_mode = 5
 [node name="Value" type="Label" parent="Content/InfoCardLeft" unique_id=477953796]
 layout_mode = 0
 offset_left = 8.0
-offset_top = 131.0
+offset_top = 136.0
 offset_right = 266.0
-offset_bottom = 165.0
+offset_bottom = 170.0
 theme_override_colors/font_color = Color(0.07, 0.3, 0.67, 1)
 theme_override_fonts/font = ExtResource("5_rovvv")
 theme_override_font_sizes/font_size = 23
@@ -496,18 +497,18 @@ vertical_alignment = 1
 [node name="InfoCardLeft3" type="Panel" parent="Content" unique_id=701321650]
 layout_mode = 0
 offset_left = 368.0
-offset_top = 680.0
+offset_top = 726.0
 offset_right = 642.0
-offset_bottom = 875.0
+offset_bottom = 921.0
 mouse_filter = 2
 theme_override_styles/panel = SubResource("InfoPanel")
 
 [node name="Title" type="Label" parent="Content/InfoCardLeft3" unique_id=1924471421]
 layout_mode = 0
 offset_left = 8.0
-offset_top = 37.0
+offset_top = 24.0
 offset_right = 266.0
-offset_bottom = 63.0
+offset_bottom = 50.0
 theme_override_colors/font_color = Color(0.045, 0.13, 0.29, 1)
 theme_override_fonts/font = ExtResource("5_rovvv")
 theme_override_font_sizes/font_size = 17
@@ -530,12 +531,12 @@ stretch_mode = 5
 [node name="Value" type="Label" parent="Content/InfoCardLeft3" unique_id=1760508790]
 layout_mode = 0
 offset_left = 5.0
-offset_top = 131.0
+offset_top = 136.0
 offset_right = 269.0
-offset_bottom = 165.0
+offset_bottom = 170.0
 theme_override_colors/font_color = Color(0.07, 0.3, 0.67, 1)
 theme_override_fonts/font = ExtResource("5_rovvv")
-theme_override_font_sizes/font_size = 18
+theme_override_font_sizes/font_size = 23
 text = "연못 보물상자"
 horizontal_alignment = 1
 vertical_alignment = 1
@@ -590,9 +591,9 @@ stretch_mode = 5
 [node name="StartButton" type="Button" parent="Content" unique_id=851607383]
 layout_mode = 0
 offset_left = 175.0
-offset_top = 900.0
+offset_top = 946.0
 offset_right = 545.0
-offset_bottom = 1025.0
+offset_bottom = 1071.0
 theme_override_colors/font_color = Color(0.045, 0.13, 0.29, 1)
 theme_override_colors/font_pressed_color = Color(0.045, 0.13, 0.29, 1)
 theme_override_colors/font_hover_color = Color(0.045, 0.13, 0.29, 1)
@@ -638,9 +639,9 @@ text = "개발 콤보 테스트"
 
 [node name="PreviousButton" type="Button" parent="." unique_id=640457836]
 layout_mode = 0
-offset_top = 540.0
+offset_top = 583.0
 offset_right = 100.0
-offset_bottom = 640.0
+offset_bottom = 683.0
 theme_override_colors/font_color = Color(0.08, 0.16, 0.24, 1)
 theme_override_colors/font_disabled_color = Color(0.08, 0.16, 0.24, 0.35)
 theme_override_font_sizes/font_size = 58
@@ -671,9 +672,9 @@ stretch_mode = 5
 [node name="NextButton" type="Button" parent="." unique_id=1269907091]
 layout_mode = 0
 offset_left = 620.0
-offset_top = 555.0
+offset_top = 598.0
 offset_right = 720.0
-offset_bottom = 655.0
+offset_bottom = 698.0
 theme_override_colors/font_color = Color(0.08, 0.16, 0.24, 1)
 theme_override_colors/font_disabled_color = Color(0.08, 0.16, 0.24, 0.35)
 theme_override_font_sizes/font_size = 58
@@ -705,18 +706,18 @@ flip_h = true
 [node name="PageFrame" type="Panel" parent="." unique_id=72995375]
 layout_mode = 0
 offset_left = 250.0
-offset_top = 786.0
+offset_top = 829.0
 offset_right = 470.0
-offset_bottom = 854.0
+offset_bottom = 897.0
 mouse_filter = 2
 theme_override_styles/panel = SubResource("PagePanel")
 
 [node name="PageLabel" type="Label" parent="." unique_id=1316009687]
 layout_mode = 0
 offset_left = 270.0
-offset_top = 798.0
+offset_top = 841.0
 offset_right = 450.0
-offset_bottom = 840.0
+offset_bottom = 883.0
 theme_override_colors/font_color = Color(1, 1, 1, 0.9)
 theme_override_fonts/font = ExtResource("5_rovvv")
 theme_override_font_sizes/font_size = 29
@@ -736,9 +737,9 @@ theme_override_styles/panel = SubResource("MoneyPanel")
 [node name="Icon" type="TextureRect" parent="MoneyDisplay" unique_id=1667470833]
 texture_filter = 4
 layout_mode = 0
-offset_left = 3.0
+offset_left = -7.0
 offset_top = -5.0
-offset_right = 69.0
+offset_right = 59.0
 offset_bottom = 61.0
 mouse_filter = 2
 texture = ExtResource("19_money_coin")
@@ -747,9 +748,9 @@ stretch_mode = 5
 
 [node name="Value" type="Label" parent="MoneyDisplay" unique_id=990981748]
 layout_mode = 0
-offset_left = 70.0
+offset_left = 59.0
 offset_top = 4.0
-offset_right = 242.0
+offset_right = 231.0
 offset_bottom = 54.0
 theme_override_colors/font_color = Color(0.045, 0.13, 0.29, 1)
 theme_override_fonts/font = ExtResource("5_rovvv")

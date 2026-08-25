@@ -9,7 +9,7 @@ enum State {
 
 const EnemyAttackEffect: StatusEffectData = preload("res://resources/effects/enemy_attack_countdown.tres")
 const IngestionEffect: StatusEffectData = preload("res://resources/effects/ingestion_countdown.tres")
-const VulnerableEffect: StatusEffectData = preload("res://resources/effects/ingestion_vulnerable.tres")
+const WeaknessEffect: StatusEffectData = preload("res://resources/effects/ingestion_vulnerable.tres")
 const IceEffect: StatusEffectData = preload("res://resources/effects/ice_countdown.tres")
 const IceSkillDataClass = preload("res://scripts/ice_skill_data.gd")
 const IceSkillControllerClass = preload("res://scripts/ice_skill_controller.gd")
@@ -88,13 +88,19 @@ func configure(
 func on_ball_dropped() -> void:
 	if enemy == null or not enemy.is_alive() or not player.is_alive():
 		return
+	_advance_weakness_turn()
 	if using_test_gimmick:
 		test_gimmick_controller.on_turn_completed()
 		return
 	remaining_turns = maxi(0, remaining_turns - 1)
 	_update_ui()
 	if remaining_turns > 0:
-		_schedule_vulnerability_tick()
+		if ice_skill != null and remaining_turns == 1:
+			var target_count := ice_controller.begin_telegraph()
+			var has_full_target_count := target_count >= ice_skill.freeze_count
+			battle.show_player_damage_preview(
+				enemy.attack_power if has_full_target_count else _get_ice_no_target_damage()
+			)
 		return
 
 	match state:
@@ -112,16 +118,17 @@ func on_ball_dropped() -> void:
 			_execute_ingestion()
 		State.INGESTION_RESPONSE:
 			_schedule_ingestion_success()
-	_schedule_vulnerability_tick()
 
 
 func route_player_damage(damage: int, merge_result_level_index := -1, combo_count := 1, merge_origin := Vector2.ZERO) -> int:
 	if damage <= 0:
 		return 0
-	if using_test_gimmick:
-		return test_gimmick_controller.modify_player_damage(damage, merge_result_level_index, combo_count, merge_origin)
 	var hp_damage := damage
-	if state == State.INGESTION_RESPONSE and current_durability > 0:
+	if using_test_gimmick:
+		hp_damage = test_gimmick_controller.modify_player_damage(
+			damage, merge_result_level_index, combo_count, merge_origin
+		)
+	elif state == State.INGESTION_RESPONSE and current_durability > 0:
 		var absorbed := mini(current_durability, hp_damage)
 		current_durability -= absorbed
 		hp_damage -= absorbed
@@ -130,11 +137,21 @@ func route_player_damage(damage: int, merge_result_level_index := -1, combo_coun
 		if current_durability <= 0:
 			_interrupt_ingestion()
 	if hp_damage > 0 and vulnerable_turns > 0:
-		hp_damage = roundi(float(hp_damage) * skill.interrupted_damage_multiplier)
+		hp_damage = roundi(float(hp_damage) * WeaknessEffect.incoming_damage_multiplier)
 	return hp_damage
 
 
+func add_weakness_turns(turns: int) -> int:
+	if turns <= 0:
+		return vulnerable_turns
+	vulnerable_turns += turns
+	status_effects.set_effect(WeaknessEffect, vulnerable_turns)
+	return vulnerable_turns
+
+
 func on_enemy_defeated() -> void:
+	vulnerable_turns = 0
+	status_effects.remove_effect(WeaknessEffect.effect_id)
 	if using_test_gimmick:
 		var has_next_enemy: bool = battle.current_enemy_index + 1 < battle.level_data.enemies.size()
 		if not has_next_enemy or not test_gimmick_controller.should_preserve_between_enemies():
@@ -165,6 +182,8 @@ func _enter_normal_attack() -> void:
 	battle.show_player_damage_preview(enemy.attack_power)
 	if ice_skill != null:
 		status_effects.set_effect(IceEffect, remaining_turns)
+		if remaining_turns == 1:
+			ice_controller.begin_telegraph()
 	durability_label.visible = false
 
 
@@ -236,13 +255,11 @@ func _interrupt_ingestion() -> void:
 	if swallowed_ball_level >= 0:
 		merge_game.return_ingested_ball_to_board(swallowed_ball_level)
 		swallowed_ball_level = -1
-	vulnerable_turns = skill.interrupted_debuff_turns
-	status_effects.set_effect(VulnerableEffect, vulnerable_turns)
+	add_weakness_turns(skill.interrupted_debuff_turns)
 	battle.status_label.text = "포식 저지 성공! 삼킨 공이 보드로 돌아옵니다"
 	battle.status_label.modulate = Color("#ffe066")
 	print("[INGESTION INTERRUPTED] vulnerable_turns=%d" % vulnerable_turns)
 	_enter_post_ingestion_state()
-	status_effects.set_effect(VulnerableEffect, vulnerable_turns)
 
 
 func _schedule_ingestion_success() -> void:
@@ -280,18 +297,14 @@ func _is_launch_ingestion() -> bool:
 	return even_ingestion if skill.launch_first else not even_ingestion
 
 
-func _schedule_vulnerability_tick() -> void:
+func _advance_weakness_turn() -> void:
 	if vulnerable_turns <= 0:
-		return
-	var version := _state_version
-	await get_tree().create_timer(0.9, true, false, true).timeout
-	if version != _state_version or vulnerable_turns <= 0:
 		return
 	vulnerable_turns -= 1
 	if vulnerable_turns <= 0:
-		status_effects.remove_effect(VulnerableEffect.effect_id)
+		status_effects.remove_effect(WeaknessEffect.effect_id)
 	else:
-		status_effects.set_effect(VulnerableEffect, vulnerable_turns)
+		status_effects.set_effect(WeaknessEffect, vulnerable_turns)
 
 
 func _select_target() -> void:
@@ -344,12 +357,20 @@ func _run_ice_turn() -> void:
 	enemy.attack(player)
 	if not player.is_alive():
 		return
-	battle.status_label.text = "빙결 공격!"
-	var frozen_count: int = await ice_controller.execute()
-	if frozen_count == 0:
-		battle.status_label.text = "빙결 대상 없음"
+	var frozen_count: int = await ice_controller.execute_telegraphed()
+	if frozen_count < ice_skill.freeze_count:
+		var enhanced_damage := _get_ice_no_target_damage()
+		var bonus_damage := maxi(0, enhanced_damage - enemy.attack_power)
+		if bonus_damage > 0 and player.is_alive():
+			player.take_damage(bonus_damage)
 	_enter_normal_attack()
 	if enemy.is_alive() and player.is_alive():
 		merge_game.set_input_enabled(true)
 		battle.status_label.text = "전투 중"
 		battle.status_label.modulate = Color.WHITE
+
+
+func _get_ice_no_target_damage() -> int:
+	if ice_skill == null:
+		return enemy.attack_power
+	return roundi(float(enemy.attack_power) * ice_skill.no_target_damage_multiplier)

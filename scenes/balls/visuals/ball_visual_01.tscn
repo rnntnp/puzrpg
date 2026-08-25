@@ -16,6 +16,9 @@ shader_parameter/outline_color = Color(0.075, 0.1, 0.18, 1)
 shader_parameter/outline_color_texel_width = 4.0
 shader_parameter/outline_total_texel_width = 6.0
 shader_parameter/outline_expand_texels = 6.0
+shader_parameter/frozen_enabled = false
+shader_parameter/frozen_outer_color = Color(0.24, 0.72, 0.95, 1)
+shader_parameter/frozen_outer_texel_width = 12.0
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_fpmha"]
 resource_local_to_scene = true
@@ -24,11 +27,17 @@ shader_parameter/outline_color = Color(0.5194222, 0.76010865, 0.8999999, 0.95)
 shader_parameter/outline_color_texel_width = 3.9263803680981595
 shader_parameter/outline_total_texel_width = 5.889570552147239
 shader_parameter/outline_expand_texels = 6.0
+shader_parameter/frozen_enabled = false
+shader_parameter/frozen_outer_color = Color(0.24, 0.72, 0.95, 1)
+shader_parameter/frozen_outer_texel_width = 12.0
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_s8334"]
 resource_local_to_scene = true
 shader = ExtResource("8_shape_mask_shader")
 shader_parameter/mask_texture = ExtResource("9_axolotl_mask")
+shader_parameter/mask_offset_pixels = Vector2(0, 0)
+shader_parameter/mask_rotation = 0.0
+shader_parameter/mask_sprite_scale = Vector2(1, 1)
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_lh7js"]
 resource_local_to_scene = true
@@ -41,6 +50,14 @@ points = PackedVector2Array(159.6, 5, 155.357, 23.937, 142.935, 50.17, 123.236, 
 
 [node name="BallVisual01" unique_id=557625348 instance=ExtResource("1_base")]
 tint_color = Color(0.57713574, 0.8445652, 0.99999994, 1)
+frozen_sheen_cycle_seconds = null
+frozen_sheen_band_width = null
+frozen_sheen_softness = null
+frozen_sheen_diagonal_slope = null
+frozen_matte_color = null
+frozen_sheen_color = null
+frozen_outer_screen_width = null
+frozen_outer_color = null
 
 [node name="ShellBase" parent="." index="0"]
 modulate = Color(0.57713574, 0.8445652, 0.99999994, 1)

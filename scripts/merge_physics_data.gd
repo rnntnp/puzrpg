@@ -24,4 +24,4 @@ extends Resource
 @export var sleep_assist_enabled := true
 @export_range(0.0, 3.0, 0.05) var sleep_assist_settle_time := 1.5
 ## 측정 시작 위치에서 이 거리(px) 안에 계속 머문 공만 잠든다.
-@export_range(0.0, 10.0, 0.1) var sleep_assist_max_displacement := 1.5
+@export_range(0.0, 30.0, 0.1) var sleep_assist_max_displacement := 1.5

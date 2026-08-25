@@ -1,6 +1,6 @@
 # MECHANIC REGISTRY
 
-Last static audit: 2026-08-13  
+Last static audit: 2026-08-25
 Highest registered number: **50**  
 Next available number: **51** (not created or reserved)
 
@@ -69,7 +69,7 @@ Runtime types:
 | 27 | 이동 약점 구역 | The weak third moves in a pattern; merges inside and outside use different damage multipliers. | Legacy · 1 enemy · [level](../resources/levels/test_weak_zone.tres) | `NEEDS_PLAYTEST` | 14, 17, 18, 31, 32 |
 | 28 | 합성 잔향 | Merge origins are recorded and replayed as radial impulses on the following turn. | Legacy · 1 enemy · [level](../resources/levels/test_merge_echo.tres) | `NEEDS_PLAYTEST` | 8, 9, 26, 34 |
 | 29 | 시간 표식 / 위치 되감기 | Eligible settled balls are marked and later returned toward saved positions if they still exist. | Legacy · 1 enemy · [level](../resources/levels/test_rewind.tres) | `NEEDS_PLAYTEST` | 19, 30, 41 |
-| 30 | 미러 드롭 | During the effect, each landed player ball creates a delayed same-stage mirror ball at the reflected X position, capped by stage. | Legacy · 1 enemy · [level](../resources/levels/test_mirror_drop.tres) | `NEEDS_PLAYTEST` | 4, 12, 15, 29, 41 |
+| 30 | 미러 드롭 보스 | A single boss alternates three preparation drops with three mirrored responses; the phase transition deals no attack damage, while boss-owned merges fire reverse merge projectiles that deal 20% scaled damage to the player. | Modular · 1 boss · [spec](mechanics/030_mirror_drop.md) · [level](../resources/levels/test_mirror_drop.tres) · [handler](../scripts/gimmicks/handlers/mirror_drop_boss_handler.gd) | `NEEDS_PLAYTEST` | 4, 12, 15, 29, 41 |
 | 31 | 보드 상태 유도 타겟팅 | The highest height/count third is continuously targeted; the action demotes or removes its highest-stage ball, and the boss alternates the metric. | Modular · 3 enemies · [level](../resources/levels/test_board_state_targeting.tres) · [handler](../scripts/gimmicks/handlers/board_state_targeting_handler.gd) | `NEEDS_PLAYTEST` | 19, 27, 32, 35, 41 |
 | 32 | 적 자세 / 행동 유도 | Merge-side majority changes enemy stance; the opposite side can be weak, while an attack can demote the highest ball on the stance side. | Modular · 3 enemies · [level](../resources/levels/test_enemy_stance.tres) · [handler](../scripts/gimmicks/handlers/enemy_stance_handler.gd) | `NEEDS_PLAYTEST` | 17, 27, 31 |
 | 33 | 체급 분리판 / 단계 필터 보드 | One-way platforms let stages at or below each side's threshold pass; later modes split and swap thresholds. | Modular · 3 enemies · [level](../resources/levels/test_stage_filter_board.tres) · [handler](../scripts/gimmicks/handlers/stage_filter_board_handler.gd) | `NEEDS_PLAYTEST` | 16, 34, 35, 39 |
@@ -96,9 +96,10 @@ Runtime types:
 | System | Confirmed current scope | Status | Duplicate risk |
 |---|---|---|---|
 | Normal enemy attack | Countdown in completed player drops, then direct player damage | `NEEDS_PLAYTEST` | Any “attack every N drops” mechanic needs an additional decision layer |
-| Ice | Campaign level 2 has basic and enhanced freeze enemies; frozen balls cannot merge and all ice loses 1 durability per normal merge | `NEEDS_PLAYTEST` | Ball lock, static obstacle, global merge-count damage |
+| Ice | Campaign level 2 telegraphs targets one completed player turn before freezing; frozen balls cannot merge and all ice loses 1 durability per normal merge | `NEEDS_PLAYTEST` | Ball lock, static obstacle, telegraphed target response, global merge-count damage |
 | Ingestion | Campaign level 3 marks and swallows the highest-stage ball; durability can interrupt and return it to the queue. Recovery heals, launch deals direct damage, and the boss alternates both without normal attacks. | `NEEDS_PLAYTEST` | Ball capture, telegraphed targeting, durability shield, queue insertion, success heal/direct damage |
 | Danger line | 1.2 s drop grace and 0.8 s overflow; short forced-movement suppression is available | `NEEDS_PLAYTEST` | Any height, compression, rising floor, or forced-physics mechanic |
+| Player Weakness skill | Player-owned normal merges charge by result `merge_score`; at 300 the player adds 2 turns to the same ×1.3 Weakness used by ingestion interruption | `NEEDS_PLAYTEST` · [contract](mechanics/player_weakness_skill.md) | Any player gauge, active skill, persistent charge, or generic incoming-damage debuff |
 
 ## Validation history and gaps
 

@@ -21,13 +21,18 @@ const StageIntroSequenceClass = preload("res://scripts/stage_intro_sequence.gd")
 @onready var left_status_effects: StatusEffectBar = $UI/LeftStatusEffects
 @onready var right_status_effects: StatusEffectBar = $UI/RightStatusEffects
 @onready var skill_durability_label: Label = $UI/SkillDurabilityLabel
+@onready var player_skill_button: PlayerSkillButton = $UI/PlayerSkillButton
 @onready var gimmick_action_label: Label = $UI/GimmickActionLabel
 @onready var gimmick_detail_label: Label = $UI/GimmickDetailLabel
 @onready var background_artwork: TextureRect = $BackgroundArtwork
 @onready var layered_background: LayeredBattleBackground = $LayeredBackground
 @onready var monster_action_controller = $MonsterActionController
+@onready var player_skill_controller: PlayerSkillController = $PlayerSkillController
 @onready var merge_game = $MergeGame
 @onready var exit_button: Button = $UI/ExitButton
+@onready var exit_confirmation_overlay: Control = $ExitConfirmationLayer/ExitConfirmationOverlay
+@onready var exit_cancel_button: Button = $ExitConfirmationLayer/ExitConfirmationOverlay/Dialog/Margin/Content/Buttons/CancelButton
+@onready var exit_confirm_button: Button = $ExitConfirmationLayer/ExitConfirmationOverlay/Dialog/Margin/Content/Buttons/ConfirmButton
 @onready var enemy_hit_sfx: AudioStreamPlayer = $EnemyHitSfx
 @onready var player_hit_sfx: AudioStreamPlayer = $PlayerHitSfx
 
@@ -43,6 +48,7 @@ var tutorial_turn_explanation_pending := false
 var tutorial_attack_drops_remaining := 0
 var tutorial_merge_exercise_active := false
 var tutorial_combo_demo_active := false
+var tutorial_skill_exercise_active := false
 var tutorial_prompt_version := 0
 var tutorial_drop_prompt_text := ""
 var tutorial_drop_prompt: Label
@@ -55,6 +61,8 @@ func get_debug_snapshot() -> Dictionary:
 
 func _ready() -> void:
 	exit_button.pressed.connect(_show_exit_confirmation)
+	exit_cancel_button.pressed.connect(_hide_exit_confirmation)
+	exit_confirm_button.pressed.connect(_exit_to_level_select)
 	left_fighter.health_changed.connect(_on_left_health_changed)
 	right_fighter.health_changed.connect(_on_right_health_changed)
 	left_fighter.damage_received.connect(_on_player_damage_received)
@@ -68,6 +76,7 @@ func _ready() -> void:
 	merge_game.turn_completed.connect(_on_ball_dropped)
 	merge_game.player_ball_landed.connect(_on_tutorial_player_ball_landed)
 	merge_game.merge_completed.connect(_on_tutorial_merge_completed)
+	player_skill_controller.skill_used.connect(_on_tutorial_skill_used)
 	_load_level()
 	_start_battle()
 
@@ -75,16 +84,17 @@ func _ready() -> void:
 func _show_exit_confirmation() -> void:
 	if level_finished:
 		return
-	var dialog := ConfirmationDialog.new()
-	dialog.title = "전투 나가기"
-	dialog.dialog_text = "현재 전투를 포기하고 레벨 선택으로 돌아갈까요?\n진행 중인 전투는 저장되지 않습니다."
-	dialog.ok_button_text = "레벨 선택"
-	dialog.cancel_button_text = "계속 플레이"
-	dialog.confirmed.connect(func() -> void:
-		get_tree().change_scene_to_file("res://scenes/level_select.tscn")
-	)
-	add_child(dialog)
-	dialog.popup_centered(Vector2(560, 250))
+	exit_confirmation_overlay.visible = true
+	exit_cancel_button.grab_focus()
+
+
+func _hide_exit_confirmation() -> void:
+	exit_confirmation_overlay.visible = false
+	exit_button.grab_focus()
+
+
+func _exit_to_level_select() -> void:
+	get_tree().change_scene_to_file("res://scenes/level_select.tscn")
 
 
 func _load_level() -> void:
@@ -113,7 +123,10 @@ func _load_level() -> void:
 	if level_data.battle_background != null:
 		background_artwork.texture = level_data.battle_background
 	left_fighter.set_character_data(level_data.player_character)
-	_apply_shadow_scale(left_fighter_shadow, level_data.player_character)
+	_apply_shadow_visual(left_fighter_shadow, left_fighter, level_data.player_character)
+	player_skill_controller.configure(
+		self, left_fighter, merge_game, monster_action_controller, player_skill_button
+	)
 	_load_enemy(current_enemy_index)
 	merge_game.configure(
 		level_data.ball_drop_time_limit,
@@ -138,7 +151,7 @@ func _load_enemy(index: int) -> void:
 		enemy_data.attack_power = level_data.test_gimmick.normal_attack_damage
 		enemy_data.enemy_attack_drop_interval = level_data.test_gimmick.action_interval
 	right_fighter.set_character_data(enemy_data)
-	_apply_shadow_scale(right_fighter_shadow, enemy_data)
+	_apply_shadow_visual(right_fighter_shadow, right_fighter, enemy_data)
 	right_bar.fill_color = enemy_data.health_bar_color
 	right_bar.queue_redraw()
 	enemy_drop_count = 0
@@ -147,11 +160,13 @@ func _load_enemy(index: int) -> void:
 		self, right_fighter, left_fighter, merge_game,
 		right_status_effects, skill_durability_label
 	)
+	player_skill_controller.set_enemy(right_fighter)
 
 
-func _apply_shadow_scale(shadow: Polygon2D, character) -> void:
-	if shadow == null or character == null:
+func _apply_shadow_visual(shadow: Polygon2D, fighter: Fighter, character) -> void:
+	if shadow == null or fighter == null or character == null:
 		return
+	shadow.position = fighter.position + character.shadow_offset
 	shadow.scale = Vector2(
 		maxf(character.shadow_scale.x, 0.0),
 		maxf(character.shadow_scale.y, 0.0)
@@ -211,29 +226,28 @@ func _start_tutorial_sequence() -> void:
 	add_child(tutorial_sequence)
 	tutorial_sequence.sequence_finished.connect(_on_initial_tutorial_sequence_finished)
 	tutorial_sequence.tutorial_control_page_shown.connect(_on_tutorial_control_page_shown)
-	tutorial_sequence.play_tutorial(
-		level_data.tutorial_sequence,
-		merge_game.get_drop_guide_global_x()
-	)
+	tutorial_sequence.play_control_tutorial(merge_game.get_drop_guide_global_x())
 
 
 func _on_initial_tutorial_sequence_finished() -> void:
 	if battle_running and not level_finished:
 		merge_game.set_input_enabled(true)
 		tutorial_waiting_for_first_drop = not level_data.tutorial_turn_message.is_empty()
+		_schedule_drop_prompt("클릭으로 방울을 떨어뜨리세요")
 
 
 func _on_tutorial_control_page_shown() -> void:
 	if battle_running and not level_finished:
 		merge_game.set_input_enabled(true)
+		tutorial_waiting_for_first_drop = true
 
 
 func _on_tutorial_player_ball_landed(_level: int, _drop_x: float) -> void:
 	if not tutorial_waiting_for_first_drop:
 		return
 	tutorial_waiting_for_first_drop = false
-	tutorial_turn_explanation_pending = true
 	merge_game.set_input_enabled(false)
+	_start_evolution_tutorial()
 
 
 func _on_left_health_changed(health: int, maximum: int) -> void:
@@ -244,12 +258,20 @@ func _on_right_health_changed(health: int, maximum: int) -> void:
 	right_bar.set_health(health, maximum)
 
 
-func _on_player_damage_received(_amount: int) -> void:
-	player_hit_sfx.play()
+func _on_player_damage_received(amount: int) -> void:
+	_play_damage_sfx(player_hit_sfx, amount, left_fighter.max_health, -5.0)
 
 
-func _on_enemy_damage_received(_amount: int) -> void:
-	enemy_hit_sfx.play()
+func _on_enemy_damage_received(amount: int) -> void:
+	_play_damage_sfx(enemy_hit_sfx, amount, right_fighter.max_health, -4.0)
+
+
+func _play_damage_sfx(player: AudioStreamPlayer, damage: int, target_max_health: int, base_volume_db: float) -> void:
+	var damage_ratio := clampf(float(damage) / float(maxi(1, target_max_health)), 0.0, 1.0)
+	var intensity := sqrt(damage_ratio)
+	player.pitch_scale = lerpf(1.1, 0.82, intensity)
+	player.volume_db = base_volume_db + lerpf(0.0, 3.0, intensity)
+	player.play()
 
 
 func show_player_damage_preview(damage: int) -> void:
@@ -273,9 +295,9 @@ func _on_ball_dropped() -> void:
 			_schedule_drop_prompt("방울을 떨어뜨려보세요")
 		else:
 			merge_game.set_input_enabled(false)
-			_start_evolution_tutorial()
+			_start_turn_tutorial()
 	elif tutorial_merge_exercise_active:
-			_schedule_drop_prompt("방울을 다른 방울 위에 떨어뜨려 보세요")
+			_schedule_drop_prompt("방울 위에 다른 방울을 떨어뜨려 보세요.")
 
 
 func _start_turn_tutorial() -> void:
@@ -292,8 +314,7 @@ func _start_turn_tutorial() -> void:
 
 func _on_turn_tutorial_sequence_finished() -> void:
 	if battle_running and not level_finished:
-		merge_game.set_input_enabled(true)
-		_start_attack_observation_tutorial()
+		_start_combo_tutorial()
 
 
 func _start_evolution_tutorial() -> void:
@@ -312,7 +333,7 @@ func _on_evolution_tutorial_sequence_finished() -> void:
 	if battle_running and not level_finished:
 		merge_game.set_input_enabled(true)
 		tutorial_merge_exercise_active = true
-		_schedule_drop_prompt("방울을 다른 방울 위에 떨어뜨려 보세요")
+		_schedule_drop_prompt("방울 위에 다른 방울을 떨어뜨려 보세요.", 0.0)
 
 
 func _start_attack_observation_tutorial() -> void:
@@ -320,26 +341,49 @@ func _start_attack_observation_tutorial() -> void:
 	_schedule_drop_prompt("방울을 떨어뜨려보세요")
 
 
+func _start_enemy_intent_tutorial() -> void:
+	var message := "적은 머리 위에 다음 행동과\n남은 턴 수를 보여줍니다."
+	var intent_tutorial := StageIntroSequenceClass.new()
+	add_child(intent_tutorial)
+	intent_tutorial.sequence_finished.connect(_on_enemy_intent_tutorial_finished)
+	intent_tutorial.play_tutorial(PackedStringArray([message]), merge_game.get_drop_guide_global_x())
+
+
+func _start_enemy_intent_tutorial_after_delay() -> void:
+	await get_tree().create_timer(1.0).timeout
+	if not is_inside_tree() or level_finished or not battle_running:
+		return
+	_start_enemy_intent_tutorial()
+
+
+func _on_enemy_intent_tutorial_finished() -> void:
+	if battle_running and not level_finished:
+		merge_game.set_input_enabled(true)
+		tutorial_attack_drops_remaining = 1
+		_schedule_drop_prompt("클릭으로 방울을 떨어뜨리세요")
+
+
 func _on_tutorial_ball_dropped() -> void:
 	if tutorial_combo_demo_active:
+		_hide_drop_prompt()
 		merge_game.set_input_enabled(false)
 		return
-	if tutorial_attack_drops_remaining <= 0 and not tutorial_merge_exercise_active:
+	if tutorial_attack_drops_remaining <= 0 and not tutorial_merge_exercise_active and not tutorial_waiting_for_first_drop:
 		return
 	_hide_drop_prompt()
 
 
-func _schedule_drop_prompt(message: String) -> void:
+func _schedule_drop_prompt(message: String, delay := 2.0) -> void:
 	tutorial_prompt_version += 1
 	tutorial_drop_prompt_text = message
-	_show_drop_prompt_after_delay(tutorial_prompt_version)
+	_show_drop_prompt_after_delay(tutorial_prompt_version, delay)
 
 
-func _show_drop_prompt_after_delay(version: int) -> void:
-	await get_tree().create_timer(2.0).timeout
+func _show_drop_prompt_after_delay(version: int, delay := 2.0) -> void:
+	await get_tree().create_timer(delay).timeout
 	if (
 		version != tutorial_prompt_version
-		or (tutorial_attack_drops_remaining <= 0 and not tutorial_merge_exercise_active)
+		or (tutorial_attack_drops_remaining <= 0 and not tutorial_merge_exercise_active and not tutorial_waiting_for_first_drop)
 		or not battle_running
 		or level_finished
 		or not merge_game.can_accept_autoplay_drop()
@@ -400,14 +444,15 @@ func _on_tutorial_merge_completed(_merged_ball: MergeBall) -> void:
 		tutorial_merge_exercise_active = false
 		_hide_drop_prompt()
 		merge_game.set_input_enabled(false)
-		_start_combo_tutorial()
+		_start_enemy_intent_tutorial_after_delay()
 		return
 	if tutorial_combo_demo_active and _merged_ball.merge_level >= 5:
 		tutorial_combo_demo_active = false
 		merge_game.set_drop_position_locked(false)
-		merge_game.set_input_enabled(true)
+		merge_game.set_input_enabled(false)
 		status_label.text = "콤보 공격 성공!"
 		status_label.modulate = Color("#ffe07a")
+		_start_skill_tutorial_after_delay()
 
 
 func _start_combo_tutorial() -> void:
@@ -428,6 +473,75 @@ func _on_combo_tutorial_sequence_finished() -> void:
 		merge_game.set_drop_position_locked(true)
 		merge_game.set_input_enabled(true)
 		_show_combo_drop_prompt()
+
+
+func _start_skill_tutorial_after_delay() -> void:
+	await get_tree().create_timer(1.0).timeout
+	if not is_inside_tree() or level_finished or not battle_running:
+		return
+	player_skill_controller.fill_gauge_for_tutorial()
+	var skill_tutorial := StageIntroSequenceClass.new()
+	add_child(skill_tutorial)
+	skill_tutorial.sequence_finished.connect(_on_skill_tutorial_sequence_finished)
+	skill_tutorial.play_custom_spotlight_tutorial(
+		"방울을 합성하면 정령들이 마나를 채워줍니다.\n마나가 가득 차면 클릭해\n스킬을 사용할 수 있습니다.",
+		Vector2(181.0, 198.0), 62.0
+	)
+
+
+func _on_skill_tutorial_sequence_finished() -> void:
+	if not battle_running or level_finished:
+		return
+	tutorial_skill_exercise_active = true
+	player_skill_controller.set_tutorial_skill_enabled(true)
+	_show_skill_drop_prompt()
+
+
+func _show_skill_drop_prompt() -> void:
+	_ensure_tutorial_drop_prompt()
+	if tutorial_prompt_tween != null and tutorial_prompt_tween.is_valid():
+		tutorial_prompt_tween.kill()
+	tutorial_drop_prompt.position = Vector2(120.0, 700.0)
+	tutorial_drop_prompt.size = Vector2(480.0, 56.0)
+	tutorial_drop_prompt.add_theme_font_size_override("font_size", 30)
+	tutorial_drop_prompt.add_theme_constant_override("outline_size", 6)
+	tutorial_drop_prompt.text = "스킬 아이콘을 클릭해 보세요."
+	tutorial_drop_prompt.modulate.a = 1.0
+	tutorial_drop_prompt.show()
+
+
+func _on_tutorial_skill_used() -> void:
+	if not tutorial_skill_exercise_active:
+		return
+	tutorial_skill_exercise_active = false
+	player_skill_controller.set_tutorial_skill_enabled(false)
+	_hide_drop_prompt()
+	_start_weakness_tutorial()
+
+
+func _start_weakness_tutorial() -> void:
+	var weakness_tutorial := StageIntroSequenceClass.new()
+	add_child(weakness_tutorial)
+	weakness_tutorial.sequence_finished.connect(_on_weakness_tutorial_sequence_finished)
+	weakness_tutorial.play_custom_box_spotlight_tutorial(
+		"스킬로 적을 약화시키면,\n일정 턴 동안 받는 피해가 증가합니다.",
+		Vector2(515.0, 150.0), Vector2(145.0, 82.0)
+	)
+
+
+func _on_weakness_tutorial_sequence_finished() -> void:
+	var final_tutorial := StageIntroSequenceClass.new()
+	add_child(final_tutorial)
+	final_tutorial.sequence_finished.connect(_on_final_tutorial_sequence_finished)
+	final_tutorial.play_custom_spotlight_tutorial(
+		"수조의 정령들을 노리는\n적들을 물리치세요!", Vector2(530.0, 235.0), 210.0
+	)
+
+
+func _on_final_tutorial_sequence_finished() -> void:
+	if battle_running and not level_finished:
+		merge_game.set_fixed_drop_level(-1)
+		merge_game.set_input_enabled(true)
 
 func _on_merge_attack_requested(
 	damage: int,
@@ -467,6 +581,7 @@ func _on_fighter_defeated(fighter: Fighter) -> void:
 		GameSession.set_battle_result(false, "%s 도전 실패" % level_data.level_name)
 		get_tree().change_scene_to_file("res://scenes/battle_result.tscn")
 		return
+	player_skill_controller.on_enemy_defeated()
 	monster_action_controller.on_enemy_defeated()
 
 	current_enemy_index += 1

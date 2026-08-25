@@ -9,6 +9,10 @@ const SOURCE_WIDTH := 941.0
 const BOTTOM_SOURCE_HEIGHT := 322.0
 const REFERENCE_VIEWPORT_WIDTH := 720.0
 const TOP_REFERENCE_HEIGHT := 508.0
+const EDITOR_REFRESH_INTERVAL := 0.15
+
+var _editor_refresh_elapsed := 0.0
+var _last_preview_signature := 0
 
 @export_category("프리뷰 대상")
 @export var stage: LevelDataClass:
@@ -33,11 +37,6 @@ const TOP_REFERENCE_HEIGHT := 508.0
 	set(value):
 		monster_display_scale = value
 		_queue_refresh()
-@export var shadow_offset_from_monster := Vector2(4.0, 119.0):
-	set(value):
-		shadow_offset_from_monster = value
-		_queue_refresh()
-
 @onready var background_artwork: TextureRect = $BackgroundArtwork
 @onready var layered_background: Control = $LayeredBackground
 @onready var top_layer: TextureRect = $LayeredBackground/Top
@@ -64,6 +63,22 @@ func _ready() -> void:
 	_connect_resource(stage)
 	_connect_resource(monster)
 	_refresh()
+	_last_preview_signature = _get_preview_signature()
+	set_process(Engine.is_editor_hint())
+
+
+func _process(delta: float) -> void:
+	if not Engine.is_editor_hint():
+		return
+	_editor_refresh_elapsed += delta
+	if _editor_refresh_elapsed < EDITOR_REFRESH_INTERVAL:
+		return
+	_editor_refresh_elapsed = 0.0
+	var current_signature := _get_preview_signature()
+	if current_signature == _last_preview_signature:
+		return
+	_last_preview_signature = current_signature
+	_refresh()
 
 
 func _notification(what: int) -> void:
@@ -73,7 +88,43 @@ func _notification(what: int) -> void:
 
 func _queue_refresh() -> void:
 	if is_node_ready():
-		_refresh.call_deferred()
+		_refresh_from_resource_change.call_deferred()
+
+
+func _refresh_from_resource_change() -> void:
+	_refresh()
+	_last_preview_signature = _get_preview_signature()
+
+
+func _get_preview_signature() -> int:
+	var values: Array = [stage, monster]
+	if stage != null:
+		values.append_array([
+			stage.level_name,
+			stage.battle_background,
+			stage.battle_background_top,
+			stage.battle_background_middle,
+			stage.battle_background_bottom,
+			stage.stage_gimmick_icon,
+			stage.player_character,
+			stage.enemies,
+		])
+	if monster != null:
+		values.append_array([
+			monster.display_name,
+			monster.display_color,
+			monster.health_bar_color,
+			monster.sprite,
+			monster.sprite_modulate,
+			monster.sprite_size,
+			monster.sprite_horizontal_offset,
+			monster.sprite_height_offset,
+			monster.outline_screen_size,
+			monster.shadow_scale,
+			monster.shadow_offset,
+			monster.max_health,
+		])
+	return hash(values)
 
 
 func _connect_resource(resource: Resource) -> void:
@@ -156,12 +207,12 @@ func _refresh_background_layout() -> void:
 func _refresh_monster() -> void:
 	monster_origin.position = monster_position
 	monster_origin.scale = Vector2.ONE * monster_display_scale
-	monster_shadow.position = monster_position + shadow_offset_from_monster
 	monster_sprite.texture = monster.sprite if monster != null else null
 	monster_sprite.visible = monster_sprite.texture != null
 	monster_shadow.visible = monster != null
 	if monster == null or monster_sprite.texture == null:
 		return
+	monster_shadow.position = monster_position + monster.shadow_offset
 	monster_sprite.modulate = monster.display_color * monster.sprite_modulate
 	monster_sprite.position = Vector2(
 		monster.sprite_horizontal_offset,

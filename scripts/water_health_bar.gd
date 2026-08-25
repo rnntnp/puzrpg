@@ -85,6 +85,10 @@ func _refresh_damage_preview() -> void:
 		_full_fill_size.x * (current_ratio - remaining_ratio),
 		_full_fill_size.y
 	)
+	_refresh_damage_preview_style(
+		remaining_ratio <= 0.0001,
+		current_ratio >= 0.9999
+	)
 
 func _refresh_fill_style() -> void:
 	if not is_instance_valid(full_health_fill):
@@ -95,10 +99,14 @@ func _refresh_fill_style() -> void:
 	full_health_fill.add_theme_stylebox_override("panel", style)
 
 
-func _refresh_damage_preview_style() -> void:
+func _refresh_damage_preview_style(round_left := false, round_right := false) -> void:
 	if not is_instance_valid(damage_preview_fill):
 		return
 	var style := damage_preview_fill.get_theme_stylebox("panel").duplicate() as StyleBoxFlat
 	style.bg_color = Color(damage_preview_color, 0.92)
 	style.border_color = damage_preview_color.lightened(0.18)
+	style.corner_radius_top_left = 9 if round_left else 0
+	style.corner_radius_bottom_left = 9 if round_left else 0
+	style.corner_radius_top_right = 9 if round_right else 0
+	style.corner_radius_bottom_right = 9 if round_right else 0
 	damage_preview_fill.add_theme_stylebox_override("panel", style)

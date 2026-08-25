@@ -16,11 +16,17 @@ shader_parameter/outline_color = Color(0.9, 0.40499997, 0.63, 0.95)
 shader_parameter/outline_color_texel_width = 3.888372093023256
 shader_parameter/outline_total_texel_width = 5.832558139534884
 shader_parameter/outline_expand_texels = 6.0
+shader_parameter/frozen_enabled = false
+shader_parameter/frozen_outer_color = Color(1, 1, 1, 1)
+shader_parameter/frozen_outer_texel_width = 6.804651162790698
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_i2jmg"]
 resource_local_to_scene = true
 shader = ExtResource("3_shape_mask_shader")
 shader_parameter/mask_texture = ExtResource("4_axolotl_mask")
+shader_parameter/mask_offset_pixels = Vector2(0, 0)
+shader_parameter/mask_rotation = 0.0
+shader_parameter/mask_sprite_scale = Vector2(1, 1)
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_2mv4h"]
 resource_local_to_scene = true
@@ -28,8 +34,9 @@ shader = ExtResource("6_j5va0")
 shader_parameter/shell_mask_texture = ExtResource("7_i2jmg")
 shader_parameter/edge_clear_texel_width = 9.0
 
-[sub_resource type="ConvexPolygonShape2D" id="ConvexPolygonShape_hitbox_local"]
-points = PackedVector2Array(10, -149, 68, -142, 128, -111, 173, -54, 182, 14, 148, 91, 93, 137, 25, 162, -45, 155, -107, 123, -159, 74, -179, 6, -168, -67, -116, -122, -45, -146)
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_tu4ex"]
+radius = 147.99188
+height = 347.29672
 
 [node name="BallVisual08" unique_id=1921838234 instance=ExtResource("1_base")]
 tint_color = Color(1, 0.45, 0.7, 1)
@@ -59,6 +66,9 @@ scale = Vector2(1, 0.930622)
 
 [node name="HitboxAuthoring" parent="." index="5"]
 position = Vector2(21, 0)
+rotation = -1.3433574
 
 [node name="HitboxBody" parent="HitboxAuthoring" index="0"]
-shape = SubResource("ConvexPolygonShape_hitbox_local")
+position = Vector2(-7.270692, -0.37011147)
+rotation = -0.22173008
+shape = SubResource("CapsuleShape2D_tu4ex")

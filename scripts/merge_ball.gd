@@ -6,6 +6,9 @@ signal first_contact(ball: MergeBall)
 
 const BallCatalogClass = preload("res://scripts/ball_catalog.gd")
 const LEGACY_VISUAL_SCENE := preload("res://scenes/balls/visuals/ball_visual_base.tscn")
+const IceBreakParticleBurstClass = preload("res://scripts/ice_break_particle_burst.gd")
+const ICE_FREEZE_SFX: AudioStream = preload("res://assets/audio/sfx/ice_freeze.wav")
+const ICE_BREAK_SFX: AudioStream = preload("res://assets/audio/sfx/ice_break.wav")
 const VISUAL_DESIGN_SIZE := 418.0
 const FLOOR_RECOVERY_MARGIN := 4.0
 @onready var visual_container: Node2D = $VisualContainer
@@ -39,6 +42,7 @@ var curse_preview := false
 var rewind_turns := 0
 var bumper_cooldown_until_msec := 0
 var danger_marked := false
+var external_merge_token := 0
 var _hitbox_radius := 0.0
 var sleep_assist_enabled := false
 var sleep_assist_settle_time := 1.5
@@ -285,8 +289,16 @@ func set_ingestion_marked(marked: bool) -> void:
 	queue_redraw()
 
 
+func set_external_merge_token(token: int) -> void:
+	external_merge_token = maxi(0, token)
+
+
 func set_ice_targeted(targeted: bool) -> void:
 	ice_targeted = targeted
+	if visual_container.get_child_count() > 0:
+		var visual := visual_container.get_child(0)
+		if visual != null and visual.has_method("set_ice_targeted_visual"):
+			visual.call("set_ice_targeted_visual", targeted)
 	queue_redraw()
 
 func set_danger_marked(marked: bool) -> void:
@@ -304,14 +316,18 @@ func set_split_targeted(targeted: bool, marker_color: Color = Color("#ffd166")) 
 func freeze_in_ice(durability: int) -> void:
 	if merge_locked:
 		return
+	var was_already_frozen := is_ice_frozen
 	is_ice_frozen = true
 	ice_durability = maxi(1, durability)
+	_set_frozen_visual(true)
 	_update_ice_durability_visual()
 	linear_velocity = Vector2.ZERO
 	angular_velocity = 0.0
 	freeze_mode = RigidBody2D.FREEZE_MODE_STATIC
 	freeze = true
 	queue_redraw()
+	if not was_already_frozen:
+		_play_ice_sfx(ICE_FREEZE_SFX)
 
 
 func damage_ice(amount: int) -> void:
@@ -336,28 +352,66 @@ func break_ice(play_effect := true) -> void:
 		return
 	is_ice_frozen = false
 	ice_durability = 0
+	_set_frozen_visual(false)
 	ice_durability_label.visible = false
 	freeze = false
 	queue_redraw()
 	if play_effect:
+		_play_ice_sfx(ICE_BREAK_SFX)
+		_play_ice_break_visual_effect()
 		modulate = Color("#bdefff")
 		var tween := create_tween()
 		tween.tween_property(self, "modulate", Color.WHITE, 0.25)
 	print("[ICE BREAK] level=%d" % (merge_level + 1))
 
 
+func _play_ice_sfx(stream: AudioStream) -> void:
+	if stream == null or get_tree().current_scene == null:
+		return
+	var player := AudioStreamPlayer.new()
+	player.name = "IceSfx"
+	player.stream = stream
+	player.volume_db = -4.0
+	get_tree().current_scene.add_child(player)
+	player.finished.connect(player.queue_free)
+	player.play()
+
+
+func _play_ice_break_visual_effect() -> void:
+	var resting_visual_scale := visual_container.scale
+	var scale_tween := create_tween()
+	scale_tween.tween_property(
+		visual_container,
+		"scale",
+		resting_visual_scale * 1.08,
+		0.08
+	).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	scale_tween.tween_property(
+		visual_container,
+		"scale",
+		resting_visual_scale,
+		0.14
+	).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	var burst := IceBreakParticleBurstClass.new() as IceBreakParticleBurst
+	get_tree().current_scene.add_child(burst)
+	burst.play(global_position)
+
+
+func _set_frozen_visual(enabled: bool) -> void:
+	if visual_container.get_child_count() == 0:
+		return
+	var visual := visual_container.get_child(0)
+	if visual != null and visual.has_method("set_frozen_visual"):
+		visual.call("set_frozen_visual", enabled)
+
+
 func _update_ice_durability_visual() -> void:
 	if not is_ice_frozen or ice_durability <= 0:
 		ice_durability_label.visible = false
 		return
-	var durability_color := Color("#d5b8ff")
-	if ice_durability == 2:
-		durability_color = Color("#9eeaff")
-	elif ice_durability == 1:
-		durability_color = Color("#ffbd69")
 	ice_durability_label.text = str(ice_durability)
-	ice_durability_label.add_theme_color_override("font_color", durability_color)
-	ice_durability_label.add_theme_color_override("font_outline_color", Color("#142238"))
+	ice_durability_label.add_theme_color_override("font_color", Color("#ffe14a"))
+	ice_durability_label.add_theme_color_override("font_outline_color", Color.BLACK)
 	ice_durability_label.visible = true
 
 func _draw() -> void:
@@ -371,26 +425,11 @@ func _draw() -> void:
 			Vector2(-9.0, -radius - 33.0),
 			Vector2(9.0, -radius - 33.0),
 		]), Color("#e0a6ff"))
-	if ice_targeted:
-		draw_arc(Vector2.ZERO, radius + 12.0, 0.0, TAU, 40, Color("#d7f7ff"), 8.0, true)
 	if danger_marked:
 		draw_arc(Vector2.ZERO, radius + 12.0, 0.0, TAU, 40, Color("#ff4d5f"), 7.0, true)
 	if split_targeted:
 		var split_marker_radius := get_radius()
 		draw_arc(Vector2.ZERO, split_marker_radius + 4.0, 0.0, TAU, 40, split_target_color, 4.0, true)
-	if is_ice_frozen:
-		var ice_fill := Color(0.45, 0.32, 0.95, 0.48)
-		var ice_ring := Color("#d5b8ff")
-		if ice_durability == 2:
-			ice_fill = Color(0.36, 0.82, 1.0, 0.38)
-			ice_ring = Color("#9eeaff")
-		elif ice_durability == 1:
-			ice_fill = Color(1.0, 0.58, 0.22, 0.38)
-			ice_ring = Color("#ffbd69")
-		draw_circle(Vector2.ZERO, radius + 5.0, ice_fill)
-		draw_arc(Vector2.ZERO, radius + 5.0, 0.0, TAU, 40, ice_ring, 7.0 if ice_durability >= 3 else 6.0, true)
-		if ice_durability >= 3:
-			draw_arc(Vector2.ZERO, radius + 11.0, -PI * 0.35, PI * 1.35, 40, Color("#8d6bff"), 3.0, true)
 	if is_enlarged:
 		draw_arc(Vector2.ZERO, radius + 7.0, 0.0, TAU, 40, Color("#ff9f43"), 6.0, true)
 	if is_heavy:

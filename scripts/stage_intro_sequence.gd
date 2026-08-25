@@ -14,9 +14,14 @@ var _story_images: Array[Texture2D] = []
 var _page_index := 0
 var _logo_first := false
 var _enemy_intent_tutorial := false
+var _control_only_tutorial := false
 var _turn_tutorial := false
 var _evolution_tutorial := false
 var _combo_tutorial := false
+var _custom_spotlight_tutorial := false
+var _custom_spotlight_center := Vector2.ZERO
+var _custom_spotlight_radius := 72.0
+var _custom_spotlight_box_half_size := Vector2.ZERO
 var _control_center_x := 360.0
 var _backdrop: ColorRect
 var _label: Label
@@ -29,7 +34,7 @@ var _mouse_cursor: TutorialMouseCursor
 
 
 func play_story(pages: PackedStringArray, story_images: Array[Texture2D] = []) -> void:
-	_logo_first = true
+	_logo_first = not pages.is_empty() and pages[0] == "로고"
 	_story_images = story_images
 	_enemy_intent_tutorial = false
 	_turn_tutorial = false
@@ -41,11 +46,23 @@ func play_story(pages: PackedStringArray, story_images: Array[Texture2D] = []) -
 func play_tutorial(pages: PackedStringArray, control_center_x := 360.0) -> void:
 	_logo_first = false
 	_enemy_intent_tutorial = true
+	_control_only_tutorial = false
 	_turn_tutorial = false
 	_evolution_tutorial = false
 	_combo_tutorial = false
 	_control_center_x = control_center_x
 	_play(pages)
+
+
+func play_control_tutorial(control_center_x := 360.0) -> void:
+	_logo_first = false
+	_enemy_intent_tutorial = true
+	_control_only_tutorial = true
+	_turn_tutorial = false
+	_evolution_tutorial = false
+	_combo_tutorial = false
+	_control_center_x = control_center_x
+	_play(PackedStringArray(["드롭 조작"]))
 
 
 func play_turn_tutorial(message: String) -> void:
@@ -72,6 +89,33 @@ func play_combo_tutorial(message: String) -> void:
 	_turn_tutorial = false
 	_evolution_tutorial = false
 	_combo_tutorial = true
+	_play(PackedStringArray([message]))
+
+
+func play_custom_spotlight_tutorial(message: String, center: Vector2, radius := 72.0) -> void:
+	_logo_first = false
+	_enemy_intent_tutorial = false
+	_control_only_tutorial = false
+	_turn_tutorial = false
+	_evolution_tutorial = false
+	_combo_tutorial = false
+	_custom_spotlight_tutorial = true
+	_custom_spotlight_center = center
+	_custom_spotlight_radius = radius
+	_custom_spotlight_box_half_size = Vector2.ZERO
+	_play(PackedStringArray([message]))
+
+
+func play_custom_box_spotlight_tutorial(message: String, center: Vector2, half_size: Vector2) -> void:
+	_logo_first = false
+	_enemy_intent_tutorial = false
+	_control_only_tutorial = false
+	_turn_tutorial = false
+	_evolution_tutorial = false
+	_combo_tutorial = false
+	_custom_spotlight_tutorial = true
+	_custom_spotlight_center = center
+	_custom_spotlight_box_half_size = half_size
 	_play(PackedStringArray([message]))
 
 
@@ -139,10 +183,13 @@ func _build_overlay() -> void:
 	_click_hint.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
 	_click_hint.offset_top = -120.0
 	_click_hint.offset_bottom = -80.0
-	_click_hint.add_theme_font_size_override("font_size", 20)
-	_click_hint.add_theme_color_override("font_color", Color(0.78, 0.88, 1.0, 0.9))
-	_click_hint.add_theme_color_override("font_outline_color", Color(0.02, 0.08, 0.18, 0.95))
+	_click_hint.add_theme_font_size_override("font_size", 26)
+	_click_hint.add_theme_color_override("font_color", Color.WHITE)
+	_click_hint.add_theme_color_override("font_outline_color", Color(0.02, 0.03, 0.07, 0.98))
+	_click_hint.add_theme_color_override("font_shadow_color", Color(0.0, 0.0, 0.0, 0.95))
 	_click_hint.add_theme_constant_override("outline_size", 3)
+	_click_hint.add_theme_constant_override("shadow_offset_x", 2)
+	_click_hint.add_theme_constant_override("shadow_offset_y", 2)
 	_click_hint.text = "클릭해서 계속"
 	_click_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_click_hint.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -170,9 +217,12 @@ func _show_current_page() -> void:
 		_click_hint.hide()
 		_play_logo()
 		return
-	if _logo_first and _show_story_image_page():
+	if _show_story_image_page():
 		return
 	if _enemy_intent_tutorial and _page_index == 0:
+		if _control_only_tutorial:
+			_show_drop_control_tutorial()
+			return
 		_show_enemy_intent_tutorial()
 		return
 	if _enemy_intent_tutorial and _page_index == 1:
@@ -187,6 +237,9 @@ func _show_current_page() -> void:
 	if _combo_tutorial:
 		_show_combo_tutorial()
 		return
+	if _custom_spotlight_tutorial:
+		_show_custom_spotlight_tutorial()
+		return
 	_set_spotlight(false)
 	_guide_label.hide()
 	_guide_panel.hide()
@@ -194,12 +247,16 @@ func _show_current_page() -> void:
 	_mouse_cursor.hide()
 	_reset_page_title_layout()
 	_label.show()
+	_click_hint.set_anchors_preset(Control.PRESET_TOP_LEFT)
+	_click_hint.position = Vector2(120.0, 1160.0)
+	_click_hint.size = Vector2(480.0, 48.0)
+	_click_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_click_hint.show()
 	_label.modulate.a = 1.0
 
 
 func _show_story_image_page() -> bool:
-	var image_index := _page_index - 1
+	var image_index := _page_index - 1 if _logo_first else _page_index
 	if image_index < 0 or image_index >= _story_images.size():
 		return false
 	var texture := _story_images[image_index]
@@ -213,6 +270,16 @@ func _show_story_image_page() -> bool:
 	_label.hide()
 	_story_image.texture = texture
 	_story_image.show()
+	_guide_panel.hide()
+	_click_hint.set_anchors_preset(Control.PRESET_TOP_LEFT)
+	_click_hint.position = Vector2(170.0, 1192.0)
+	_click_hint.size = Vector2(380.0, 60.0)
+	_click_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_click_hint.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_click_hint.add_theme_color_override("font_color", Color.WHITE)
+	_click_hint.add_theme_color_override("font_outline_color", Color(0.02, 0.03, 0.07, 0.98))
+	_click_hint.add_theme_color_override("font_shadow_color", Color(0.0, 0.0, 0.0, 0.95))
+	_click_hint.add_theme_constant_override("outline_size", 3)
 	_click_hint.show()
 	return true
 
@@ -242,7 +309,7 @@ func _show_drop_control_tutorial() -> void:
 	_guide_label.add_theme_font_size_override("font_size", 25)
 	_guide_label.add_theme_color_override("font_color", Color(1.0, 0.97, 0.82, 1.0))
 	_guide_label.add_theme_constant_override("outline_size", 5)
-	_guide_label.text = "좌우로 스와이프해 방울의 위치를 정하고\n클릭해 떨어뜨리세요."
+	_guide_label.text = "좌우로 스와이프해 방울의 위치를 정하고\n클릭해 수조에 떨어뜨리세요."
 	_guide_label.show()
 	_control_arrow.show()
 	_mouse_cursor.show()
@@ -300,9 +367,28 @@ func _show_combo_tutorial() -> void:
 	_guide_label.text = _pages[_page_index]
 	_guide_label.show()
 	_click_hint.set_anchors_preset(Control.PRESET_TOP_LEFT)
-	_click_hint.position = Vector2(400.0, 1060.0)
+	_click_hint.position = Vector2(430.0, 1060.0)
 	_click_hint.size = Vector2(210.0, 42.0)
 	_click_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	_click_hint.show()
+
+
+func _show_custom_spotlight_tutorial() -> void:
+	if _custom_spotlight_box_half_size != Vector2.ZERO:
+		_backdrop.material = _create_box_spotlight_material(_custom_spotlight_center, _custom_spotlight_box_half_size)
+	else:
+		_backdrop.material = _create_spotlight_material_at(_custom_spotlight_center, _custom_spotlight_radius)
+	_guide_panel.hide()
+	_control_arrow.hide()
+	_mouse_cursor.hide()
+	_label.hide()
+	_guide_label.position = Vector2(70.0, 500.0)
+	_guide_label.size = Vector2(580.0, 130.0)
+	_guide_label.add_theme_font_size_override("font_size", 31)
+	_guide_label.add_theme_color_override("font_color", Color(0.95, 0.98, 1.0, 1.0))
+	_guide_label.add_theme_constant_override("outline_size", 7)
+	_guide_label.text = _pages[_page_index]
+	_guide_label.show()
 	_click_hint.show()
 
 
@@ -318,7 +404,7 @@ float rounded_box_sdf(vec2 point, vec2 center, vec2 half_size, float radius) {
 
 void fragment() {
 	vec2 point = UV * vec2(720.0, 1280.0);
-	float distance_from_stack = rounded_box_sdf(point, vec2(395.0, 1020.0), vec2(95.0, 225.0), 28.0);
+	float distance_from_stack = rounded_box_sdf(point, vec2(395.0, 970.0), vec2(112.0, 305.0), 32.0);
 	float overlay_alpha = smoothstep(-2.0, 5.0, distance_from_stack) * 0.76;
 	COLOR = vec4(0.02, 0.03, 0.07, overlay_alpha);
 }
@@ -366,17 +452,43 @@ void fragment() {
 
 
 func _create_spotlight_material() -> ShaderMaterial:
+	return _create_spotlight_material_at(Vector2(534.0, 171.0), 72.0)
+
+
+func _create_spotlight_material_at(center: Vector2, radius: float) -> ShaderMaterial:
 	var shader := Shader.new()
 	shader.code = """
 shader_type canvas_item;
 
 void fragment() {
 	vec2 point = UV * vec2(720.0, 1280.0);
-	float distance_from_spotlight = distance(point, vec2(534.0, 171.0));
-	float overlay_alpha = smoothstep(64.0, 72.0, distance_from_spotlight) * 0.76;
+	float distance_from_spotlight = distance(point, vec2(%0.2f, %0.2f));
+	float overlay_alpha = smoothstep(%0.2f, %0.2f, distance_from_spotlight) * 0.76;
 	COLOR = vec4(0.02, 0.03, 0.07, overlay_alpha);
 }
-"""
+""" % [center.x, center.y, radius - 8.0, radius]
+	var material := ShaderMaterial.new()
+	material.shader = shader
+	return material
+
+
+func _create_box_spotlight_material(center: Vector2, half_size: Vector2) -> ShaderMaterial:
+	var shader := Shader.new()
+	shader.code = """
+shader_type canvas_item;
+
+float rounded_box_sdf(vec2 point, vec2 center, vec2 half_size, float radius) {
+	vec2 delta = abs(point - center) - half_size + vec2(radius);
+	return length(max(delta, vec2(0.0))) + min(max(delta.x, delta.y), 0.0) - radius;
+}
+
+void fragment() {
+	vec2 point = UV * vec2(720.0, 1280.0);
+	float distance_from_spotlight = rounded_box_sdf(point, vec2(%0.2f, %0.2f), vec2(%0.2f, %0.2f), 24.0);
+	float overlay_alpha = smoothstep(-2.0, 6.0, distance_from_spotlight) * 0.76;
+	COLOR = vec4(0.02, 0.03, 0.07, overlay_alpha);
+}
+""" % [center.x, center.y, half_size.x, half_size.y]
 	var material := ShaderMaterial.new()
 	material.shader = shader
 	return material

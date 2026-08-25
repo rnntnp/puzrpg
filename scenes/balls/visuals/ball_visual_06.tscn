@@ -38,6 +38,12 @@ radius = 151.58493
 
 [node name="BallVisual06" unique_id=639394593 instance=ExtResource("1_base")]
 tint_color = Color(0.84204525, 0.69722426, 1, 1)
+frozen_sheen_cycle_seconds = null
+frozen_sheen_band_width = null
+frozen_sheen_softness = null
+frozen_sheen_diagonal_slope = null
+frozen_matte_color = null
+frozen_sheen_color = null
 
 [node name="ShellBase" parent="." index="0"]
 modulate = Color(0.84204525, 0.69722426, 1, 1)
@@ -66,6 +72,7 @@ rotation = 0.3252128
 scale = Vector2(0.75377893, 0.7343105)
 
 [node name="HitboxAuthoring" parent="." index="5"]
+visible = false
 position = Vector2(18, 0)
 rotation = -0.26731703
 

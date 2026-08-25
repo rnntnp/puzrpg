@@ -23,5 +23,4 @@ extends Resource
 @export_range(0, 9999, 1) var maximum_launch_damage: int = 9999
 
 @export_category("저지 효과")
-@export_range(0.0, 5.0, 0.05) var interrupted_damage_multiplier: float = 1.3
 @export_range(0, 20, 1) var interrupted_debuff_turns: int = 2

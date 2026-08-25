@@ -1,6 +1,6 @@
 # GAME CORE RULES
 
-Last code audit: 2026-08-13  
+Last code audit: 2026-08-25
 Scope: the current Godot prototype in this repository
 
 This document is the long-term source of truth for rules shared by campaign stages and mechanic test levels. It records what the current runtime actually does. A planning document does not override a conflicting implementation unless the user explicitly decides to change the core game.
@@ -70,6 +70,7 @@ Primary runtime evidence: `scripts/ball_catalog.gd`, `scripts/ball_data.gd`, `sc
 - The current implementation does not transfer the source balls' average velocity to the result. It creates a new result ball, then applies the configured radial merge push to nearby balls.
 - The result is a normal ball. It emits the normal merge registration and completion signals and may participate in later chain merges.
 - A gimmick-created demotion, removal, duplication, mirror spawn, or terrain move is not automatically a normal merge. A mechanic must explicitly state any exception.
+- A handler may bracket an enemy-owned physical drop with the opt-in external merge window and tag that drop with the window's unique ownership token. Only merges containing a ball with the active token use the isolated combo and external damage signal; unrelated or previously queued player merges keep player score, combo, and merge projectiles. Result balls inherit the active token so only that enemy drop's direct chain remains externally owned. The current Mirror Drop Boss is the registered user of this exception.
 - A mechanic driven by merge events must prevent its own resulting movement from recursively counting as another player input unless its spec explicitly requires that behavior.
 
 Primary runtime evidence: `scripts/merge_ball.gd` and `scripts/merge_game.gd`.
@@ -138,19 +139,19 @@ These are not part of the numbered 1–50 test-mechanic sequence, but future dup
 ### Ice
 
 - Campaign level 2 contains a basic, enhanced, and boss ice enemy.
-- On its action, the controller locks input, performs the enemy's normal damage, then freezes eligible balls.
+- One completed player turn before its action, the controller selects eligible balls and marks them with the freeze telegraph. On the next action it locks input, performs the enemy's normal damage, then freezes the marked lineage. If one marked ball merges, the result inherits its mark through later chain merges. If two marked balls merge together, the result keeps one mark and the duplicate slot immediately searches for a new telegraphed target.
 - Frozen balls are static and cannot merge.
 - Every normal merge completion damages every frozen ball's ice by 1.
 - The basic Resource has 400 HP, attacks for 5 every 4 completed player turns, freezes 1 ball, prioritizes displayed stages 1–3, and uses durability 2.
 - The enhanced Resource has 600 HP, attacks for 5 every 5 completed player turns, freezes 2 balls, prioritizes displayed stages 2–4, and uses durability 2.
 - The boss has 800 HP, attacks for 7 every 4 completed player turns, freezes 2 balls, prioritizes displayed stages 3–5, and uses durability 3.
-- There is no frozen-ball cap. Targets are searched in strict displayed-stage order starting at the configured preferred minimum (for example, 3 → 4 → 5 → 6), so the remaining slots are filled by the next stage rather than by skipping ahead. If no unfrozen target is found, a frozen ball below that enemy's configured ice durability is re-frozen and restored to full durability.
+- There is no frozen-ball cap. Targets are searched in strict displayed-stage order starting at the configured preferred minimum (for example, 3 → 4 → 5 → 6), so the remaining slots are filled by the next stage rather than by skipping ahead. If no unfrozen target is found, a frozen ball below that enemy's configured ice durability is re-frozen and restored to full durability. If the action freezes fewer balls than its configured target count, including partial success such as 1/2, its total direct-attack damage is 1.5× the normal value.
 
 ### Ingestion
 
 - Campaign level 3 contains a recovery-ingestion enemy, a launch-ingestion enemy, and an alternating ingestion boss in that order.
 - After a normal attack, it telegraphs and marks the highest-stage eligible ball. On execution that ball is removed from the board and stored by stage.
-- During the response window, player merge damage first reduces ingestion durability. Breaking durability spawns the swallowed stage as an independent physics ball falling vertically from a random safe board X, without changing the player's current or queued drops, then applies a temporary incoming-damage multiplier to the enemy.
+- During the response window, player merge damage first reduces ingestion durability. Breaking durability spawns the swallowed stage as an independent physics ball falling vertically from a random safe board X, without changing the player's current or queued drops, then adds 2 turns to the shared ×1.3 Weakness effect.
 - The recovery variant heals when the response window expires. The launch variant starts with ingestion and deals configured direct player damage using the normal attack animation when the response window expires.
 - The boss has no normal attack phase. It alternates launch and recovery ingestion, immediately telegraphing the next ingestion after each success or interruption. Its launch damage scales to a configured cap while ingestion durability remains fixed.
 - The swallowed ball is not returned on monster success.
@@ -158,12 +159,17 @@ These are not part of the numbered 1–50 test-mechanic sequence, but future dup
 
 Primary runtime evidence: `resources/levels/level_02.tres`, `resources/levels/level_03.tres`, `scripts/ice_skill_controller.gd`, `scripts/monster_action_controller.gd`, and their skill Resources.
 
-## 12. Skill gauge and Break
+## 12. Player skill gauge, Weakness, and Break
 
-- The planning documents describe a player skill gauge, but the inspected runtime has no generic player skill-gauge system. The label named `SkillDurabilityLabel` displays ingestion durability, not a player gauge.
-- The inspected runtime has no generic Break meter shared by all enemies.
-- Ingestion durability is an interruptible mechanic-specific shield. Several numbered test mechanics call bonus enemy damage “BREAK” in feedback, but that is not evidence of a shared Break subsystem.
-- A new mechanic must say “not applicable” for Skill Gauge or Break unless it intentionally reuses an existing concrete system. Do not invent a generic manager just to satisfy a template heading.
+- `CharacterData.player_skill` optionally enables the shared player skill system. The current blue player uses a maximum gauge of 300 and adds 2 turns to Weakness in `resources/skills/player_weakness.tres`; the shared ×1.3 incoming HP-damage multiplier lives in `resources/effects/ingestion_vulnerable.tres`.
+- Every player-owned normal merge immediately grants the result ball's `BallData.merge_score` as gauge. Combo scaling, routed/final damage, defenses, ingestion durability, and damage multipliers do not change this gain.
+- Enemy-owned external merges, overflow removal, mechanic removals, and non-merge damage grant no gauge.
+- Gauge is capped at its maximum, starts at 0 for each stage, persists across the stage's enemy sequence, and is discarded when the battle scene ends.
+- At maximum gauge, the player may use the skill between completed drops while a living current enemy exists and board input is available. Use resets the gauge to 0.
+- Weakness belongs to the current enemy. Player skill use and ingestion interruption add their configured turns to the same remaining-turn counter and status icon. It loses one turn at each completed player turn and is removed on enemy defeat instead of transferring to the next enemy.
+- Weakness multiplies the merge projectile damage remaining after the existing ingestion/test-gimmick routing, immediately before enemy HP damage. It does not amplify ingestion durability damage or alter gauge gain.
+- The icon above the player fills from grayscale to color bottom-to-top; full charge adds a pulsing aura. The enemy's existing status-effect bar displays Weakness and its remaining turns.
+- The inspected runtime still has no generic Break meter shared by all enemies. Ingestion durability is an interruptible mechanic-specific shield, and numbered mechanics using “BREAK” feedback are not a shared Break subsystem.
 
 ## 13. Test-mechanic runtime contract
 
@@ -189,7 +195,7 @@ The following are intentionally not harmonized by guesswork:
 | Merge damage | Result `merge_score` × chain multiplier; one projectile per merge | Common PDF describes result-stage base damage and a combo extra hit | Runtime wins until redesign |
 | Turn settlement | Landing + 500 ms merge quiet, maximum 4 s; full stillness is optional per handler | Planning flow implies full-board settlement before enemy action | Runtime wins; state-reading handlers must wait explicitly |
 | Result velocity | New result has no inherited average source velocity | Older design notes describe inherited/averaged motion | Runtime wins until redesign |
-| Player skill gauge | No generic runtime implementation found | Common PDF includes a skill gauge | Unresolved / not implemented |
+| Player skill gauge | Player-owned normal merges grant result `merge_score`; the configured skill persists through enemy transitions and adds 2 turns to the shared ingestion Weakness | Older notes commonly describe result-stage damage and a combo extra hit | Runtime implementation wins; gauge follows runtime merge damage units |
 | Generic attack queue | No dedicated queue; delayed projectiles are independent | Common PDF describes an attack queue | Unresolved / not implemented |
 | Ice boss | Three ice enemies are registered; the boss freezes two balls with durability 3 and has no frozen-ball cap | Ice PDF includes a boss phase | Runtime wins; any differing PDF boss behavior is design intent only |
 | Ingestion variants | Recovery, launch, and alternating boss variants are registered in campaign level 3 | Older ingestion documents describe the same broad progression with differing tuning | Runtime tuning wins |

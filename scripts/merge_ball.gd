@@ -6,6 +6,7 @@ signal first_contact(ball: MergeBall)
 
 const BallCatalogClass = preload("res://scripts/ball_catalog.gd")
 const LEGACY_VISUAL_SCENE := preload("res://scenes/balls/visuals/ball_visual_base.tscn")
+const IceBreakParticleBurstClass = preload("res://scripts/ice_break_particle_burst.gd")
 const VISUAL_DESIGN_SIZE := 418.0
 const FLOOR_RECOVERY_MARGIN := 4.0
 @onready var visual_container: Node2D = $VisualContainer
@@ -346,10 +347,31 @@ func break_ice(play_effect := true) -> void:
 	freeze = false
 	queue_redraw()
 	if play_effect:
+		_play_ice_break_visual_effect()
 		modulate = Color("#bdefff")
 		var tween := create_tween()
 		tween.tween_property(self, "modulate", Color.WHITE, 0.25)
 	print("[ICE BREAK] level=%d" % (merge_level + 1))
+
+
+func _play_ice_break_visual_effect() -> void:
+	var resting_visual_scale := visual_container.scale
+	var scale_tween := create_tween()
+	scale_tween.tween_property(
+		visual_container,
+		"scale",
+		resting_visual_scale * 1.08,
+		0.08
+	).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	scale_tween.tween_property(
+		visual_container,
+		"scale",
+		resting_visual_scale,
+		0.14
+	).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	var burst := IceBreakParticleBurstClass.new() as IceBreakParticleBurst
+	get_tree().current_scene.add_child(burst)
+	burst.play(global_position)
 
 
 func _set_frozen_visual(enabled: bool) -> void:

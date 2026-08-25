@@ -3,12 +3,11 @@ extends Node
 
 const IceSkillDataClass = preload("res://scripts/ice_skill_data.gd")
 const IceCastEffectScene = preload("res://scenes/ice_cast_effect.tscn")
-const MAX_RETARGET_ATTEMPTS := 16
 
 var merge_game: MergeGame
 var skill: IceSkillDataClass
 var caster: Fighter
-var telegraphed_targets: Array[MergeBall] = []
+var telegraphed_target_ids: Array[int] = []
 var active_cast_target_id := 0
 
 
@@ -27,54 +26,37 @@ func begin_telegraph() -> int:
 	if skill == null:
 		return 0
 	cancel_telegraph()
-	telegraphed_targets = _select_targets(skill.freeze_count)
-	for ball in telegraphed_targets:
+	var selected_targets := _select_targets(skill.freeze_count)
+	for ball in selected_targets:
 		ball.set_ice_targeted(true)
-	return telegraphed_targets.size()
+		telegraphed_target_ids.append(ball.get_instance_id())
+	return telegraphed_target_ids.size()
 
 
 func execute_telegraphed() -> int:
 	if skill == null:
 		return 0
 	var frozen_count := 0
-	var failed_attempts := 0
-	var pending_target_ids: Array[int] = []
-	for telegraphed_target in telegraphed_targets:
-		if is_instance_valid(telegraphed_target):
-			pending_target_ids.append(telegraphed_target.get_instance_id())
-	telegraphed_targets.clear()
-	while frozen_count < skill.freeze_count and failed_attempts < MAX_RETARGET_ATTEMPTS:
-		var target: MergeBall = null
-		while not pending_target_ids.is_empty() and target == null:
-			var target_id: int = pending_target_ids.pop_front()
-			var telegraphed := instance_from_id(target_id) as MergeBall
-			if _is_valid_freeze_target(telegraphed):
-				target = telegraphed
-		var is_retarget := false
-		if target == null:
-			var replacements := _select_targets(1)
-			if replacements.is_empty():
-				break
-			target = replacements.front()
-			is_retarget = true
-		if is_retarget:
-			target.set_ice_targeted(true)
-			await get_tree().create_timer(skill.target_highlight_duration).timeout
+	var pending_target_ids: Array[int] = telegraphed_target_ids.duplicate()
+	telegraphed_target_ids.clear()
+	for target_id in pending_target_ids:
+		var target := instance_from_id(target_id) as MergeBall
+		if not _is_valid_freeze_target(target):
+			continue
 		var froze_target: bool = await _cast_freeze_at(target)
 		if froze_target:
 			frozen_count += 1
-		else:
-			failed_attempts += 1
 	await get_tree().create_timer(skill.freeze_effect_duration).timeout
 	print("[ICE FREEZE] count=%d | durability=%d" % [frozen_count, skill.ice_durability])
 	return frozen_count
 
 
 func cancel_telegraph() -> void:
-	for ball in telegraphed_targets:
+	for target_id in telegraphed_target_ids:
+		var ball := instance_from_id(target_id) as MergeBall
 		if is_instance_valid(ball):
 			ball.set_ice_targeted(false)
-	telegraphed_targets.clear()
+	telegraphed_target_ids.clear()
 	active_cast_target_id = 0
 
 
@@ -184,16 +166,19 @@ func _on_ice_telegraph_merge_resolved(
 	if is_instance_valid(active_cast_target) and active_cast_target.get_instance_id() in source_ids:
 		active_cast_target_id = result_ball.get_instance_id()
 	var removed_targets := 0
-	for index in range(telegraphed_targets.size() - 1, -1, -1):
-		var target := telegraphed_targets[index]
-		if is_instance_valid(target) and target.get_instance_id() in source_ids:
-			target.set_ice_targeted(false)
-			telegraphed_targets.remove_at(index)
+	for index in range(telegraphed_target_ids.size() - 1, -1, -1):
+		var target_id := telegraphed_target_ids[index]
+		if target_id in source_ids:
+			var target := instance_from_id(target_id) as MergeBall
+			if is_instance_valid(target):
+				target.set_ice_targeted(false)
+			telegraphed_target_ids.remove_at(index)
 			removed_targets += 1
 	if removed_targets <= 0:
 		return
-	if result_ball not in telegraphed_targets:
-		telegraphed_targets.append(result_ball)
+	var result_id := result_ball.get_instance_id()
+	if result_id not in telegraphed_target_ids:
+		telegraphed_target_ids.append(result_id)
 	result_ball.set_ice_targeted(true)
 	if removed_targets < 2:
 		return
@@ -202,4 +187,4 @@ func _on_ice_telegraph_merge_resolved(
 		return
 	var replacement: MergeBall = replacements.front()
 	replacement.set_ice_targeted(true)
-	telegraphed_targets.append(replacement)
+	telegraphed_target_ids.append(replacement.get_instance_id())

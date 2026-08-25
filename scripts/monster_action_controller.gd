@@ -97,8 +97,6 @@ func on_ball_dropped() -> void:
 		if ice_skill != null and remaining_turns == 1:
 			var target_count := ice_controller.begin_telegraph()
 			var has_full_target_count := target_count >= ice_skill.freeze_count
-			battle.status_label.text = "빙결 예고!" if has_full_target_count else "빙결 대상 부족"
-			battle.status_label.modulate = Color("#ff6b78") if target_count > 0 else Color.WHITE
 			battle.show_player_damage_preview(
 				enemy.attack_power if has_full_target_count else _get_ice_no_target_damage()
 			)
@@ -354,16 +352,12 @@ func _run_ice_turn() -> void:
 	enemy.attack(player)
 	if not player.is_alive():
 		return
-	battle.status_label.text = "빙결 공격!"
 	var frozen_count: int = await ice_controller.execute_telegraphed()
 	if frozen_count < ice_skill.freeze_count:
 		var enhanced_damage := _get_ice_no_target_damage()
 		var bonus_damage := maxi(0, enhanced_damage - enemy.attack_power)
 		if bonus_damage > 0 and player.is_alive():
 			player.take_damage(bonus_damage)
-		battle.status_label.text = "빙결 부족 %d/%d · 강화 공격! 총 피해 %d" % [
-			frozen_count, ice_skill.freeze_count, enhanced_damage
-		]
 	_enter_normal_attack()
 	if enemy.is_alive() and player.is_alive():
 		merge_game.set_input_enabled(true)

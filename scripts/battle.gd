@@ -104,7 +104,8 @@ func _load_level() -> void:
 		layered_background.configure(
 			level_data.battle_background_top,
 			level_data.battle_background_middle,
-			level_data.battle_background_bottom
+			level_data.battle_background_bottom,
+			level_data.battle_background_top_height
 		)
 	else:
 		layered_background.visible = false

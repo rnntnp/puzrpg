@@ -2,9 +2,9 @@
 
 [ext_resource type="Script" path="res://scripts/character_data.gd" id="1"]
 [ext_resource type="Resource" path="res://resources/skills/boss_ingestion.tres" id="2"]
-[ext_resource type="Texture2D" path="res://assets/characters/generated/crystal_toad_normal.png" id="3_normal"]
-[ext_resource type="Texture2D" path="res://assets/characters/generated/crystal_toad_telegraph.png" id="4_telegraph"]
-[ext_resource type="Texture2D" path="res://assets/characters/generated/crystal_toad_swallowed.png" id="5_swallowed"]
+[ext_resource type="Texture2D" path="res://assets/characters/generated/crystal_toad_boss_idle_v4.png" id="3_normal"]
+[ext_resource type="Texture2D" path="res://assets/characters/generated/crystal_toad_boss_telegraph_v1.png" id="4_telegraph"]
+[ext_resource type="Texture2D" path="res://assets/characters/generated/crystal_toad_boss_swallowed_v1.png" id="5_swallowed"]
 
 [resource]
 script = ExtResource("1")
@@ -15,8 +15,7 @@ ingestion_telegraph_sprite = ExtResource("4_telegraph")
 ingestion_swallowed_sprite = ExtResource("5_swallowed")
 ingestion_mouth_offset = Vector2(-64, -10)
 ingestion_belly_glow_offset = Vector2(-14, 42)
-sprite_modulate = Color(0.82, 0.68, 1, 1)
-sprite_size = Vector2(225, 225)
+sprite_size = Vector2(260, 185)
 max_health = 700
 attack_power = 0
 enemy_attack_drop_interval = 1

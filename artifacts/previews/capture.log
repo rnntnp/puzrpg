@@ -1,0 +1,26 @@
+Godot Engine v4.7.1.stable.official.a13da4feb - https://godotengine.org
+OpenGL API 3.3.0 NVIDIA 591.86 - Compatibility - Using Device: NVIDIA - NVIDIA GeForce RTX 5070 Ti
+
+[MCPRuntimeServer] port: scanning 6570-6585 (default)
+[MCPRuntimeServer] listening on 127.0.0.1:6574
+[MCPRegistry] runtime port 6574 registered for c:/users/jaynap/desktop/godot_proj/puzrpg
+WARNING: Nodes with non-equal opposite anchors will have their size overridden after _ready(). 
+If you want to set size, change the anchors or consider using set_deferred().
+   at: _set_size (scene/gui/control.cpp:1519)
+   GDScript backtrace (most recent call first):
+       [0] _layout_layers (res://scripts/layered_battle_background.gd:31)
+       [1] _ready (res://scripts/layered_battle_background.gd:17)
+       [2] _capture_scene (res://scripts/capture_stage_03_previews.gd:38)
+       [3] _run (res://scripts/capture_stage_03_previews.gd:25)
+       [4] _capture_scene (res://scripts/capture_stage_03_previews.gd:46)
+WARNING: Nodes with non-equal opposite anchors will have their size overridden after _ready(). 
+If you want to set size, change the anchors or consider using set_deferred().
+   at: _set_size (scene/gui/control.cpp:1519)
+   GDScript backtrace (most recent call first):
+       [0] _layout_layers (res://scripts/layered_battle_background.gd:31)
+       [1] configure (res://scripts/layered_battle_background.gd:25)
+       [2] _load_level (res://scripts/battle.gd:104)
+       [3] _ready (res://scripts/battle.gd:71)
+       [4] _capture_scene (res://scripts/capture_stage_03_previews.gd:38)
+       [5] _run (res://scripts/capture_stage_03_previews.gd:25)
+       [6] _capture_scene (res://scripts/capture_stage_03_previews.gd:46)

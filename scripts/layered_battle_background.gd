@@ -7,6 +7,8 @@ const BOTTOM_SOURCE_HEIGHT := 322.0
 const REFERENCE_VIEWPORT_WIDTH := 720.0
 const TOP_REFERENCE_HEIGHT := 508.0
 
+var top_reference_height := TOP_REFERENCE_HEIGHT
+
 @onready var top_layer: TextureRect = $Top
 @onready var middle_layer: TextureRect = $Middle
 @onready var bottom_layer: TextureRect = $Bottom
@@ -17,10 +19,16 @@ func _ready() -> void:
 	_layout_layers()
 
 
-func configure(top_texture: Texture2D, middle_texture: Texture2D, bottom_texture: Texture2D) -> void:
+func configure(
+	top_texture: Texture2D,
+	middle_texture: Texture2D,
+	bottom_texture: Texture2D,
+	reference_top_height := TOP_REFERENCE_HEIGHT
+) -> void:
 	top_layer.texture = top_texture
 	middle_layer.texture = middle_texture
 	bottom_layer.texture = bottom_texture
+	top_reference_height = maxf(reference_top_height, 1.0)
 	visible = top_texture != null and middle_texture != null and bottom_texture != null
 	_layout_layers()
 
@@ -31,7 +39,7 @@ func _layout_layers() -> void:
 	size = viewport_size
 
 	var width_scale := viewport_size.x / SOURCE_WIDTH
-	var top_height := TOP_REFERENCE_HEIGHT * (viewport_size.x / REFERENCE_VIEWPORT_WIDTH)
+	var top_height := top_reference_height * (viewport_size.x / REFERENCE_VIEWPORT_WIDTH)
 	var bottom_height := BOTTOM_SOURCE_HEIGHT * width_scale
 	var middle_height := maxf(viewport_size.y - top_height - bottom_height, 1.0)
 

@@ -1,6 +1,6 @@
 # GAME CORE RULES
 
-Last code audit: 2026-08-13  
+Last code audit: 2026-08-25
 Scope: the current Godot prototype in this repository
 
 This document is the long-term source of truth for rules shared by campaign stages and mechanic test levels. It records what the current runtime actually does. A planning document does not override a conflicting implementation unless the user explicitly decides to change the core game.
@@ -151,7 +151,7 @@ These are not part of the numbered 1–50 test-mechanic sequence, but future dup
 
 - Campaign level 3 contains a recovery-ingestion enemy, a launch-ingestion enemy, and an alternating ingestion boss in that order.
 - After a normal attack, it telegraphs and marks the highest-stage eligible ball. On execution that ball is removed from the board and stored by stage.
-- During the response window, player merge damage first reduces ingestion durability. Breaking durability spawns the swallowed stage as an independent physics ball falling vertically from a random safe board X, without changing the player's current or queued drops, then applies a temporary incoming-damage multiplier to the enemy.
+- During the response window, player merge damage first reduces ingestion durability. Breaking durability spawns the swallowed stage as an independent physics ball falling vertically from a random safe board X, without changing the player's current or queued drops, then adds 2 turns to the shared ×1.3 Weakness effect.
 - The recovery variant heals when the response window expires. The launch variant starts with ingestion and deals configured direct player damage using the normal attack animation when the response window expires.
 - The boss has no normal attack phase. It alternates launch and recovery ingestion, immediately telegraphing the next ingestion after each success or interruption. Its launch damage scales to a configured cap while ingestion durability remains fixed.
 - The swallowed ball is not returned on monster success.
@@ -159,12 +159,17 @@ These are not part of the numbered 1–50 test-mechanic sequence, but future dup
 
 Primary runtime evidence: `resources/levels/level_02.tres`, `resources/levels/level_03.tres`, `scripts/ice_skill_controller.gd`, `scripts/monster_action_controller.gd`, and their skill Resources.
 
-## 12. Skill gauge and Break
+## 12. Player skill gauge, Weakness, and Break
 
-- The planning documents describe a player skill gauge, but the inspected runtime has no generic player skill-gauge system. The label named `SkillDurabilityLabel` displays ingestion durability, not a player gauge.
-- The inspected runtime has no generic Break meter shared by all enemies.
-- Ingestion durability is an interruptible mechanic-specific shield. Several numbered test mechanics call bonus enemy damage “BREAK” in feedback, but that is not evidence of a shared Break subsystem.
-- A new mechanic must say “not applicable” for Skill Gauge or Break unless it intentionally reuses an existing concrete system. Do not invent a generic manager just to satisfy a template heading.
+- `CharacterData.player_skill` optionally enables the shared player skill system. The current blue player uses a maximum gauge of 300 and adds 2 turns to Weakness in `resources/skills/player_weakness.tres`; the shared ×1.3 incoming HP-damage multiplier lives in `resources/effects/ingestion_vulnerable.tres`.
+- Every player-owned normal merge immediately grants the result ball's `BallData.merge_score` as gauge. Combo scaling, routed/final damage, defenses, ingestion durability, and damage multipliers do not change this gain.
+- Enemy-owned external merges, overflow removal, mechanic removals, and non-merge damage grant no gauge.
+- Gauge is capped at its maximum, starts at 0 for each stage, persists across the stage's enemy sequence, and is discarded when the battle scene ends.
+- At maximum gauge, the player may use the skill between completed drops while a living current enemy exists and board input is available. Use resets the gauge to 0.
+- Weakness belongs to the current enemy. Player skill use and ingestion interruption add their configured turns to the same remaining-turn counter and status icon. It loses one turn at each completed player turn and is removed on enemy defeat instead of transferring to the next enemy.
+- Weakness multiplies the merge projectile damage remaining after the existing ingestion/test-gimmick routing, immediately before enemy HP damage. It does not amplify ingestion durability damage or alter gauge gain.
+- The icon above the player fills from grayscale to color bottom-to-top; full charge adds a pulsing aura. The enemy's existing status-effect bar displays Weakness and its remaining turns.
+- The inspected runtime still has no generic Break meter shared by all enemies. Ingestion durability is an interruptible mechanic-specific shield, and numbered mechanics using “BREAK” feedback are not a shared Break subsystem.
 
 ## 13. Test-mechanic runtime contract
 
@@ -190,7 +195,7 @@ The following are intentionally not harmonized by guesswork:
 | Merge damage | Result `merge_score` × chain multiplier; one projectile per merge | Common PDF describes result-stage base damage and a combo extra hit | Runtime wins until redesign |
 | Turn settlement | Landing + 500 ms merge quiet, maximum 4 s; full stillness is optional per handler | Planning flow implies full-board settlement before enemy action | Runtime wins; state-reading handlers must wait explicitly |
 | Result velocity | New result has no inherited average source velocity | Older design notes describe inherited/averaged motion | Runtime wins until redesign |
-| Player skill gauge | No generic runtime implementation found | Common PDF includes a skill gauge | Unresolved / not implemented |
+| Player skill gauge | Player-owned normal merges grant result `merge_score`; the configured skill persists through enemy transitions and adds 2 turns to the shared ingestion Weakness | Older notes commonly describe result-stage damage and a combo extra hit | Runtime implementation wins; gauge follows runtime merge damage units |
 | Generic attack queue | No dedicated queue; delayed projectiles are independent | Common PDF describes an attack queue | Unresolved / not implemented |
 | Ice boss | Three ice enemies are registered; the boss freezes two balls with durability 3 and has no frozen-ball cap | Ice PDF includes a boss phase | Runtime wins; any differing PDF boss behavior is design intent only |
 | Ingestion variants | Recovery, launch, and alternating boss variants are registered in campaign level 3 | Older ingestion documents describe the same broad progression with differing tuning | Runtime tuning wins |

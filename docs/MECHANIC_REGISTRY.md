@@ -1,6 +1,6 @@
 # MECHANIC REGISTRY
 
-Last static audit: 2026-08-13  
+Last static audit: 2026-08-25
 Highest registered number: **50**  
 Next available number: **51** (not created or reserved)
 
@@ -99,6 +99,7 @@ Runtime types:
 | Ice | Campaign level 2 telegraphs targets one completed player turn before freezing; frozen balls cannot merge and all ice loses 1 durability per normal merge | `NEEDS_PLAYTEST` | Ball lock, static obstacle, telegraphed target response, global merge-count damage |
 | Ingestion | Campaign level 3 marks and swallows the highest-stage ball; durability can interrupt and return it to the queue. Recovery heals, launch deals direct damage, and the boss alternates both without normal attacks. | `NEEDS_PLAYTEST` | Ball capture, telegraphed targeting, durability shield, queue insertion, success heal/direct damage |
 | Danger line | 1.2 s drop grace and 0.8 s overflow; short forced-movement suppression is available | `NEEDS_PLAYTEST` | Any height, compression, rising floor, or forced-physics mechanic |
+| Player Weakness skill | Player-owned normal merges charge by result `merge_score`; at 300 the player adds 2 turns to the same ×1.3 Weakness used by ingestion interruption | `NEEDS_PLAYTEST` · [contract](mechanics/player_weakness_skill.md) | Any player gauge, active skill, persistent charge, or generic incoming-damage debuff |
 
 ## Validation history and gaps
 

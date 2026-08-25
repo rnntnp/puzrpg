@@ -5,6 +5,7 @@
 
 [resource]
 script = ExtResource("1")
-effect_id = &"ingestion_vulnerable"
-display_name = "포식 저지 · 받는 피해 증가"
+effect_id = &"weakness"
+display_name = "약화 · 받는 피해 증가"
 icon = ExtResource("2")
+incoming_damage_multiplier = 1.3

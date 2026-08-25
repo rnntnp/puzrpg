@@ -40,6 +40,7 @@ var curse_preview := false
 var rewind_turns := 0
 var bumper_cooldown_until_msec := 0
 var danger_marked := false
+var external_merge_token := 0
 var _hitbox_radius := 0.0
 var sleep_assist_enabled := false
 var sleep_assist_settle_time := 1.5
@@ -284,6 +285,10 @@ func has_landed() -> bool:
 func set_ingestion_marked(marked: bool) -> void:
 	ingestion_marked = marked
 	queue_redraw()
+
+
+func set_external_merge_token(token: int) -> void:
+	external_merge_token = maxi(0, token)
 
 
 func set_ice_targeted(targeted: bool) -> void:

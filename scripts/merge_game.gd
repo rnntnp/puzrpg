@@ -16,6 +16,13 @@ signal ingestion_target_replaced(ball: MergeBall)
 signal merge_completed(merged_ball: MergeBall)
 signal merge_registered(result_level: int, origin: Vector2, chain_index: int, source_ids: Array[int], involved_cursed: bool)
 signal player_ball_landed(level: int, drop_x: float)
+signal external_merge_damage_requested(
+	damage: int,
+	combo_count: int,
+	base_points: int,
+	origin: Vector2,
+	ball_level: int
+)
 
 const BallScene = preload("res://scenes/merge_ball.tscn")
 const MergeBurstEffectScene = preload("res://scenes/merge_burst_effect.tscn")
@@ -97,6 +104,10 @@ var combo_effect_tween: Tween
 var queued_levels: Array[int] = []
 var next_merge_resolution_msec := 0
 var dropped_ball_has_landed := false
+var external_merge_window_active := false
+var external_merge_combo_count := 0
+var external_merge_token_serial := 0
+var active_external_merge_token := 0
 var board_inner_left := 96.0
 var board_inner_right := 624.0
 var board_inner_top := 0.0
@@ -202,11 +213,36 @@ func get_active_balls() -> Array:
 	return balls.get_children()
 
 
-func spawn_gimmick_ball(level_index: int, at: Vector2, velocity := Vector2.ZERO) -> MergeBall:
+func spawn_gimmick_ball(
+	level_index: int,
+	at: Vector2,
+	velocity := Vector2.ZERO,
+	external_merge_token := 0
+) -> MergeBall:
 	var ball := _spawn_ball(at, clampi(level_index, 0, max_level_index)) as MergeBall
 	if is_instance_valid(ball):
 		ball.linear_velocity = velocity
+		ball.set_external_merge_token(external_merge_token)
 	return ball
+
+
+func begin_external_merge_window() -> int:
+	external_merge_token_serial += 1
+	active_external_merge_token = external_merge_token_serial
+	external_merge_window_active = true
+	external_merge_combo_count = 0
+	last_merge_msec = Time.get_ticks_msec()
+	return active_external_merge_token
+
+
+func end_external_merge_window() -> void:
+	external_merge_window_active = false
+	external_merge_combo_count = 0
+	active_external_merge_token = 0
+
+
+func is_external_merge_window_active() -> bool:
+	return external_merge_window_active
 
 
 func remove_gimmick_ball(ball: MergeBall) -> void:
@@ -479,6 +515,7 @@ func animate_board_tilt(degrees: float, duration: float) -> void:
 
 
 func reset_gimmick_state() -> void:
+	end_external_merge_window()
 	for tween in active_gimmick_tweens:
 		if tween != null and tween.is_valid():
 			tween.kill()
@@ -836,10 +873,18 @@ func _on_merge_requested(first, second) -> void:
 	var carries_ingestion_target: bool = first.ingestion_marked or second.ingestion_marked
 	var involved_cursed: bool = first.is_merge_cursed or second.is_merge_cursed
 	var source_ids: Array[int] = [first.get_instance_id(), second.get_instance_id()]
+	var result_external_merge_token := 0
+	if external_merge_window_active and active_external_merge_token > 0:
+		if (
+			first.external_merge_token == active_external_merge_token
+			or second.external_merge_token == active_external_merge_token
+		):
+			result_external_merge_token = active_external_merge_token
+	var is_external_merge := result_external_merge_token > 0
 	first.lock_for_merge()
 	second.lock_for_merge()
 	# 연쇄 접촉은 순서를 예약해 하나씩 보여준 뒤 합성한다. 실제 시간 기준이라 FPS와 무관하다.
-	if drop_sequence_active and chain_merge_delay > 0.0:
+	if not is_external_merge and drop_sequence_active and chain_merge_delay > 0.0:
 		var now_msec := Time.get_ticks_msec()
 		var scheduled_msec := now_msec
 		if combo_count > 0:
@@ -855,10 +900,15 @@ func _on_merge_requested(first, second) -> void:
 	second.queue_free()
 	var merged_ball_data: Resource = BallCatalogClass.get_ball(level)
 	var earned_points: int = merged_ball_data.merge_score
-	score += earned_points
-	score_label.text = "점수 %d" % score
 	var attack_combo_count := 1
-	if drop_sequence_active:
+	if is_external_merge:
+		external_merge_combo_count += 1
+		attack_combo_count = external_merge_combo_count
+		last_merge_msec = Time.get_ticks_msec()
+	else:
+		score += earned_points
+		score_label.text = "점수 %d" % score
+	if not is_external_merge and drop_sequence_active:
 		combo_count += 1
 		combo_points += earned_points
 		last_merge_msec = Time.get_ticks_msec()
@@ -866,14 +916,24 @@ func _on_merge_requested(first, second) -> void:
 	merge_registered.emit(level, at, attack_combo_count, source_ids, involved_cursed)
 	_spawn_merge_burst(at, merged_ball_data, attack_combo_count)
 	var merge_damage := _calculate_merge_damage(earned_points, attack_combo_count)
-	if attack_combo_count >= 2:
+	if not is_external_merge and attack_combo_count >= 2:
 		_show_combo_effect(attack_combo_count, merge_damage)
-	_emit_merge_attack_after_delay(merge_damage, attack_combo_count, earned_points, at, level)
-	print("[MERGE] %d단계 + %d단계 -> %d단계 | 획득=%d | 사이클=%s | 콤보=%d | 누적=%d" % [
+	if is_external_merge:
+		external_merge_damage_requested.emit(merge_damage, attack_combo_count, earned_points, at, level)
+	else:
+		_emit_merge_attack_after_delay(merge_damage, attack_combo_count, earned_points, at, level)
+	print("[MERGE] %d단계 + %d단계 -> %d단계 | 획득=%d | 소유=%s | 콤보=%d | 누적=%d" % [
 		level, level, level + 1, earned_points,
-		str(drop_sequence_active), combo_count, combo_points
+		"EXTERNAL" if is_external_merge else "PLAYER", attack_combo_count, combo_points
 	])
-	call_deferred("_spawn_merged_ball", at, level, carries_ingestion_target, attack_combo_count)
+	call_deferred(
+		"_spawn_merged_ball",
+		at,
+		level,
+		carries_ingestion_target,
+		attack_combo_count,
+		result_external_merge_token
+	)
 
 
 func _spawn_merge_burst(at: Vector2, data: Resource, merge_combo_count: int) -> void:
@@ -886,9 +946,12 @@ func _spawn_merged_ball(
 	at: Vector2,
 	level: int,
 	carries_ingestion_target: bool = false,
-	merge_combo_count: int = 1
+	merge_combo_count: int = 1,
+	external_merge_token: int = 0
 ) -> void:
 	var merged_ball = _spawn_ball(at, level)
+	if is_instance_valid(merged_ball):
+		merged_ball.set_external_merge_token(external_merge_token)
 	if carries_ingestion_target and is_instance_valid(merged_ball):
 		merged_ball.set_ingestion_marked(true)
 		ingestion_target_replaced.emit(merged_ball)

@@ -148,12 +148,13 @@ These are not part of the numbered 1–50 test-mechanic sequence, but future dup
 
 ### Ingestion
 
-- Campaign level 3 currently contains one recovery-ingestion enemy.
+- Campaign level 3 contains a recovery-ingestion enemy, a launch-ingestion enemy, and an alternating ingestion boss in that order.
 - After a normal attack, it telegraphs and marks the highest-stage eligible ball. On execution that ball is removed from the board and stored by stage.
-- During the response window, player merge damage first reduces ingestion durability. Breaking durability returns the swallowed stage immediately after the current preview, then applies a temporary incoming-damage multiplier to the enemy.
-- If the response window succeeds, the enemy heals and the swallowed ball is not returned.
-- If the enemy dies while holding a ball, that stage is returned to the queue.
-- Only the recovery-ingestion variant is registered in the current campaign.
+- During the response window, player merge damage first reduces ingestion durability. Breaking durability spawns the swallowed stage as an independent physics ball falling vertically from a random safe board X, without changing the player's current or queued drops, then applies a temporary incoming-damage multiplier to the enemy.
+- The recovery variant heals when the response window expires. The launch variant starts with ingestion and deals configured direct player damage using the normal attack animation when the response window expires.
+- The boss has no normal attack phase. It alternates launch and recovery ingestion, immediately telegraphing the next ingestion after each success or interruption. Its launch damage scales to a configured cap while ingestion durability remains fixed.
+- The swallowed ball is not returned on monster success.
+- If the enemy dies while holding a ball, that stage is returned through the same independent random-X board drop.
 
 Primary runtime evidence: `resources/levels/level_02.tres`, `resources/levels/level_03.tres`, `scripts/ice_skill_controller.gd`, `scripts/monster_action_controller.gd`, and their skill Resources.
 
@@ -191,6 +192,6 @@ The following are intentionally not harmonized by guesswork:
 | Player skill gauge | No generic runtime implementation found | Common PDF includes a skill gauge | Unresolved / not implemented |
 | Generic attack queue | No dedicated queue; delayed projectiles are independent | Common PDF describes an attack queue | Unresolved / not implemented |
 | Ice boss | Three ice enemies are registered; the boss freezes two balls with durability 3 and has no frozen-ball cap | Ice PDF includes a boss phase | Runtime wins; any differing PDF boss behavior is design intent only |
-| Ingestion variants | One recovery variant registered | Ingestion PDF describes additional variants | Design intent only |
+| Ingestion variants | Recovery, launch, and alternating boss variants are registered in campaign level 3 | Older ingestion documents describe the same broad progression with differing tuning | Runtime tuning wins |
 
 Changing one of these requires an explicit core-rule decision and an update to this table, affected code, and related mechanics.

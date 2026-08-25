@@ -597,11 +597,18 @@ func animate_ball_consumption(ball: MergeBall, target_global_position: Vector2, 
 	return true
 
 
-func insert_ball_after_current(level: int) -> void:
-	var previous_next := next_level
-	next_level = clampi(level, 0, max_level_index)
-	queued_levels.push_front(previous_next)
-	_refresh_preview()
+func return_ingested_ball_to_board(level: int) -> MergeBall:
+	var safe_level := clampi(level, 0, max_level_index)
+	var ball_data = BallCatalogClass.get_ball(safe_level)
+	var radius := 26.0
+	if ball_data != null:
+		radius = maxf(radius, ball_data.get_radius())
+	var minimum_x := board_inner_left + radius
+	var maximum_x := board_inner_right - radius
+	var spawn_x := (minimum_x + maximum_x) * 0.5
+	if minimum_x < maximum_x:
+		spawn_x = randf_range(minimum_x, maximum_x)
+	return _spawn_ball(Vector2(spawn_x, drop_position_y), safe_level) as MergeBall
 
 func configure(
 	time_limit: float,

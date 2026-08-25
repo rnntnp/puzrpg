@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="IngestionSkillData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/ingestion_skill_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+start_with_ingestion = true
+repeat_ingestion_without_normal_attack = true
+alternate_launch_and_heal = true
+launch_first = true
+telegraph_turns = 3
+durability = 60
+durability_increase_per_use = 0
+maximum_durability = 60
+response_turns = 4
+heal_amount = 40
+launch_damage = 12
+launch_damage_increase_per_use = 3
+maximum_launch_damage = 18
+interrupted_damage_multiplier = 1.3
+interrupted_debuff_turns = 2

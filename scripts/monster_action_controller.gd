@@ -29,6 +29,11 @@ var using_test_gimmick := false
 var state := State.NORMAL_ATTACK
 var remaining_turns := 0
 var current_durability := 0
+var active_durability_max := 0
+var ingestion_executions := 0
+var active_ingestion_is_launch := false
+var active_launch_damage := 0
+var launch_executions := 0
 var swallowed_ball_level := -1
 var target_ball: MergeBall
 var vulnerable_turns := 0
@@ -59,6 +64,11 @@ func configure(
 	_state_version += 1
 	_clear_target()
 	swallowed_ball_level = -1
+	active_durability_max = 0
+	ingestion_executions = 0
+	active_ingestion_is_launch = false
+	active_launch_damage = 0
+	launch_executions = 0
 	vulnerable_turns = 0
 	status_effects.clear_effects()
 	durability_label.visible = false
@@ -67,7 +77,10 @@ func configure(
 	if using_test_gimmick:
 		test_gimmick_controller.configure(battle, enemy, player, merge_game, battle.level_data.test_gimmick)
 		return
-	_enter_normal_attack()
+	if skill != null and skill.start_with_ingestion:
+		_enter_ingestion_telegraph()
+	else:
+		_enter_normal_attack()
 	if not merge_game.ingestion_target_replaced.is_connected(_on_target_replaced):
 		merge_game.ingestion_target_replaced.connect(_on_target_replaced)
 
@@ -131,7 +144,7 @@ func on_enemy_defeated() -> void:
 	enemy.clear_visual_override()
 	enemy.hide_ingestion_glow()
 	if swallowed_ball_level >= 0:
-		merge_game.insert_ball_after_current(swallowed_ball_level)
+		merge_game.return_ingested_ball_to_board(swallowed_ball_level)
 	_state_version += 1
 	_clear_target()
 	status_effects.clear_effects()
@@ -157,14 +170,18 @@ func _enter_normal_attack() -> void:
 
 func _enter_ingestion_telegraph() -> void:
 	battle.clear_player_damage_preview()
+	enemy.hide_ingestion_glow()
 	state = State.INGESTION_TELEGRAPH
+	current_durability = 0
+	durability_label.visible = false
+	active_ingestion_is_launch = _is_launch_ingestion()
 	enemy.set_visual_override(enemy.character_data.ingestion_telegraph_sprite)
 	remaining_turns = skill.telegraph_turns
 	status_effects.remove_effect(EnemyAttackEffect.effect_id)
 	status_effects.remove_effect(IceEffect.effect_id)
 	status_effects.set_effect(IngestionEffect, remaining_turns)
 	_select_target()
-	battle.status_label.text = "회복 포식 예고"
+	battle.status_label.text = "발사 포식 예고" if active_ingestion_is_launch else "회복 포식 예고"
 	battle.status_label.modulate = Color("#d79cff")
 
 
@@ -190,7 +207,20 @@ func _execute_ingestion() -> void:
 	enemy.show_ingestion_glow(swallowed_color)
 	state = State.INGESTION_RESPONSE
 	remaining_turns = skill.response_turns
-	current_durability = skill.durability
+	active_durability_max = mini(
+		skill.maximum_durability,
+		skill.durability + skill.durability_increase_per_use * ingestion_executions
+	)
+	current_durability = active_durability_max
+	if active_ingestion_is_launch:
+		active_launch_damage = mini(
+			skill.maximum_launch_damage,
+			skill.launch_damage + skill.launch_damage_increase_per_use * launch_executions
+		)
+		launch_executions += 1
+	else:
+		active_launch_damage = 0
+	ingestion_executions += 1
 	status_effects.set_effect(IngestionEffect, remaining_turns)
 	durability_label.visible = true
 	battle.status_label.text = "포식 저지! 내구도를 파괴하세요"
@@ -204,14 +234,14 @@ func _execute_ingestion() -> void:
 func _interrupt_ingestion() -> void:
 	_state_version += 1
 	if swallowed_ball_level >= 0:
-		merge_game.insert_ball_after_current(swallowed_ball_level)
+		merge_game.return_ingested_ball_to_board(swallowed_ball_level)
 		swallowed_ball_level = -1
 	vulnerable_turns = skill.interrupted_debuff_turns
 	status_effects.set_effect(VulnerableEffect, vulnerable_turns)
-	battle.status_label.text = "포식 저지 성공!"
+	battle.status_label.text = "포식 저지 성공! 삼킨 공이 보드로 돌아옵니다"
 	battle.status_label.modulate = Color("#ffe066")
 	print("[INGESTION INTERRUPTED] vulnerable_turns=%d" % vulnerable_turns)
-	_enter_normal_attack()
+	_enter_post_ingestion_state()
 	status_effects.set_effect(VulnerableEffect, vulnerable_turns)
 
 
@@ -221,12 +251,33 @@ func _schedule_ingestion_success() -> void:
 	if version != _state_version or state != State.INGESTION_RESPONSE or current_durability <= 0:
 		return
 	_state_version += 1
-	enemy.heal(skill.heal_amount)
 	swallowed_ball_level = -1
-	battle.status_label.text = "포식 성공 · HP %d 회복" % skill.heal_amount
-	battle.status_label.modulate = Color("#67dc83")
-	print("[INGESTION SUCCEEDED] heal=%d" % skill.heal_amount)
-	_enter_normal_attack()
+	if active_ingestion_is_launch:
+		enemy.attack_with_damage(player, active_launch_damage)
+		battle.status_label.text = "포식 성공 · 발사 피해 %d" % active_launch_damage
+		battle.status_label.modulate = Color("#ff765f")
+		print("[INGESTION SUCCEEDED] launch_damage=%d" % active_launch_damage)
+	else:
+		enemy.heal(skill.heal_amount)
+		battle.status_label.text = "포식 성공 · HP %d 회복" % skill.heal_amount
+		battle.status_label.modulate = Color("#67dc83")
+		print("[INGESTION SUCCEEDED] heal=%d" % skill.heal_amount)
+	if player.is_alive():
+		_enter_post_ingestion_state()
+
+
+func _enter_post_ingestion_state() -> void:
+	if skill.repeat_ingestion_without_normal_attack:
+		_enter_ingestion_telegraph()
+	else:
+		_enter_normal_attack()
+
+
+func _is_launch_ingestion() -> bool:
+	if not skill.alternate_launch_and_heal:
+		return skill.launch_damage > 0
+	var even_ingestion := ingestion_executions % 2 == 0
+	return even_ingestion if skill.launch_first else not even_ingestion
 
 
 func _schedule_vulnerability_tick() -> void:
@@ -281,7 +332,7 @@ func _update_ui() -> void:
 		State.INGESTION_TELEGRAPH, State.INGESTION_RESPONSE:
 			status_effects.set_effect(IngestionEffect, remaining_turns)
 	if state == State.INGESTION_RESPONSE:
-		durability_label.text = "포식 내구도 %d / %d" % [current_durability, skill.durability]
+		durability_label.text = "포식 내구도 %d / %d" % [current_durability, active_durability_max]
 
 
 func _run_ice_turn() -> void:

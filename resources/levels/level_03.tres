@@ -6,6 +6,8 @@
 [ext_resource type="Script" uid="uid://duu5mev8uwp8d" path="res://scripts/character_data.gd" id="4"]
 [ext_resource type="Texture2D" uid="uid://c3vhyr1ewy74w" path="res://assets/backgrounds/cave_battle_background_inpainted.png" id="5"]
 [ext_resource type="Texture2D" uid="uid://dy4hcy7jmubx2" path="res://assets/effects/generated/status_ingestion.png" id="7_gimmick"]
+[ext_resource type="Resource" path="res://resources/characters/launch_ingester.tres" id="8_launch"]
+[ext_resource type="Resource" path="res://resources/characters/ingestion_boss.tres" id="9_boss"]
 
 [resource]
 script = ExtResource("1")
@@ -15,10 +17,10 @@ LEVEL IMAGE"
 battle_background = ExtResource("5")
 recommended_ball_level = 7
 stage_gimmick_icon = ExtResource("7_gimmick")
-stage_gimmick_name = "포식 · 회복"
+stage_gimmick_name = "포식 · 회복/발사"
 reward_name = "수정 보물상자"
 player_character = ExtResource("2")
-enemies = Array[ExtResource("4")]([ExtResource("3")])
+enemies = Array[ExtResource("4")]([ExtResource("3"), ExtResource("8_launch"), ExtResource("9_boss")])
 ball_drop_time_limit = -1.0
 merge_hit_stop_time_scale = 0.18
 merge_hit_stop_duration = 0.2

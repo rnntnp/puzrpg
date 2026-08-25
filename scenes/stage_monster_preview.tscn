@@ -1,4 +1,4 @@
-[gd_scene load_steps=12 format=3 uid="uid://cfgqgnw2kvrip"]
+[gd_scene format=3 uid="uid://cfgqgnw2kvrip"]
 
 [ext_resource type="Script" uid="uid://c4ipgqjh5mxnv" path="res://scripts/stage_monster_preview.gd" id="1_script"]
 [ext_resource type="Resource" uid="uid://vj6xbbyn4q28" path="res://resources/characters/ice_monster_enhanced.tres" id="3_v3ffy"]

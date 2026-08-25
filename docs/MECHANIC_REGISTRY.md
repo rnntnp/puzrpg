@@ -42,7 +42,7 @@ Runtime types:
 |---:|---|---|---|---|---|
 | 1 | 공 거대화 | At its action, the enemy enlarges the highest eligible non-enlarged ball, up to the configured target cap. | Legacy · 1 enemy · [level](../resources/levels/test_01_enlarge.tres) | `NEEDS_PLAYTEST` | 2, 3, 4 |
 | 2 | 공 중량화 | At its action, the enemy increases the mass of the highest eligible non-heavy ball. | Legacy · 1 enemy · [level](../resources/levels/test_02_heavy.tres) | `NEEDS_PLAYTEST` | 1, 36, 37, 39 |
-| 3 | 공 분열 | The selected highest-stage eligible ball is replaced by two balls one stage lower. | Legacy · 1 enemy · [level](../resources/levels/test_03_split.tres) | `NEEDS_PLAYTEST` | 1, 4, 19 |
+| 3 | 공 분열 | The highest-stage landed ball within the upper board band is split once, Twist selects two, and the Boss cascades one target from one ball to two then four two stages lower. | Modular · 3 enemies · [spec](mechanics/003_ball_split.md) · [level](../resources/levels/test_03_split.tres) · [handler](../scripts/gimmicks/handlers/split_cascade_handler.gd) | `NEEDS_PLAYTEST` | 1, 4, 19 |
 | 4 | 공 복제 | The selected eligible ball creates another ball of the same stage at the drop area. | Legacy · 1 enemy · [level](../resources/levels/test_04_duplicate.tres) | `NEEDS_PLAYTEST` | 1, 3, 30 |
 | 5 | 좌우 보드 압축 | Repeated actions move both side walls inward in configured steps, reducing board width. | Legacy · 1 enemy · [level](../resources/levels/test_05_compress.tres) | `NEEDS_PLAYTEST` | 6, 7, 25, 34, 42 |
 | 6 | 바닥 상승 | Repeated actions raise the base floor in configured steps, reducing board height. | Legacy · 1 enemy · [level](../resources/levels/test_06_raise_floor.tres) | `NEEDS_PLAYTEST` | 5, 21, 25, 39 |

@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="LevelData" load_steps=9 format=3]
+[gd_resource type="Resource" script_class="LevelData" load_steps=15 format=3]
 
 [ext_resource type="Script" path="res://scripts/level_data.gd" id="1_level"]
 [ext_resource type="Resource" path="res://resources/characters/blue_fighter.tres" id="2_player"]
@@ -8,6 +8,66 @@
 [ext_resource type="Texture2D" path="res://assets/backgrounds/stage_01_moonlit_pond.png" id="6_background"]
 [ext_resource type="Texture2D" path="res://assets/level_previews/level_01_preview.png" id="7_preview"]
 [ext_resource type="Texture2D" path="res://assets/effects/generated/status_attack.png" id="8_icon"]
+[ext_resource type="Resource" path="res://resources/characters/prototype_gimmick_enemy_1.tres" id="9_enemy_1"]
+[ext_resource type="Resource" path="res://resources/characters/prototype_gimmick_enemy_2.tres" id="10_enemy_2"]
+[ext_resource type="Resource" path="res://resources/characters/prototype_gimmick_boss.tres" id="11_boss"]
+[ext_resource type="Script" path="res://scripts/gimmicks/handlers/split_cascade_handler.gd" id="12_handler"]
+[ext_resource type="Script" path="res://scripts/gimmicks/configs/split_cascade_config.gd" id="13_config"]
+
+[sub_resource type="Resource" id="SplitCascadeConfig"]
+script = ExtResource("13_config")
+enemy_modes = Array[int]([0, 1, 2])
+action_intervals = Array[int]([4, 5, 4])
+partial_split_bonus_damage = Array[int]([0, 5, 0])
+split_damage = Array[int]([5, 5, 7])
+incomplete_split_damage = Array[int]([10, 10, 10])
+minimum_target_stage = 3
+maximum_target_stage = 11
+minimum_target_stages = Array[int]([2, 2, 3])
+normal_spawn_offset_radius_ratio = 0.2
+normal_spawn_min_offset = 8.0
+normal_spawn_lift_radius_ratio = 0.25
+normal_sibling_clearance = 10.0
+normal_sibling_min_grace = 0.3
+normal_sibling_max_grace = 0.8
+enemy_one_anticipation_duration = 0.15
+enemy_one_stack_low_fill_ratio = 0.45
+enemy_one_stack_high_fill_ratio = 0.8
+enemy_one_crowded_lift_base_distance = 80.0
+enemy_one_crowded_lift_radius_ratio = 0.25
+enemy_one_crowded_lift_max_distance = 140.0
+enemy_one_lift_speed = 400.0
+enemy_one_lift_min_duration = 0.4
+enemy_one_lift_max_duration = 1.0
+enemy_one_arrival_hold_duration = 0.15
+enemy_one_split_pulse_duration = 0.1
+enemy_one_recovery_duration = 0.1
+enemy_one_board_top_margin = 20.0
+enemy_one_danger_safety_margin = 12.0
+enemy_one_split_x_ratio = 0.5
+enemy_one_split_velocity = Vector2(520, 0)
+enemy_one_horizontal_speed_per_radius = 1.5
+enemy_one_horizontal_speed_max = 850.0
+enemy_two_anticipation_duration = 0.1
+enemy_two_lift_min_duration = 0.3
+enemy_two_lift_max_duration = 0.65
+enemy_two_arrival_hold_duration = 0.1
+enemy_two_split_pulse_duration = 0.1
+enemy_two_inter_split_delay = 0.12
+enemy_two_recovery_duration = 0.1
+boss_anticipation_duration = 0.15
+boss_lift_min_duration = 0.35
+boss_lift_max_duration = 0.75
+boss_arrival_hold_duration = 0.1
+boss_first_split_pulse_duration = 0.1
+boss_first_split_velocity = Vector2(360, 0)
+boss_first_horizontal_speed_per_radius = 1.0
+boss_first_horizontal_speed_max = 600.0
+boss_first_branch_gap = 40.0
+boss_first_generation_hold = 0.12
+boss_second_split_pulse_duration = 0.1
+boss_inter_branch_delay = 0.15
+boss_recovery_duration = 0.1
 
 [sub_resource type="Resource" id="Gimmick"]
 script = ExtResource("5_gimmick")
@@ -17,10 +77,10 @@ monster_health = 270
 normal_attack_damage = 5
 action_interval = 5
 normal_attack_interval = 3
-minimum_ball_stage = 3
-maximum_ball_stage = 11
-spawn_offset = Vector2(52, -55)
-initial_velocity = Vector2(180, -600)
+enemy_healths = Array[int]([500, 750, 1000])
+preserve_board_between_enemies = true
+handler_script = ExtResource("12_handler")
+tuning = SubResource("SplitCascadeConfig")
 
 [resource]
 script = ExtResource("1_level")
@@ -33,10 +93,9 @@ stage_gimmick_icon = ExtResource("8_icon")
 stage_gimmick_name = "공 분열"
 reward_name = "기믹 플레이테스트"
 player_character = ExtResource("2_player")
-enemies = Array[ExtResource("4_character")]([ExtResource("3_enemy"), ExtResource("3_enemy")])
+enemies = Array[ExtResource("4_character")]([ExtResource("9_enemy_1"), ExtResource("10_enemy_2"), ExtResource("11_boss")])
 is_gimmick_test_level = true
 test_gimmick = SubResource("Gimmick")
-enemy_healths = Array[int]([270, 340])
 ball_drop_time_limit = -1.0
 merge_hit_stop_time_scale = 0.18
 merge_hit_stop_duration = 0.2

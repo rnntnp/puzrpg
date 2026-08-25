@@ -21,6 +21,7 @@ var is_ice_frozen := false
 var ice_durability := 0
 var ice_targeted := false
 var split_targeted := false
+var split_target_color := Color("#ffd166")
 var horizontal_bounds_enabled := false
 var horizontal_bound_left := 0.0
 var horizontal_bound_right := 720.0
@@ -293,8 +294,10 @@ func set_danger_marked(marked: bool) -> void:
 	queue_redraw()
 
 
-func set_split_targeted(targeted: bool) -> void:
+func set_split_targeted(targeted: bool, marker_color: Color = Color("#ffd166")) -> void:
 	split_targeted = targeted
+	if targeted:
+		split_target_color = marker_color
 	queue_redraw()
 
 
@@ -373,7 +376,8 @@ func _draw() -> void:
 	if danger_marked:
 		draw_arc(Vector2.ZERO, radius + 12.0, 0.0, TAU, 40, Color("#ff4d5f"), 7.0, true)
 	if split_targeted:
-		draw_arc(Vector2.ZERO, radius + 10.0, 0.0, TAU, 40, Color("#ffd166"), 5.0, true)
+		var split_marker_radius := get_radius()
+		draw_arc(Vector2.ZERO, split_marker_radius + 4.0, 0.0, TAU, 40, split_target_color, 4.0, true)
 	if is_ice_frozen:
 		var ice_fill := Color(0.45, 0.32, 0.95, 0.48)
 		var ice_ring := Color("#d5b8ff")

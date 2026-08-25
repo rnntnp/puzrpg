@@ -17,11 +17,15 @@ extends Control
 @onready var value_label: Label = $ValueLabel
 @onready var value_label_background: TextureRect = $ValueLabelBackground
 @onready var full_health_fill: Panel = $FullHealthFill
+@onready var durability_fill: Panel = $DurabilityFill
 @onready var damage_preview_fill: Panel = $DamagePreviewFill
 
 var current_health := 100
 var maximum_health := 100
 var predicted_damage := 0
+var durability_active := false
+var current_durability := 0
+var maximum_durability := 1
 var _full_fill_size := Vector2.ZERO
 
 
@@ -31,6 +35,7 @@ func _ready() -> void:
 	value_label_background.position.x = 130.0 if right_aligned else -22.0
 	_refresh_value_text()
 	_refresh_fill_style()
+	_refresh_durability()
 	_refresh_fill_size()
 	_refresh_damage_preview_style()
 	_refresh_damage_preview()
@@ -53,13 +58,34 @@ func clear_predicted_damage() -> void:
 	set_predicted_damage(0)
 
 
+func set_durability(value: int, maximum: int) -> void:
+	maximum_durability = maxi(1, maximum)
+	current_durability = clampi(value, 0, maximum_durability)
+	durability_active = true
+	_refresh_value_text()
+	_refresh_durability()
+
+
+func clear_durability() -> void:
+	durability_active = false
+	current_durability = 0
+	_refresh_value_text()
+	_refresh_durability()
+
+
 func _refresh_value_text() -> void:
 	if is_instance_valid(value_label):
-		value_label.text = "%d / %d" % [current_health, maximum_health]
+		if durability_active:
+			value_label.text = "내구도 %d / %d" % [current_durability, maximum_durability]
+		else:
+			value_label.text = "%d / %d" % [current_health, maximum_health]
 
 
 func _refresh_fill_size() -> void:
 	if not is_instance_valid(full_health_fill):
+		return
+	if durability_active:
+		full_health_fill.visible = false
 		return
 	var health_ratio := clampf(float(current_health) / float(maximum_health), 0.0, 1.0)
 	full_health_fill.visible = health_ratio > 0.0
@@ -89,6 +115,19 @@ func _refresh_damage_preview() -> void:
 		remaining_ratio <= 0.0001,
 		current_ratio >= 0.9999
 	)
+
+
+func _refresh_durability() -> void:
+	if not is_instance_valid(durability_fill):
+		return
+	durability_fill.visible = durability_active and current_durability > 0
+	_refresh_fill_size()
+	if not durability_fill.visible:
+		return
+	var durability_ratio := clampf(
+		float(current_durability) / float(maximum_durability), 0.0, 1.0
+	)
+	durability_fill.size = Vector2(_full_fill_size.x * durability_ratio, _full_fill_size.y)
 
 func _refresh_fill_style() -> void:
 	if not is_instance_valid(full_health_fill):

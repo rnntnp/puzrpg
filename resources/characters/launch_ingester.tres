@@ -2,21 +2,20 @@
 
 [ext_resource type="Script" path="res://scripts/character_data.gd" id="1"]
 [ext_resource type="Resource" path="res://resources/skills/launch_ingestion.tres" id="2"]
-[ext_resource type="Texture2D" path="res://assets/characters/generated/crystal_toad_normal.png" id="3_normal"]
-[ext_resource type="Texture2D" path="res://assets/characters/generated/crystal_toad_telegraph.png" id="4_telegraph"]
-[ext_resource type="Texture2D" path="res://assets/characters/generated/crystal_toad_swallowed.png" id="5_swallowed"]
+[ext_resource type="Texture2D" path="res://assets/characters/generated/crystal_toad_launch_idle_v5.png" id="3_normal"]
+[ext_resource type="Texture2D" path="res://assets/characters/generated/crystal_toad_launch_telegraph_v1.png" id="4_telegraph"]
+[ext_resource type="Texture2D" path="res://assets/characters/generated/crystal_toad_launch_swallowed_v1.png" id="5_swallowed"]
 
 [resource]
 script = ExtResource("1")
 display_name = "수정 포식 사수"
-health_bar_color = Color(0.78, 0.24, 0.16, 1)
+health_bar_color = Color(0.94, 0.32, 0.16, 1)
 sprite = ExtResource("3_normal")
 ingestion_telegraph_sprite = ExtResource("4_telegraph")
 ingestion_swallowed_sprite = ExtResource("5_swallowed")
 ingestion_mouth_offset = Vector2(-58, -8)
 ingestion_belly_glow_offset = Vector2(-12, 38)
-sprite_modulate = Color(1, 0.78, 0.72, 1)
-sprite_size = Vector2(205, 205)
+sprite_size = Vector2(235, 170)
 max_health = 500
 attack_power = 3
 enemy_attack_drop_interval = 2

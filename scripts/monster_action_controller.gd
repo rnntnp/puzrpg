@@ -9,6 +9,7 @@ enum State {
 
 const EnemyAttackEffect: StatusEffectData = preload("res://resources/effects/enemy_attack_countdown.tres")
 const IngestionEffect: StatusEffectData = preload("res://resources/effects/ingestion_countdown.tres")
+const IngestionDurabilityEffect: StatusEffectData = preload("res://resources/effects/ingestion_durability.tres")
 const WeaknessEffect: StatusEffectData = preload("res://resources/effects/ingestion_vulnerable.tres")
 const IceEffect: StatusEffectData = preload("res://resources/effects/ice_countdown.tres")
 const IceSkillDataClass = preload("res://scripts/ice_skill_data.gd")
@@ -19,7 +20,8 @@ var enemy: Fighter
 var player: Fighter
 var merge_game: MergeGame
 var status_effects: StatusEffectBar
-var durability_label: Label
+var applied_status_effects: StatusEffectBar
+var durability_bar: WaterHealthBar
 var skill: IngestionSkillData
 var ice_skill: IceSkillDataClass
 var ice_controller: IceSkillControllerClass
@@ -46,14 +48,16 @@ func configure(
 	player_fighter: Fighter,
 	game: MergeGame,
 	effect_bar: StatusEffectBar,
-	durability_ui: Label
+	applied_effect_bar: StatusEffectBar,
+	durability_ui: WaterHealthBar
 ) -> void:
 	battle = battle_node
 	enemy = enemy_fighter
 	player = player_fighter
 	merge_game = game
 	status_effects = effect_bar
-	durability_label = durability_ui
+	applied_status_effects = applied_effect_bar
+	durability_bar = durability_ui
 	skill = enemy.character_data.ingestion_skill as IngestionSkillData
 	ice_skill = enemy.character_data.ice_skill as IceSkillDataClass
 	ice_controller = get_node("IceSkillController") as IceSkillControllerClass
@@ -71,7 +75,8 @@ func configure(
 	launch_executions = 0
 	vulnerable_turns = 0
 	status_effects.clear_effects()
-	durability_label.visible = false
+	applied_status_effects.clear_effects()
+	durability_bar.clear_durability()
 	battle.clear_player_damage_preview()
 	using_test_gimmick = battle.level_data != null and battle.level_data.test_gimmick != null
 	if using_test_gimmick:
@@ -145,13 +150,13 @@ func add_weakness_turns(turns: int) -> int:
 	if turns <= 0:
 		return vulnerable_turns
 	vulnerable_turns += turns
-	status_effects.set_effect(WeaknessEffect, vulnerable_turns)
+	applied_status_effects.set_effect(WeaknessEffect, vulnerable_turns)
 	return vulnerable_turns
 
 
 func on_enemy_defeated() -> void:
 	vulnerable_turns = 0
-	status_effects.remove_effect(WeaknessEffect.effect_id)
+	applied_status_effects.remove_effect(WeaknessEffect.effect_id)
 	if using_test_gimmick:
 		var has_next_enemy: bool = battle.current_enemy_index + 1 < battle.level_data.enemies.size()
 		if not has_next_enemy or not test_gimmick_controller.should_preserve_between_enemies():
@@ -162,10 +167,12 @@ func on_enemy_defeated() -> void:
 	enemy.hide_ingestion_glow()
 	if swallowed_ball_level >= 0:
 		merge_game.return_ingested_ball_to_board(swallowed_ball_level)
+		battle.play_ingestion_spit_sfx()
 	_state_version += 1
 	_clear_target()
 	status_effects.clear_effects()
-	durability_label.visible = false
+	applied_status_effects.clear_effects()
+	durability_bar.clear_durability()
 	if ice_controller != null:
 		ice_controller.clear_all_ice()
 
@@ -184,7 +191,8 @@ func _enter_normal_attack() -> void:
 		status_effects.set_effect(IceEffect, remaining_turns)
 		if remaining_turns == 1:
 			ice_controller.begin_telegraph()
-	durability_label.visible = false
+	durability_bar.clear_durability()
+	applied_status_effects.remove_effect(IngestionDurabilityEffect.effect_id)
 
 
 func _enter_ingestion_telegraph() -> void:
@@ -192,7 +200,8 @@ func _enter_ingestion_telegraph() -> void:
 	enemy.hide_ingestion_glow()
 	state = State.INGESTION_TELEGRAPH
 	current_durability = 0
-	durability_label.visible = false
+	durability_bar.clear_durability()
+	applied_status_effects.remove_effect(IngestionDurabilityEffect.effect_id)
 	active_ingestion_is_launch = _is_launch_ingestion()
 	enemy.set_visual_override(enemy.character_data.ingestion_telegraph_sprite)
 	remaining_turns = skill.telegraph_turns
@@ -222,6 +231,7 @@ func _execute_ingestion() -> void:
 	)
 	if not consumed or not is_instance_valid(enemy) or not enemy.is_alive():
 		return
+	battle.play_ingestion_swallow_sfx()
 	enemy.set_visual_override(enemy.character_data.ingestion_swallowed_sprite)
 	enemy.show_ingestion_glow(swallowed_color)
 	state = State.INGESTION_RESPONSE
@@ -241,7 +251,7 @@ func _execute_ingestion() -> void:
 		active_launch_damage = 0
 	ingestion_executions += 1
 	status_effects.set_effect(IngestionEffect, remaining_turns)
-	durability_label.visible = true
+	applied_status_effects.set_effect(IngestionDurabilityEffect, 0)
 	battle.status_label.text = "포식 저지! 내구도를 파괴하세요"
 	_update_ui()
 	merge_game.set_input_enabled(true)
@@ -254,6 +264,7 @@ func _interrupt_ingestion() -> void:
 	_state_version += 1
 	if swallowed_ball_level >= 0:
 		merge_game.return_ingested_ball_to_board(swallowed_ball_level)
+		battle.play_ingestion_spit_sfx()
 		swallowed_ball_level = -1
 	add_weakness_turns(skill.interrupted_debuff_turns)
 	battle.status_label.text = "포식 저지 성공! 삼킨 공이 보드로 돌아옵니다"
@@ -302,9 +313,9 @@ func _advance_weakness_turn() -> void:
 		return
 	vulnerable_turns -= 1
 	if vulnerable_turns <= 0:
-		status_effects.remove_effect(WeaknessEffect.effect_id)
+		applied_status_effects.remove_effect(WeaknessEffect.effect_id)
 	else:
-		status_effects.set_effect(WeaknessEffect, vulnerable_turns)
+		applied_status_effects.set_effect(WeaknessEffect, vulnerable_turns)
 
 
 func _select_target() -> void:
@@ -319,7 +330,7 @@ func _select_target() -> void:
 		return a.merge_level > b.merge_level
 	)
 	target_ball = candidates.front()
-	target_ball.set_ingestion_marked(true)
+	target_ball.set_ingestion_marked(true, enemy.character_data.health_bar_color)
 	print("[INGESTION TARGET] level=%d" % (target_ball.merge_level + 1))
 
 
@@ -333,6 +344,7 @@ func _on_target_replaced(ball: MergeBall) -> void:
 	if state != State.INGESTION_TELEGRAPH:
 		return
 	target_ball = ball
+	target_ball.set_ingestion_marked(true, enemy.character_data.health_bar_color)
 	print("[INGESTION TARGET TRANSFER] level=%d" % (ball.merge_level + 1))
 
 
@@ -345,7 +357,7 @@ func _update_ui() -> void:
 		State.INGESTION_TELEGRAPH, State.INGESTION_RESPONSE:
 			status_effects.set_effect(IngestionEffect, remaining_turns)
 	if state == State.INGESTION_RESPONSE:
-		durability_label.text = "포식 내구도 %d / %d" % [current_durability, active_durability_max]
+		durability_bar.set_durability(current_durability, active_durability_max)
 
 
 func _run_ice_turn() -> void:

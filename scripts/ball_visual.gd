@@ -46,6 +46,7 @@ var _gloss_was_visible := true
 var _is_frozen_visual := false
 var _ice_target_outline: Sprite2D
 var _ice_targeted_visual := false
+var _target_wave_color := ice_target_wave_color
 
 
 func _ready() -> void:
@@ -80,8 +81,13 @@ func set_frozen_visual(enabled: bool) -> void:
 
 
 func set_ice_targeted_visual(enabled: bool) -> void:
+	set_targeted_visual(enabled, ice_target_wave_color)
+
+
+func set_targeted_visual(enabled: bool, color: Color) -> void:
 	_setup_ice_target_outline()
 	_ice_targeted_visual = enabled
+	_target_wave_color = color
 	if _ice_target_outline != null:
 		_ice_target_outline.visible = enabled
 	_last_global_scale = -1.0
@@ -212,4 +218,6 @@ func _update_ice_target_outline_width(safe_scale: float, texture_size: Vector2) 
 	target_material.set_shader_parameter("start_radius", start_radius)
 	target_material.set_shader_parameter("wave_width", wave_uv_width)
 	target_material.set_shader_parameter("cycle_seconds", ice_target_wave_cycle_seconds)
-	target_material.set_shader_parameter("wave_color", ice_target_wave_color)
+	var wave_color := _target_wave_color
+	wave_color.a = ice_target_wave_color.a
+	target_material.set_shader_parameter("wave_color", wave_color)

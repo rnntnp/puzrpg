@@ -8,6 +8,9 @@
 [ext_resource type="Texture2D" uid="uid://df4mtl8v4cqg0" path="res://assets/effects/generated/status_ingestion_simple.png" id="7_gimmick"]
 [ext_resource type="Resource" path="res://resources/characters/launch_ingester.tres" id="8_launch"]
 [ext_resource type="Resource" path="res://resources/characters/ingestion_boss.tres" id="9_boss"]
+[ext_resource type="Texture2D" path="res://assets/backgrounds/stage_03_crystal_dungeon_flat_purple_top.png" id="10_background_top"]
+[ext_resource type="Texture2D" path="res://assets/backgrounds/stage_03_crystal_dungeon_flat_purple_middle.png" id="11_background_middle"]
+[ext_resource type="Texture2D" path="res://assets/backgrounds/stage_03_crystal_dungeon_flat_purple_bottom.png" id="12_background_bottom"]
 
 [resource]
 script = ExtResource("1")
@@ -15,6 +18,10 @@ level_name = "3. 수정 동굴"
 image_placeholder = "ICE FIELD
 LEVEL IMAGE"
 battle_background = ExtResource("5")
+battle_background_top = ExtResource("10_background_top")
+battle_background_middle = ExtResource("11_background_middle")
+battle_background_bottom = ExtResource("12_background_bottom")
+battle_background_top_height = 558.0
 recommended_ball_level = 7
 stage_gimmick_icon = ExtResource("7_gimmick")
 stage_gimmick_name = "포식 · 회복/발사"

@@ -1,0 +1,80 @@
+Godot Engine v4.7.1.stable.official.a13da4feb - https://godotengine.org
+
+[   0% ] first_scan_filesystem | Started Project initialization (5 steps)
+[   0% ] first_scan_filesystem | Scanning file structure...
+[  16% ] first_scan_filesystem | Loading global class names...
+[  33% ] first_scan_filesystem | Verifying GDExtensions...
+[  50% ] first_scan_filesystem | Creating autoload scripts...
+[  66% ] first_scan_filesystem | Initializing plugins...
+Godot MCP Toolkit v1.0.0 — by NPGameDev · npgamedev.com
+[MCPExtensions] Hot-reload watcher active
+[MCPServer] port: scanning 6550-6560 (default)
+[MCPServer] session token written to user://addons/godot_mcp_toolkit/project_instance_a16ec52abf54/mcp_token
+[MCPServer] listening on 127.0.0.1:6551
+[MCPRegistry] registered c:/users/jaynap/desktop/godot_proj/puzrpg on port 6551
+[  83% ] first_scan_filesystem | Starting file scan...
+[ DONE ] first_scan_filesystem
+
+[   0% ] update_scripts_classes | Started Registering global classes... (13 steps)
+[   0% ] update_scripts_classes | SplitCascadeConfig
+[   7% ] update_scripts_classes | SplitCascadeHandler
+[  14% ] update_scripts_classes | SplitCascadeOverlay
+[  21% ] update_scripts_classes | Battle
+[  28% ] update_scripts_classes | 
+[  35% ] update_scripts_classes | Fighter
+[  42% ] update_scripts_classes | IngestionSkillData
+[  50% ] update_scripts_classes | MergeBall
+[  57% ] update_scripts_classes | MergeGame
+[  64% ] update_scripts_classes | MergePhysicsData
+[  71% ] update_scripts_classes | MonsterActionController
+[  78% ] update_scripts_classes | 
+[  85% ] update_scripts_classes | WaterHealthBar
+[ DONE ] update_scripts_classes
+
+[   0% ] _update_scan_actions | Started Scanning actions... (8 steps)
+[   0% ] _update_scan_actions | enemy_hit_cute.wav
+[  11% ] _update_scan_actions | player_hit_cute.wav
+[  22% ] _update_scan_actions | stage_03_crystal_dungeon_flat_purple.png
+[  33% ] _update_scan_actions | stage_03_crystal_dungeon_flat_purple_bottom.png
+[  44% ] _update_scan_actions | stage_03_crystal_dungeon_flat_purple_middle.png
+[  55% ] _update_scan_actions | stage_03_crystal_dungeon_flat_purple_top.png
+[  66% ] _update_scan_actions | devour_dungeon_bg_v5_flat.png
+[  77% ] _update_scan_actions | devour_dungeon_bg_v5_flat_purple.png
+[ DONE ] _update_scan_actions
+
+[   0% ] reimport | Started (Re)Importing Assets (8 steps)
+[   0% ] reimport | Preparing files to reimport...
+[  11% ] reimport | Preparing files to reimport...
+[  22% ] reimport | Preparing files to reimport...
+[  33% ] reimport | Preparing files to reimport...
+[  44% ] reimport | Preparing files to reimport...
+[  55% ] reimport | Preparing files to reimport...
+[  66% ] reimport | Preparing files to reimport...
+[  77% ] reimport | Preparing files to reimport...
+[   0% ] reimport | Executing pre-reimport operations...
+[   0% ] reimport | stage_03_crystal_dungeon_flat_purple.png
+[  11% ] reimport | stage_03_crystal_dungeon_flat_purple_bottom.png
+[  22% ] reimport | stage_03_crystal_dungeon_flat_purple_middle.png
+[  33% ] reimport | stage_03_crystal_dungeon_flat_purple_top.png
+[  44% ] reimport | devour_dungeon_bg_v5_flat.png
+[  55% ] reimport | devour_dungeon_bg_v5_flat_purple.png
+[  66% ] reimport | stage_03_crystal_dungeon_flat_purple.png
+[  77% ] reimport | stage_03_crystal_dungeon_flat_purple_bottom.png
+[  88% ] reimport | Finalizing Asset Import...
+[ DONE ] reimport
+
+[   0% ] reimport | Started (Re)Importing Assets (8 steps)
+[   0% ] reimport | Executing post-reimport operations...
+[ DONE ] reimport
+
+[   0% ] loading_editor_layout | Started Loading editor (5 steps)
+[   0% ] loading_editor_layout | Loading editor layout...
+[  16% ] loading_editor_layout | Loading docks...
+[  33% ] loading_editor_layout | Reopening scenes...
+[  50% ] loading_editor_layout | Loading central editor layout...
+[  66% ] loading_editor_layout | Loading plugin window layout...
+[  83% ] loading_editor_layout | Editor layout ready.
+[ DONE ] loading_editor_layout
+
+[MCPServer] stopped
+[MCPRegistry] deregistered c:/users/jaynap/desktop/godot_proj/puzrpg

@@ -24,6 +24,18 @@ border_width_right = 1
 border_width_bottom = 1
 border_color = Color(1, 0.6509804, 0.5686275, 1)
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_durability"]
+bg_color = Color(0.55, 0.24, 0.82, 0.96)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.78, 0.55, 1, 1)
+corner_radius_top_left = 9
+corner_radius_top_right = 9
+corner_radius_bottom_right = 9
+corner_radius_bottom_left = 9
+
 [sub_resource type="Gradient" id="Gradient_value_label_background"]
 offsets = PackedFloat32Array(0, 0.35, 0.7, 1)
 colors = PackedColorArray(0, 0, 0, 0.68, 0, 0, 0, 0.52, 0, 0, 0, 0.2, 0, 0, 0, 0)
@@ -73,6 +85,16 @@ offset_right = 265.0
 offset_bottom = 48.0
 mouse_filter = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_damage_preview")
+
+[node name="DurabilityFill" type="Panel" parent="."]
+visible = false
+layout_mode = 0
+offset_left = 27.0
+offset_top = 25.0
+offset_right = 265.0
+offset_bottom = 48.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_durability")
 
 [node name="ValueLabelBackground" type="TextureRect" parent="." unique_id=1484594820]
 layout_mode = 0

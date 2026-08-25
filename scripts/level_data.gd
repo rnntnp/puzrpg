@@ -12,6 +12,8 @@ const TestGimmickDataClass = preload("res://scripts/test_gimmick_data.gd")
 @export var battle_background_top: Texture2D
 @export var battle_background_middle: Texture2D
 @export var battle_background_bottom: Texture2D
+## 720px 기준 상단 고정 레이어의 표시 높이다.
+@export_range(100.0, 900.0, 1.0) var battle_background_top_height: float = 508.0
 @export_group("")
 @export var level_select_preview: Texture2D
 

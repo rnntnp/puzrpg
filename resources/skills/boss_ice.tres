@@ -10,3 +10,4 @@ target_max_level = 5
 ice_durability = 3
 target_highlight_duration = 0.65
 freeze_effect_duration = 0.3
+no_target_damage_multiplier = 1.5

@@ -13,6 +13,7 @@ signal ball_dropped
 signal turn_completed
 signal overflow_triggered(damage: int)
 signal ingestion_target_replaced(ball: MergeBall)
+signal ice_telegraph_merge_resolved(result_ball: MergeBall, source_ids: Array[int], marked_source_count: int)
 signal merge_completed(merged_ball: MergeBall)
 signal merge_registered(result_level: int, origin: Vector2, chain_index: int, source_ids: Array[int], involved_cursed: bool)
 signal player_ball_landed(level: int, drop_x: float)
@@ -871,6 +872,7 @@ func _on_merge_requested(first, second) -> void:
 	var at: Vector2 = (first.position + second.position) * 0.5
 	var level: int = first.merge_level + 1
 	var carries_ingestion_target: bool = first.ingestion_marked or second.ingestion_marked
+	var ice_target_count := int(first.ice_targeted) + int(second.ice_targeted)
 	var involved_cursed: bool = first.is_merge_cursed or second.is_merge_cursed
 	var source_ids: Array[int] = [first.get_instance_id(), second.get_instance_id()]
 	var result_external_merge_token := 0
@@ -931,6 +933,8 @@ func _on_merge_requested(first, second) -> void:
 		at,
 		level,
 		carries_ingestion_target,
+		ice_target_count,
+		source_ids,
 		attack_combo_count,
 		result_external_merge_token
 	)
@@ -946,6 +950,8 @@ func _spawn_merged_ball(
 	at: Vector2,
 	level: int,
 	carries_ingestion_target: bool = false,
+	ice_target_count: int = 0,
+	source_ids: Array[int] = [],
 	merge_combo_count: int = 1,
 	external_merge_token: int = 0
 ) -> void:
@@ -955,6 +961,9 @@ func _spawn_merged_ball(
 	if carries_ingestion_target and is_instance_valid(merged_ball):
 		merged_ball.set_ingestion_marked(true)
 		ingestion_target_replaced.emit(merged_ball)
+	if ice_target_count > 0 and is_instance_valid(merged_ball):
+		merged_ball.set_ice_targeted(true)
+		ice_telegraph_merge_resolved.emit(merged_ball, source_ids, ice_target_count)
 	if is_instance_valid(merged_ball):
 		_play_merge_sfx(merge_combo_count)
 		merge_completed.emit(merged_ball)

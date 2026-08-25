@@ -139,13 +139,13 @@ These are not part of the numbered 1–50 test-mechanic sequence, but future dup
 ### Ice
 
 - Campaign level 2 contains a basic, enhanced, and boss ice enemy.
-- One completed player turn before its action, the controller selects eligible balls and marks them with the freeze telegraph. On the next action it locks input, performs the enemy's normal damage, then freezes only the still-existing telegraphed balls; a telegraphed ball merged away during the response turn is not silently replaced.
+- One completed player turn before its action, the controller selects eligible balls and marks them with the freeze telegraph. On the next action it locks input, performs the enemy's normal damage, then freezes the marked lineage. If one marked ball merges, the result inherits its mark through later chain merges. If two marked balls merge together, the result keeps one mark and the duplicate slot immediately searches for a new telegraphed target.
 - Frozen balls are static and cannot merge.
 - Every normal merge completion damages every frozen ball's ice by 1.
 - The basic Resource has 400 HP, attacks for 5 every 4 completed player turns, freezes 1 ball, prioritizes displayed stages 1–3, and uses durability 2.
 - The enhanced Resource has 600 HP, attacks for 5 every 5 completed player turns, freezes 2 balls, prioritizes displayed stages 2–4, and uses durability 2.
 - The boss has 800 HP, attacks for 7 every 4 completed player turns, freezes 2 balls, prioritizes displayed stages 3–5, and uses durability 3.
-- There is no frozen-ball cap. Targets are searched in strict displayed-stage order starting at the configured preferred minimum (for example, 3 → 4 → 5 → 6), so the remaining slots are filled by the next stage rather than by skipping ahead. If no unfrozen target is found, a frozen ball below that enemy's configured ice durability is re-frozen and restored to full durability.
+- There is no frozen-ball cap. Targets are searched in strict displayed-stage order starting at the configured preferred minimum (for example, 3 → 4 → 5 → 6), so the remaining slots are filled by the next stage rather than by skipping ahead. If no unfrozen target is found, a frozen ball below that enemy's configured ice durability is re-frozen and restored to full durability. If the action freezes fewer balls than its configured target count, including partial success such as 1/2, its total direct-attack damage is 1.5× the normal value.
 
 ### Ingestion
 

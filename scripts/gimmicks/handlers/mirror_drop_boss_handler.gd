@@ -151,17 +151,20 @@ func _execute_mirror_drop(level: int, player_drop_x: float) -> void:
 
 
 func _wait_for_mirror_resolution(ball: MergeBall) -> void:
-	var started_msec := Time.get_ticks_msec()
 	var quiet_msec := roundi(tuning.mirror_merge_quiet_time * 1000.0)
-	var timeout_msec := roundi(tuning.mirror_resolution_timeout * 1000.0)
+	# A boss drop cannot hand the turn back while its ball is still airborne.
+	# Unlike player drops, it has no following boss drop that needs a deadlock cap.
 	while _battle_is_active():
-		var now_msec := Time.get_ticks_msec()
-		var has_landed := not is_instance_valid(ball) or ball.has_landed()
-		var merge_is_quiet := now_msec - mirror_last_merge_msec >= quiet_msec
-		if has_landed and merge_is_quiet:
-			return
-		if now_msec - started_msec >= timeout_msec:
-			log_event("MIRROR RESOLUTION TIMEOUT", "timeout=%.2f" % tuning.mirror_resolution_timeout)
+		if not is_instance_valid(ball) or ball.has_landed():
+			break
+		await get_tree().physics_frame
+	if not _battle_is_active():
+		return
+	# Always grant a short post-contact observation window. Boss-owned merges
+	# reset this timestamp through _on_external_merge_damage_requested.
+	mirror_last_merge_msec = Time.get_ticks_msec()
+	while _battle_is_active():
+		if Time.get_ticks_msec() - mirror_last_merge_msec >= quiet_msec:
 			return
 		await get_tree().physics_frame
 

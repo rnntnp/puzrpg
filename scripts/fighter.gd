@@ -91,6 +91,10 @@ func get_spell_origin_global_position() -> Vector2:
 func _apply_current_texture() -> void:
 	if character_data == null or character_sprite == null:
 		return
+	character_sprite.position = Vector2(
+		character_data.sprite_horizontal_offset,
+		character_data.sprite_height_offset
+	)
 	character_sprite.texture = _visual_override if _visual_override != null else character_data.sprite
 	character_sprite.visible = character_sprite.texture != null
 	if character_sprite.texture == null:
@@ -183,15 +187,27 @@ func play_cast_animation() -> void:
 		return
 	_stop_visual_tween()
 	character_sprite.texture = character_data.cast_sprite
+	character_sprite.position.y = character_data.sprite_height_offset + character_data.cast_sprite_height_offset
 	var resting_scale := character_sprite.scale
 	character_sprite.scale = resting_scale * 0.94
 	_visual_tween = create_tween()
-	_visual_tween.tween_property(character_sprite, "scale", resting_scale * 1.05, 0.09).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-	_visual_tween.tween_interval(0.16)
-	_visual_tween.tween_property(character_sprite, "scale", resting_scale, 0.1)
+	_visual_tween.tween_property(character_sprite, "scale", resting_scale * 1.05, 0.18).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	_visual_tween.tween_interval(0.32)
+	_visual_tween.tween_property(character_sprite, "scale", resting_scale, 0.2)
 	_visual_tween.tween_callback(func():
 		_apply_current_texture()
 	)
+
+
+func play_ingestion_squash() -> void:
+	if character_sprite == null or not is_alive():
+		return
+	_stop_visual_tween()
+	var resting_scale := character_sprite.scale
+	var squashed_scale := Vector2(resting_scale.x * 1.07, resting_scale.y * 0.80)
+	_visual_tween = create_tween()
+	_visual_tween.tween_property(character_sprite, "scale", squashed_scale, 0.10).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	_visual_tween.tween_property(character_sprite, "scale", resting_scale, 0.20).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 
 
 func _stop_visual_tween() -> void:

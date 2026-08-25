@@ -1,14 +1,16 @@
-[gd_resource type="Resource" script_class="CharacterData" load_steps=4 format=3 uid="uid://dd8t0hxokj424"]
+[gd_resource type="Resource" script_class="CharacterData" load_steps=5 format=3 uid="uid://dd8t0hxokj424"]
 
 [ext_resource type="Script" uid="uid://duu5mev8uwp8d" path="res://scripts/character_data.gd" id="1_data"]
 [ext_resource type="Texture2D" uid="uid://b7h561hqtvxvr" path="res://assets/characters/player_idle_handdrawn.png" id="2_sprite"]
 [ext_resource type="Resource" path="res://resources/skills/player_weakness.tres" id="3_skill"]
+[ext_resource type="Texture2D" path="res://assets/characters/generated/player_cast_handdrawn_v1.png" id="4_cast_sprite"]
 
 [resource]
 script = ExtResource("1_data")
 display_name = "BLUE"
 sprite = ExtResource("2_sprite")
-cast_sprite = ExtResource("2_sprite")
+cast_sprite = ExtResource("4_cast_sprite")
+cast_sprite_height_offset = 29.0
 shadow_offset = Vector2(-3, 119)
 attack_power = 0
 player_skill = ExtResource("3_skill")

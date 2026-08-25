@@ -8,4 +8,5 @@ script = ExtResource("1")
 effect_id = &"weakness"
 display_name = "약화 · 받는 피해 증가"
 icon = ExtResource("2")
+play_apply_pop = true
 incoming_damage_multiplier = 1.3

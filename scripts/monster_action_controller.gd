@@ -9,11 +9,16 @@ enum State {
 
 const EnemyAttackEffect: StatusEffectData = preload("res://resources/effects/enemy_attack_countdown.tres")
 const IngestionEffect: StatusEffectData = preload("res://resources/effects/ingestion_countdown.tres")
+const IngestionHealEffect: StatusEffectData = preload("res://resources/effects/ingestion_heal_countdown.tres")
 const IngestionDurabilityEffect: StatusEffectData = preload("res://resources/effects/ingestion_durability.tres")
 const WeaknessEffect: StatusEffectData = preload("res://resources/effects/ingestion_vulnerable.tres")
 const IceEffect: StatusEffectData = preload("res://resources/effects/ice_countdown.tres")
 const IceSkillDataClass = preload("res://scripts/ice_skill_data.gd")
 const IceSkillControllerClass = preload("res://scripts/ice_skill_controller.gd")
+const HealCrossParticleBurstClass = preload("res://scripts/heal_cross_particle_burst.gd")
+const INGESTION_HELP_TEXT := "내구도를 파괴해서 포식을 저지하세요!"
+const HELP_YELLOW := Color("#ffe34f")
+const HELP_MAGENTA := Color("#ff4fc8")
 
 var battle: Battle
 var enemy: Fighter
@@ -40,6 +45,8 @@ var swallowed_ball_level := -1
 var target_ball: MergeBall
 var vulnerable_turns := 0
 var _state_version := 0
+var _ingestion_help_tween: Tween
+var _ingestion_help_active := false
 
 
 func configure(
@@ -99,6 +106,8 @@ func on_ball_dropped() -> void:
 		return
 	remaining_turns = maxi(0, remaining_turns - 1)
 	_update_ui()
+	if state == State.INGESTION_TELEGRAPH:
+		_update_ingestion_telegraph_visual()
 	if remaining_turns > 0:
 		if ice_skill != null and remaining_turns == 1:
 			var target_count := ice_controller.begin_telegraph()
@@ -155,6 +164,7 @@ func add_weakness_turns(turns: int) -> int:
 
 
 func on_enemy_defeated() -> void:
+	_clear_ingestion_help()
 	vulnerable_turns = 0
 	applied_status_effects.remove_effect(WeaknessEffect.effect_id)
 	if using_test_gimmick:
@@ -181,12 +191,14 @@ func on_enemy_defeated() -> void:
 
 
 func _enter_normal_attack() -> void:
+	_clear_ingestion_help()
 	enemy.clear_visual_override()
 	enemy.hide_ingestion_glow()
 	state = State.NORMAL_ATTACK
 	remaining_turns = enemy.enemy_attack_drop_interval
 	current_durability = 0
 	status_effects.remove_effect(IngestionEffect.effect_id)
+	status_effects.remove_effect(IngestionHealEffect.effect_id)
 	status_effects.remove_effect(IceEffect.effect_id)
 	status_effects.set_effect(EnemyAttackEffect, remaining_turns)
 	battle.show_player_damage_preview(enemy.attack_power)
@@ -199,6 +211,7 @@ func _enter_normal_attack() -> void:
 
 
 func _enter_ingestion_telegraph() -> void:
+	_clear_ingestion_help()
 	battle.clear_player_damage_preview()
 	enemy.hide_ingestion_glow()
 	state = State.INGESTION_TELEGRAPH
@@ -206,14 +219,13 @@ func _enter_ingestion_telegraph() -> void:
 	durability_bar.clear_durability()
 	applied_status_effects.remove_effect(IngestionDurabilityEffect.effect_id)
 	active_ingestion_is_launch = _is_launch_ingestion()
-	enemy.set_visual_override(enemy.character_data.ingestion_telegraph_sprite)
 	remaining_turns = skill.telegraph_turns
+	_update_ingestion_telegraph_visual()
 	status_effects.remove_effect(EnemyAttackEffect.effect_id)
 	status_effects.remove_effect(IceEffect.effect_id)
+	status_effects.remove_effect(IngestionHealEffect.effect_id)
 	status_effects.set_effect(IngestionEffect, remaining_turns)
 	_select_target()
-	battle.status_label.text = "발사 포식 예고" if active_ingestion_is_launch else "회복 포식 예고"
-	battle.status_label.modulate = Color("#d79cff")
 
 
 func _execute_ingestion() -> void:
@@ -236,6 +248,7 @@ func _execute_ingestion() -> void:
 		return
 	battle.play_ingestion_swallow_sfx()
 	enemy.set_visual_override(enemy.character_data.ingestion_swallowed_sprite)
+	enemy.play_ingestion_squash()
 	enemy.show_ingestion_glow(swallowed_color)
 	state = State.INGESTION_RESPONSE
 	remaining_turns = skill.response_turns
@@ -253,9 +266,13 @@ func _execute_ingestion() -> void:
 	else:
 		active_launch_damage = 0
 	ingestion_executions += 1
-	status_effects.set_effect(IngestionEffect, remaining_turns)
+	if active_ingestion_is_launch:
+		status_effects.set_effect(IngestionEffect, remaining_turns)
+	else:
+		status_effects.remove_effect(IngestionEffect.effect_id)
+		status_effects.set_effect(IngestionHealEffect, remaining_turns)
 	applied_status_effects.set_effect(IngestionDurabilityEffect, 0)
-	battle.status_label.text = "포식 저지! 내구도를 파괴하세요"
+	_start_ingestion_help()
 	_update_ui()
 	merge_game.set_input_enabled(true)
 	print("[INGESTION START] level=%d | durability=%d | turns=%d" % [
@@ -265,6 +282,11 @@ func _execute_ingestion() -> void:
 
 func _interrupt_ingestion() -> void:
 	_state_version += 1
+	_clear_ingestion_help()
+	var interrupted_effect_id := (
+		IngestionEffect.effect_id if active_ingestion_is_launch else IngestionHealEffect.effect_id
+	)
+	await status_effects.dismiss_effect_with_shake(interrupted_effect_id)
 	if swallowed_ball_level >= 0:
 		merge_game.return_ingested_ball_to_board(
 			swallowed_ball_level,
@@ -273,28 +295,27 @@ func _interrupt_ingestion() -> void:
 		battle.play_ingestion_spit_sfx()
 		swallowed_ball_level = -1
 	add_weakness_turns(skill.interrupted_debuff_turns)
-	battle.status_label.text = "포식 저지 성공! 삼킨 공이 보드로 돌아옵니다"
-	battle.status_label.modulate = Color("#ffe066")
 	print("[INGESTION INTERRUPTED] vulnerable_turns=%d" % vulnerable_turns)
 	_enter_post_ingestion_state()
 
 
 func _schedule_ingestion_success() -> void:
+	_clear_ingestion_help()
 	var version := _state_version
 	await get_tree().create_timer(0.8, true, false, true).timeout
 	if version != _state_version or state != State.INGESTION_RESPONSE or current_durability <= 0:
 		return
 	_state_version += 1
 	swallowed_ball_level = -1
+	enemy.play_ingestion_squash()
 	if active_ingestion_is_launch:
 		enemy.attack_with_damage(player, active_launch_damage)
-		battle.status_label.text = "포식 성공 · 발사 피해 %d" % active_launch_damage
-		battle.status_label.modulate = Color("#ff765f")
 		print("[INGESTION SUCCEEDED] launch_damage=%d" % active_launch_damage)
 	else:
 		enemy.heal(skill.heal_amount)
-		battle.status_label.text = "포식 성공 · HP %d 회복" % skill.heal_amount
-		battle.status_label.modulate = Color("#67dc83")
+		var heal_burst := HealCrossParticleBurstClass.new()
+		get_tree().current_scene.add_child(heal_burst)
+		heal_burst.play(enemy.global_position + Vector2(0.0, 12.0))
 		print("[INGESTION SUCCEEDED] heal=%d" % skill.heal_amount)
 	if player.is_alive():
 		_enter_post_ingestion_state()
@@ -360,8 +381,10 @@ func _update_ui() -> void:
 			status_effects.set_effect(EnemyAttackEffect, remaining_turns)
 			if ice_skill != null:
 				status_effects.set_effect(IceEffect, remaining_turns)
-		State.INGESTION_TELEGRAPH, State.INGESTION_RESPONSE:
+		State.INGESTION_TELEGRAPH:
 			status_effects.set_effect(IngestionEffect, remaining_turns)
+		State.INGESTION_RESPONSE:
+			status_effects.set_effect(_get_active_ingestion_effect(), remaining_turns)
 	if state == State.INGESTION_RESPONSE:
 		durability_bar.set_durability(current_durability, active_durability_max)
 
@@ -392,3 +415,35 @@ func _get_ice_no_target_damage() -> int:
 	if ice_skill == null:
 		return enemy.attack_power
 	return roundi(float(enemy.attack_power) * ice_skill.no_target_damage_multiplier)
+
+
+func _get_active_ingestion_effect() -> StatusEffectData:
+	return IngestionEffect if active_ingestion_is_launch else IngestionHealEffect
+
+
+func _update_ingestion_telegraph_visual() -> void:
+	if remaining_turns <= 1:
+		enemy.set_visual_override(enemy.character_data.ingestion_telegraph_sprite)
+	else:
+		enemy.clear_visual_override()
+
+
+func _start_ingestion_help() -> void:
+	_clear_ingestion_help()
+	_ingestion_help_active = true
+	battle.status_label.text = INGESTION_HELP_TEXT
+	battle.status_label.modulate = HELP_YELLOW
+	_ingestion_help_tween = create_tween().set_loops()
+	_ingestion_help_tween.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	_ingestion_help_tween.tween_property(battle.status_label, "modulate", HELP_MAGENTA, 0.42)
+	_ingestion_help_tween.tween_property(battle.status_label, "modulate", HELP_YELLOW, 0.42)
+
+
+func _clear_ingestion_help() -> void:
+	if is_instance_valid(_ingestion_help_tween):
+		_ingestion_help_tween.kill()
+	_ingestion_help_tween = null
+	if _ingestion_help_active and is_instance_valid(battle) and is_instance_valid(battle.status_label):
+		battle.status_label.text = ""
+		battle.status_label.modulate = Color.WHITE
+	_ingestion_help_active = false

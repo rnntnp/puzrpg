@@ -14,6 +14,7 @@ var selected_level_index := 0
 var highest_completed_level_index := -1
 var last_battle_won := false
 var last_result_title := ""
+var last_battle_level_path := DEFAULT_LEVEL_PATH
 var developer_autoplay_enabled := false
 var developer_combo_test_requested := false
 var money := 12450
@@ -26,6 +27,14 @@ func _ready() -> void:
 func set_battle_result(won: bool, title: String) -> void:
 	last_battle_won = won
 	last_result_title = title
+	last_battle_level_path = current_level_path
+
+
+func get_last_battle_level() -> LevelDataClass:
+	var level := load(last_battle_level_path) as LevelDataClass
+	if level == null:
+		push_error("결과 화면 레벨 데이터를 불러올 수 없습니다: %s" % last_battle_level_path)
+	return level
 
 
 func get_current_level() -> LevelDataClass:

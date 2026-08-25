@@ -9,6 +9,7 @@ extends Control
 @export var accent_color := Color("#9beeff")
 @export var heart_color := Color("#ff7fa3")
 @export var right_aligned := false
+@export_range(0.05, 2.0, 0.05) var health_lerp_duration := 0.4
 @export var damage_preview_color := Color("#ff8066"):
 	set(value):
 		damage_preview_color = value
@@ -27,6 +28,8 @@ var durability_active := false
 var current_durability := 0
 var maximum_durability := 1
 var _full_fill_size := Vector2.ZERO
+var _displayed_health_ratio := 1.0
+var _health_tween: Tween
 
 
 func _ready() -> void:
@@ -42,10 +45,15 @@ func _ready() -> void:
 
 
 func set_health(health: int, maximum: int) -> void:
+	var previous_maximum := maximum_health
 	maximum_health = maxi(1, maximum)
 	current_health = clampi(health, 0, maximum_health)
 	_refresh_value_text()
-	_refresh_fill_size()
+	var target_ratio := clampf(float(current_health) / float(maximum_health), 0.0, 1.0)
+	if Engine.is_editor_hint() or not is_node_ready() or previous_maximum != maximum_health:
+		_set_displayed_health_ratio(target_ratio)
+	else:
+		_animate_health_ratio(target_ratio)
 	_refresh_damage_preview()
 	_refresh_durability()
 
@@ -82,11 +90,32 @@ func _refresh_value_text() -> void:
 func _refresh_fill_size() -> void:
 	if not is_instance_valid(full_health_fill):
 		return
-	var health_ratio := clampf(float(current_health) / float(maximum_health), 0.0, 1.0)
+	var health_ratio := clampf(_displayed_health_ratio, 0.0, 1.0)
 	full_health_fill.visible = health_ratio > 0.0
 	if not full_health_fill.visible:
 		return
 	full_health_fill.size = Vector2(_full_fill_size.x * health_ratio, _full_fill_size.y)
+
+
+func _animate_health_ratio(target_ratio: float) -> void:
+	if is_instance_valid(_health_tween):
+		_health_tween.kill()
+	if is_equal_approx(_displayed_health_ratio, target_ratio):
+		_set_displayed_health_ratio(target_ratio)
+		return
+	_health_tween = create_tween()
+	_health_tween.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	_health_tween.tween_method(
+		_set_displayed_health_ratio,
+		_displayed_health_ratio,
+		target_ratio,
+		health_lerp_duration
+	)
+
+
+func _set_displayed_health_ratio(ratio: float) -> void:
+	_displayed_health_ratio = clampf(ratio, 0.0, 1.0)
+	_refresh_fill_size()
 
 
 func _refresh_damage_preview() -> void:

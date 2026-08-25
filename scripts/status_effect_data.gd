@@ -6,4 +6,5 @@ extends Resource
 @export var icon: Texture2D
 @export var icon_modulate: Color = Color.WHITE
 @export var show_turns: bool = true
+@export var play_apply_pop: bool = false
 @export_range(1.0, 5.0, 0.05) var incoming_damage_multiplier: float = 1.0

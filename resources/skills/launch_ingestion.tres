@@ -5,7 +5,7 @@
 [resource]
 script = ExtResource("1")
 start_with_ingestion = true
-telegraph_turns = 1
+telegraph_turns = 2
 durability = 50
 durability_increase_per_use = 10
 maximum_durability = 70

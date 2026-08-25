@@ -15,6 +15,9 @@ var highest_completed_level_index := -1
 var last_battle_won := false
 var last_result_title := ""
 var last_battle_level_path := DEFAULT_LEVEL_PATH
+var last_result_gold := 0
+var last_result_max_combo := 0
+var last_result_damage_dealt := 0
 var developer_autoplay_enabled := false
 var developer_combo_test_requested := false
 var money := 12450
@@ -24,10 +27,15 @@ func _ready() -> void:
 	_load_progress()
 
 
-func set_battle_result(won: bool, title: String) -> void:
+func set_battle_result(won: bool, title: String, stats: Dictionary = {}) -> void:
 	last_battle_won = won
 	last_result_title = title
 	last_battle_level_path = current_level_path
+	last_result_gold = maxi(0, int(stats.get("gold", 0))) if won else 0
+	last_result_max_combo = maxi(0, int(stats.get("max_combo", 0)))
+	last_result_damage_dealt = maxi(0, int(stats.get("damage_dealt", 0)))
+	if last_result_gold > 0:
+		add_money(last_result_gold)
 
 
 func get_last_battle_level() -> LevelDataClass:

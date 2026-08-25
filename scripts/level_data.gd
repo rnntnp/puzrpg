@@ -22,6 +22,7 @@ const TestGimmickDataClass = preload("res://scripts/test_gimmick_data.gd")
 @export var stage_gimmick_icon: Texture2D
 @export var stage_gimmick_name: String = "기본 전투"
 @export var reward_name: String = "첫 승리 보상"
+@export_range(0, 99999, 1) var clear_gold_reward: int = 150
 
 @export_category("전투 구성")
 @export var player_character: CharacterDataClass

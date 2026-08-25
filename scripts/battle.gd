@@ -57,6 +57,8 @@ var tutorial_drop_prompt: Label
 var tutorial_prompt_tween: Tween
 var enemy_transition_active := false
 var pending_merge_attacks: Array[Dictionary] = []
+var result_max_combo := 0
+var result_damage_dealt := 0
 
 
 func get_debug_snapshot() -> Dictionary:
@@ -111,6 +113,8 @@ func _load_level() -> void:
 	level_finished = false
 	enemy_transition_active = false
 	pending_merge_attacks.clear()
+	result_max_combo = 0
+	result_damage_dealt = 0
 	if (
 		level_data.battle_background_top != null
 		and level_data.battle_background_middle != null
@@ -195,7 +199,7 @@ func fail_gimmick_level(reason: String) -> void:
 	merge_game.set_input_enabled(false)
 	status_label.text = reason
 	status_label.modulate = Color("#ff6b6b")
-	GameSession.set_battle_result(false, "%s · %s" % [level_data.level_name, reason])
+	GameSession.set_battle_result(false, "%s · %s" % [level_data.level_name, reason], _get_result_stats(false))
 	await get_tree().create_timer(0.8).timeout
 	get_tree().change_scene_to_file("res://scenes/battle_result.tscn")
 
@@ -271,6 +275,7 @@ func _on_player_damage_received(amount: int) -> void:
 
 
 func _on_enemy_damage_received(amount: int) -> void:
+	result_damage_dealt += maxi(0, amount)
 	_play_damage_sfx(enemy_hit_sfx, amount, right_fighter.max_health, -4.0)
 
 
@@ -296,6 +301,13 @@ func play_ingestion_swallow_sfx() -> void:
 
 func play_ingestion_spit_sfx() -> void:
 	ingestion_spit_sfx.play()
+
+
+func play_enemy_durability_hit_feedback(damage: int) -> void:
+	if damage <= 0 or not right_fighter.is_alive():
+		return
+	right_fighter.play_hit_animation()
+	_play_damage_sfx(enemy_hit_sfx, damage, right_fighter.max_health, -4.0)
 
 
 func _on_ball_dropped() -> void:
@@ -623,6 +635,7 @@ func _on_merge_projectile_hit(damage: int, ball_level: int, combo_count: int, me
 	damage = monster_action_controller.route_player_damage(damage, ball_level, combo_count, merge_origin)
 	if damage <= 0:
 		return
+	result_max_combo = maxi(result_max_combo, combo_count)
 	print("[MERGE ATTACK] damage=%d" % damage)
 	right_fighter.take_damage(damage)
 
@@ -640,7 +653,7 @@ func _on_fighter_defeated(fighter: Fighter) -> void:
 	if fighter == left_fighter:
 		enemy_transition_active = false
 		pending_merge_attacks.clear()
-		GameSession.set_battle_result(false, "%s 도전 실패" % level_data.level_name)
+		GameSession.set_battle_result(false, "%s 도전 실패" % level_data.level_name, _get_result_stats(false))
 		get_tree().change_scene_to_file("res://scenes/battle_result.tscn")
 		return
 	player_skill_controller.on_enemy_defeated()
@@ -662,7 +675,7 @@ func _on_fighter_defeated(fighter: Fighter) -> void:
 	level_finished = true
 	status_label.text = "모든 적 처치!"
 	await get_tree().create_timer(0.4).timeout
-	GameSession.set_battle_result(true, "%s 완료" % level_data.level_name)
+	GameSession.set_battle_result(true, "%s 완료" % level_data.level_name, _get_result_stats(true))
 	GameSession.advance_to_next_level()
 	get_tree().change_scene_to_file("res://scenes/battle_result.tscn")
 
@@ -670,8 +683,16 @@ func _on_merge_game_over() -> void:
 	battle_running = false
 	enemy_transition_active = false
 	pending_merge_attacks.clear()
-	GameSession.set_battle_result(false, "%s · 머지 보드 게임오버" % level_data.level_name)
+	GameSession.set_battle_result(false, "%s · 머지 보드 게임오버" % level_data.level_name, _get_result_stats(false))
 	get_tree().change_scene_to_file("res://scenes/battle_result.tscn")
+
+
+func _get_result_stats(won: bool) -> Dictionary:
+	return {
+		"gold": level_data.clear_gold_reward if won and level_data != null else 0,
+		"max_combo": result_max_combo,
+		"damage_dealt": result_damage_dealt,
+	}
 
 
 func _on_overflow_triggered(damage: int) -> void:

@@ -163,6 +163,9 @@ func route_player_damage(damage: int, merge_result_level_index := -1, combo_coun
 		hp_damage -= absorbed
 		_update_ui()
 		print("[INGESTION DURABILITY] damage=%d | remaining=%d" % [absorbed, current_durability])
+		# 내구도를 뚫고 HP까지 피해를 주는 타격은 take_damage()의 기존 피드백을 사용한다.
+		if absorbed > 0 and hp_damage <= 0:
+			battle.play_enemy_durability_hit_feedback(absorbed)
 		if current_durability <= 0:
 			_interrupt_ingestion()
 	if hp_damage > 0 and vulnerable_turns > 0:

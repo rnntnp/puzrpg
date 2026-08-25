@@ -287,6 +287,10 @@ func set_ingestion_marked(marked: bool) -> void:
 
 func set_ice_targeted(targeted: bool) -> void:
 	ice_targeted = targeted
+	if visual_container.get_child_count() > 0:
+		var visual := visual_container.get_child(0)
+		if visual != null and visual.has_method("set_ice_targeted_visual"):
+			visual.call("set_ice_targeted_visual", targeted)
 	queue_redraw()
 
 func set_danger_marked(marked: bool) -> void:
@@ -306,6 +310,7 @@ func freeze_in_ice(durability: int) -> void:
 		return
 	is_ice_frozen = true
 	ice_durability = maxi(1, durability)
+	_set_frozen_visual(true)
 	_update_ice_durability_visual()
 	linear_velocity = Vector2.ZERO
 	angular_velocity = 0.0
@@ -336,6 +341,7 @@ func break_ice(play_effect := true) -> void:
 		return
 	is_ice_frozen = false
 	ice_durability = 0
+	_set_frozen_visual(false)
 	ice_durability_label.visible = false
 	freeze = false
 	queue_redraw()
@@ -346,19 +352,16 @@ func break_ice(play_effect := true) -> void:
 	print("[ICE BREAK] level=%d" % (merge_level + 1))
 
 
-func _update_ice_durability_visual() -> void:
-	if not is_ice_frozen or ice_durability <= 0:
-		ice_durability_label.visible = false
+func _set_frozen_visual(enabled: bool) -> void:
+	if visual_container.get_child_count() == 0:
 		return
-	var durability_color := Color("#d5b8ff")
-	if ice_durability == 2:
-		durability_color = Color("#9eeaff")
-	elif ice_durability == 1:
-		durability_color = Color("#ffbd69")
-	ice_durability_label.text = str(ice_durability)
-	ice_durability_label.add_theme_color_override("font_color", durability_color)
-	ice_durability_label.add_theme_color_override("font_outline_color", Color("#142238"))
-	ice_durability_label.visible = true
+	var visual := visual_container.get_child(0)
+	if visual != null and visual.has_method("set_frozen_visual"):
+		visual.call("set_frozen_visual", enabled)
+
+
+func _update_ice_durability_visual() -> void:
+	ice_durability_label.visible = false
 
 func _draw() -> void:
 	var radius: float = ball_data.get_radius() if ball_data != null else 0.0
@@ -371,26 +374,11 @@ func _draw() -> void:
 			Vector2(-9.0, -radius - 33.0),
 			Vector2(9.0, -radius - 33.0),
 		]), Color("#e0a6ff"))
-	if ice_targeted:
-		draw_arc(Vector2.ZERO, radius + 12.0, 0.0, TAU, 40, Color("#d7f7ff"), 8.0, true)
 	if danger_marked:
 		draw_arc(Vector2.ZERO, radius + 12.0, 0.0, TAU, 40, Color("#ff4d5f"), 7.0, true)
 	if split_targeted:
 		var split_marker_radius := get_radius()
 		draw_arc(Vector2.ZERO, split_marker_radius + 4.0, 0.0, TAU, 40, split_target_color, 4.0, true)
-	if is_ice_frozen:
-		var ice_fill := Color(0.45, 0.32, 0.95, 0.48)
-		var ice_ring := Color("#d5b8ff")
-		if ice_durability == 2:
-			ice_fill = Color(0.36, 0.82, 1.0, 0.38)
-			ice_ring = Color("#9eeaff")
-		elif ice_durability == 1:
-			ice_fill = Color(1.0, 0.58, 0.22, 0.38)
-			ice_ring = Color("#ffbd69")
-		draw_circle(Vector2.ZERO, radius + 5.0, ice_fill)
-		draw_arc(Vector2.ZERO, radius + 5.0, 0.0, TAU, 40, ice_ring, 7.0 if ice_durability >= 3 else 6.0, true)
-		if ice_durability >= 3:
-			draw_arc(Vector2.ZERO, radius + 11.0, -PI * 0.35, PI * 1.35, 40, Color("#8d6bff"), 3.0, true)
 	if is_enlarged:
 		draw_arc(Vector2.ZERO, radius + 7.0, 0.0, TAU, 40, Color("#ff9f43"), 6.0, true)
 	if is_heavy:

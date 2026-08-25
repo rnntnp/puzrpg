@@ -7,9 +7,11 @@ const IceCastEffectScene = preload("res://scenes/ice_cast_effect.tscn")
 var merge_game: MergeGame
 var skill: IceSkillDataClass
 var caster: Fighter
+var telegraphed_targets: Array[MergeBall] = []
 
 
 func configure(game: MergeGame, skill_data: IceSkillDataClass, caster_fighter: Fighter) -> void:
+	cancel_telegraph()
 	merge_game = game
 	skill = skill_data
 	caster = caster_fighter
@@ -17,22 +19,38 @@ func configure(game: MergeGame, skill_data: IceSkillDataClass, caster_fighter: F
 		merge_game.merge_completed.connect(_on_merge_completed)
 
 
-func execute() -> int:
+func begin_telegraph() -> int:
 	if skill == null:
 		return 0
-	var targets := _select_targets(skill.freeze_count)
-	if targets.is_empty():
-		return 0
-	for ball in targets:
+	cancel_telegraph()
+	telegraphed_targets = _select_targets(skill.freeze_count)
+	for ball in telegraphed_targets:
 		ball.set_ice_targeted(true)
-	await get_tree().create_timer(skill.target_highlight_duration).timeout
+	return telegraphed_targets.size()
+
+
+func execute_telegraphed() -> int:
+	if skill == null or telegraphed_targets.is_empty():
+		return 0
+	var frozen_count := 0
+	var targets := telegraphed_targets.duplicate()
+	telegraphed_targets.clear()
 	for ball in targets:
 		if is_instance_valid(ball):
 			ball.set_ice_targeted(false)
 			await _cast_freeze_at(ball)
+			if is_instance_valid(ball) and ball.is_ice_frozen:
+				frozen_count += 1
 	await get_tree().create_timer(skill.freeze_effect_duration).timeout
-	print("[ICE FREEZE] count=%d | durability=%d" % [targets.size(), skill.ice_durability])
-	return targets.size()
+	print("[ICE FREEZE] count=%d | durability=%d" % [frozen_count, skill.ice_durability])
+	return frozen_count
+
+
+func cancel_telegraph() -> void:
+	for ball in telegraphed_targets:
+		if is_instance_valid(ball):
+			ball.set_ice_targeted(false)
+	telegraphed_targets.clear()
 
 
 func _cast_freeze_at(ball: MergeBall) -> void:
@@ -47,6 +65,7 @@ func _cast_freeze_at(ball: MergeBall) -> void:
 
 
 func clear_all_ice() -> void:
+	cancel_telegraph()
 	if merge_game == null:
 		return
 	for ball in _get_frozen_balls():

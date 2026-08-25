@@ -96,7 +96,7 @@ Runtime types:
 | System | Confirmed current scope | Status | Duplicate risk |
 |---|---|---|---|
 | Normal enemy attack | Countdown in completed player drops, then direct player damage | `NEEDS_PLAYTEST` | Any “attack every N drops” mechanic needs an additional decision layer |
-| Ice | Campaign level 2 has basic and enhanced freeze enemies; frozen balls cannot merge and all ice loses 1 durability per normal merge | `NEEDS_PLAYTEST` | Ball lock, static obstacle, global merge-count damage |
+| Ice | Campaign level 2 telegraphs targets one completed player turn before freezing; frozen balls cannot merge and all ice loses 1 durability per normal merge | `NEEDS_PLAYTEST` | Ball lock, static obstacle, telegraphed target response, global merge-count damage |
 | Ingestion | Campaign level 3 marks and swallows the highest-stage ball; durability can interrupt and return it to the queue. Recovery heals, launch deals direct damage, and the boss alternates both without normal attacks. | `NEEDS_PLAYTEST` | Ball capture, telegraphed targeting, durability shield, queue insertion, success heal/direct damage |
 | Danger line | 1.2 s drop grace and 0.8 s overflow; short forced-movement suppression is available | `NEEDS_PLAYTEST` | Any height, compression, rising floor, or forced-physics mechanic |
 

@@ -94,6 +94,10 @@ func on_ball_dropped() -> void:
 	remaining_turns = maxi(0, remaining_turns - 1)
 	_update_ui()
 	if remaining_turns > 0:
+		if ice_skill != null and remaining_turns == 1:
+			var target_count := ice_controller.begin_telegraph()
+			battle.status_label.text = "빙결 예고!" if target_count > 0 else "빙결 대상 없음"
+			battle.status_label.modulate = Color("#ff6b78") if target_count > 0 else Color.WHITE
 		_schedule_vulnerability_tick()
 		return
 
@@ -165,6 +169,8 @@ func _enter_normal_attack() -> void:
 	battle.show_player_damage_preview(enemy.attack_power)
 	if ice_skill != null:
 		status_effects.set_effect(IceEffect, remaining_turns)
+		if remaining_turns == 1:
+			ice_controller.begin_telegraph()
 	durability_label.visible = false
 
 
@@ -345,7 +351,7 @@ func _run_ice_turn() -> void:
 	if not player.is_alive():
 		return
 	battle.status_label.text = "빙결 공격!"
-	var frozen_count: int = await ice_controller.execute()
+	var frozen_count: int = await ice_controller.execute_telegraphed()
 	if frozen_count == 0:
 		battle.status_label.text = "빙결 대상 없음"
 	_enter_normal_attack()

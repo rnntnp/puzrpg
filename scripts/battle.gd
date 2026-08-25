@@ -243,12 +243,20 @@ func _on_right_health_changed(health: int, maximum: int) -> void:
 	right_bar.set_health(health, maximum)
 
 
-func _on_player_damage_received(_amount: int) -> void:
-	player_hit_sfx.play()
+func _on_player_damage_received(amount: int) -> void:
+	_play_damage_sfx(player_hit_sfx, amount, left_fighter.max_health, -5.0)
 
 
-func _on_enemy_damage_received(_amount: int) -> void:
-	enemy_hit_sfx.play()
+func _on_enemy_damage_received(amount: int) -> void:
+	_play_damage_sfx(enemy_hit_sfx, amount, right_fighter.max_health, -4.0)
+
+
+func _play_damage_sfx(player: AudioStreamPlayer, damage: int, target_max_health: int, base_volume_db: float) -> void:
+	var damage_ratio := clampf(float(damage) / float(maxi(1, target_max_health)), 0.0, 1.0)
+	var intensity := sqrt(damage_ratio)
+	player.pitch_scale = lerpf(1.1, 0.82, intensity)
+	player.volume_db = base_volume_db + lerpf(0.0, 3.0, intensity)
+	player.play()
 
 
 func show_player_damage_preview(damage: int) -> void:

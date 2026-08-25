@@ -138,7 +138,7 @@ These are not part of the numbered 1–50 test-mechanic sequence, but future dup
 ### Ice
 
 - Campaign level 2 contains a basic, enhanced, and boss ice enemy.
-- On its action, the controller locks input, performs the enemy's normal damage, then freezes eligible balls.
+- One completed player turn before its action, the controller selects eligible balls and marks them with the freeze telegraph. On the next action it locks input, performs the enemy's normal damage, then freezes only the still-existing telegraphed balls; a telegraphed ball merged away during the response turn is not silently replaced.
 - Frozen balls are static and cannot merge.
 - Every normal merge completion damages every frozen ball's ice by 1.
 - The basic Resource has 400 HP, attacks for 5 every 4 completed player turns, freezes 1 ball, prioritizes displayed stages 1–3, and uses durability 2.

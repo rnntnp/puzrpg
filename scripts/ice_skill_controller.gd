@@ -9,7 +9,7 @@ var merge_game: MergeGame
 var skill: IceSkillDataClass
 var caster: Fighter
 var telegraphed_targets: Array[MergeBall] = []
-var active_cast_target: MergeBall
+var active_cast_target_id := 0
 
 
 func configure(game: MergeGame, skill_data: IceSkillDataClass, caster_fighter: Fighter) -> void:
@@ -38,12 +38,16 @@ func execute_telegraphed() -> int:
 		return 0
 	var frozen_count := 0
 	var failed_attempts := 0
-	var pending_targets := telegraphed_targets.duplicate()
+	var pending_target_ids: Array[int] = []
+	for telegraphed_target in telegraphed_targets:
+		if is_instance_valid(telegraphed_target):
+			pending_target_ids.append(telegraphed_target.get_instance_id())
 	telegraphed_targets.clear()
 	while frozen_count < skill.freeze_count and failed_attempts < MAX_RETARGET_ATTEMPTS:
 		var target: MergeBall = null
-		while not pending_targets.is_empty() and target == null:
-			var telegraphed: MergeBall = pending_targets.pop_front()
+		while not pending_target_ids.is_empty() and target == null:
+			var target_id: int = pending_target_ids.pop_front()
+			var telegraphed := instance_from_id(target_id) as MergeBall
 			if _is_valid_freeze_target(telegraphed):
 				target = telegraphed
 		var is_retarget := false
@@ -71,25 +75,31 @@ func cancel_telegraph() -> void:
 		if is_instance_valid(ball):
 			ball.set_ice_targeted(false)
 	telegraphed_targets.clear()
-	active_cast_target = null
+	active_cast_target_id = 0
 
 
 func _cast_freeze_at(ball: MergeBall) -> bool:
 	if not is_instance_valid(ball) or not is_instance_valid(caster):
 		return false
-	active_cast_target = ball
+	active_cast_target_id = ball.get_instance_id()
 	ball.set_ice_targeted(true)
 	var effect := IceCastEffectScene.instantiate() as IceCastEffect
 	get_tree().current_scene.add_child(effect)
 	effect.play(caster.get_spell_origin_global_position(), ball.global_position)
 	await effect.arrived
-	var final_target := active_cast_target
-	active_cast_target = null
+	var final_target := _get_active_cast_target()
+	active_cast_target_id = 0
 	if not _is_valid_freeze_target(final_target):
 		return false
 	final_target.set_ice_targeted(false)
 	final_target.freeze_in_ice(skill.ice_durability)
 	return true
+
+
+func _get_active_cast_target() -> MergeBall:
+	if active_cast_target_id <= 0:
+		return null
+	return instance_from_id(active_cast_target_id) as MergeBall
 
 
 func _is_valid_freeze_target(ball: MergeBall) -> bool:
@@ -170,8 +180,9 @@ func _on_ice_telegraph_merge_resolved(
 ) -> void:
 	if not is_instance_valid(result_ball):
 		return
+	var active_cast_target := _get_active_cast_target()
 	if is_instance_valid(active_cast_target) and active_cast_target.get_instance_id() in source_ids:
-		active_cast_target = result_ball
+		active_cast_target_id = result_ball.get_instance_id()
 	var removed_targets := 0
 	for index in range(telegraphed_targets.size() - 1, -1, -1):
 		var target := telegraphed_targets[index]

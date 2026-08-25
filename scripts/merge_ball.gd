@@ -361,7 +361,13 @@ func _set_frozen_visual(enabled: bool) -> void:
 
 
 func _update_ice_durability_visual() -> void:
-	ice_durability_label.visible = false
+	if not is_ice_frozen or ice_durability <= 0:
+		ice_durability_label.visible = false
+		return
+	ice_durability_label.text = str(ice_durability)
+	ice_durability_label.add_theme_color_override("font_color", Color("#ffe14a"))
+	ice_durability_label.add_theme_color_override("font_outline_color", Color.BLACK)
+	ice_durability_label.visible = true
 
 func _draw() -> void:
 	var radius: float = ball_data.get_radius() if ball_data != null else 0.0

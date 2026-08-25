@@ -92,11 +92,13 @@ Primary runtime evidence: `scripts/merge_ball.gd` and `scripts/merge_game.gd`.
 - Base damage for that merge is the result ball's `merge_score`.
 - Within a drop sequence, damage is:
 
-  `round(base_merge_score × (1 + 0.5 × (chain_index - 1)))`
+  `round(base_merge_score × (1 + 0.25 × (chain_index - 1)))`
 
-- Therefore chain 1 uses ×1.0, chain 2 ×1.5, chain 3 ×2.0, and so on.
+- Therefore chain 1 uses ×1.0, chain 2 ×1.25, chain 3 ×1.5, chain 4 ×1.75, and chain 5 or later uses the ×2.0 cap.
 - The projectile hit is routed through `MonsterActionController.route_player_damage()` before enemy HP is reduced. Ingestion durability or a test handler may absorb or modify it.
 - There is no separate runtime attack-queue class and no extra combo-only hit. Multiple merges create multiple projectiles.
+- When an enemy has begun its defeat transition and another enemy remains in the same level, player merge attacks that reach the delayed attack-request point before the next enemy is configured are retained. After the next enemy is ready, those retained requests create their normal projectiles toward that enemy. This retention does not emit merge registration/completion again, grant score or gauge again, or damage ice again.
+- A projectile that was already created before its target enemy died is not retargeted or retained. If it reaches the shared fighter while battle damage is inactive, its hit is discarded. Retained requests are also discarded after the final enemy, player defeat, gimmick failure, or board game-over.
 - A test handler may implement a documented damage multiplier through `modify_player_damage()`. It must keep the normal merge result and routing unless its mechanic contract explicitly says otherwise.
 
 Primary runtime evidence: `scripts/merge_game.gd`, `scripts/battle.gd`, and `scripts/monster_action_controller.gd`.
@@ -138,14 +140,16 @@ These are not part of the numbered 1–50 test-mechanic sequence, but future dup
 
 ### Ice
 
-- Campaign level 2 contains a basic, enhanced, and boss ice enemy.
-- One completed player turn before its action, the controller selects eligible balls and marks them with the freeze telegraph. On the next action it locks input, performs the enemy's normal damage, then freezes the marked lineage. If one marked ball merges, the result inherits its mark through later chain merges. If two marked balls merge together, the result keeps one mark and the duplicate slot immediately searches for a new telegraphed target.
+- Campaign level 2 presents the basic, enhanced, and boss ice enemies in that order.
+- One completed player turn before its action, the controller selects eligible balls and marks them with the freeze telegraph. When the player starts the action-triggering drop, input locks immediately so first contact cannot enable another drop. After landing and the final 500 ms merge-quiet window, the enemy freezes the marked lineage and input unlocks only after the full skill finishes. At resolution, a marked ball not already committed to a merge is cast-reserved so it cannot start another merge. A marked ball already `merge_locked` is allowed to finish that committed merge; its result inherits the slot, is reserved before the next physics merge can begin, and is then frozen. Missing results wait up to 500 ms before the slot retargets. Target tracking remains active until each slot freezes or definitively fails. All three current ice actions are freeze-only; their stored attack-power values are reserved for separately scheduled normal attacks. If two marked balls merge together, the result keeps one mark and the duplicate slot immediately searches for a new telegraphed target.
 - Frozen balls are static and cannot merge.
 - Every normal merge completion damages every frozen ball's ice by 1.
-- The basic Resource has 400 HP, attacks for 5 every 4 completed player turns, freezes 1 ball, prioritizes displayed stages 1–3, and uses durability 2.
-- The enhanced Resource has 600 HP, attacks for 5 every 5 completed player turns, freezes 2 balls, prioritizes displayed stages 2–4, and uses durability 2.
-- The boss has 800 HP, attacks for 7 every 4 completed player turns, freezes 2 balls, prioritizes displayed stages 3–5, and uses durability 3.
-- There is no frozen-ball cap. Targets are searched in strict displayed-stage order starting at the configured preferred minimum (for example, 3 → 4 → 5 → 6), so the remaining slots are filled by the next stage rather than by skipping ahead. If no unfrozen target is found, a frozen ball below that enemy's configured ice durability is re-frozen and restored to full durability. If the action freezes fewer balls than its configured target count, including partial success such as 1/2, its total direct-attack damage is 1.5× the normal value.
+- Completed ice persists across the level's enemy transitions. On enemy defeat, uncast telegraphs, pending merge-result slots, and cast reservations are cancelled, while an already-launched ice projectile is allowed to land and apply its snapshotted durability. A delayed merge result inherits a mark only when one of its source IDs is still owned by the controller's current uncast target list, preventing a defeated enemy's mark from transferring into the next enemy.
+- All three ice enemies repeat `ice skill → normal attack → ice skill`. Ice actions deal no direct damage. After each ice action they wait 2 completed turns for the low-damage normal attack; after that attack they wait their configured 3/3/4 turns for the next ice action, producing effective ice recurrence periods of 5/5/6 turns.
+- The basic Resource has 600 HP and normal-attack damage 4. It waits 3 turns for its ice action, gathers up to 6 unfrozen candidates in normal priority order, randomly freezes 1 of them with durability 2, and uses the normal reinforcement fallback only when no unfrozen candidate exists.
+- The enhanced Resource has 800 HP and normal-attack damage 5. Unlike the other two ice enemies, it starts with its 2-turn normal-attack countdown, then waits 3 turns for its first 2-ball ice action. It gathers up to 6 unfrozen candidates in normal priority order, randomly selects 2 of them, and uses durability 2. Shortages use the normal reinforcement and stage-priority fallback.
+- The boss has 900 HP and normal-attack damage 6. It waits 4 turns for its ice action, collects up to 6 unfrozen candidates in normal stage-priority order and randomly chooses 1 as the center, then selects the 2 nearest unfrozen balls regardless of stage, for 3 total targets with durability 3. If no unfrozen center candidate exists or fewer than 2 nearby unfrozen balls exist, the remaining slots use the normal reinforcement and stage-priority fallback.
+- There is no frozen-ball cap. The controller first searches stages from the preferred minimum through stage 11 in pool order: unfrozen balls, damaged frozen balls, then full frozen balls. Only if slots still remain does it search lower stages from the nearest lower stage through stage 1 in the same pool order. Re-freezing any frozen ball adds the acting enemy's configured durability to its current durability, including damaged ice. A shortage remains possible only when fewer distinct valid balls than the requested count exist or a selected target becomes invalid before impact. The configured shortage multiplier is inactive while these actions remain freeze-only because they deal no direct damage.
 
 ### Ingestion
 

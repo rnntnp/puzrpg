@@ -97,6 +97,8 @@ Primary runtime evidence: `scripts/merge_ball.gd` and `scripts/merge_game.gd`.
 - Therefore chain 1 uses ×1.0, chain 2 ×1.25, chain 3 ×1.5, chain 4 ×1.75, and chain 5 or later uses the ×2.0 cap.
 - The projectile hit is routed through `MonsterActionController.route_player_damage()` before enemy HP is reduced. Ingestion durability or a test handler may absorb or modify it.
 - There is no separate runtime attack-queue class and no extra combo-only hit. Multiple merges create multiple projectiles.
+- When an enemy has begun its defeat transition and another enemy remains in the same level, player merge attacks that reach the delayed attack-request point before the next enemy is configured are retained. After the next enemy is ready, those retained requests create their normal projectiles toward that enemy. This retention does not emit merge registration/completion again, grant score or gauge again, or damage ice again.
+- A projectile that was already created before its target enemy died is not retargeted or retained. If it reaches the shared fighter while battle damage is inactive, its hit is discarded. Retained requests are also discarded after the final enemy, player defeat, gimmick failure, or board game-over.
 - A test handler may implement a documented damage multiplier through `modify_player_damage()`. It must keep the normal merge result and routing unless its mechanic contract explicitly says otherwise.
 
 Primary runtime evidence: `scripts/merge_game.gd`, `scripts/battle.gd`, and `scripts/monster_action_controller.gd`.

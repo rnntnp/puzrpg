@@ -55,6 +55,8 @@ var tutorial_prompt_version := 0
 var tutorial_drop_prompt_text := ""
 var tutorial_drop_prompt: Label
 var tutorial_prompt_tween: Tween
+var enemy_transition_active := false
+var pending_merge_attacks: Array[Dictionary] = []
 
 
 func get_debug_snapshot() -> Dictionary:
@@ -107,6 +109,8 @@ func _load_level() -> void:
 	title_label.text = level_data.level_name
 	current_enemy_index = 0
 	level_finished = false
+	enemy_transition_active = false
+	pending_merge_attacks.clear()
 	if (
 		level_data.battle_background_top != null
 		and level_data.battle_background_middle != null
@@ -186,6 +190,8 @@ func fail_gimmick_level(reason: String) -> void:
 	if level_finished or not battle_running:
 		return
 	battle_running = false
+	enemy_transition_active = false
+	pending_merge_attacks.clear()
 	merge_game.set_input_enabled(false)
 	status_label.text = reason
 	status_label.modulate = Color("#ff6b6b")
@@ -561,16 +567,54 @@ func _on_merge_attack_requested(
 	origin: Vector2,
 	ball_level: int
 ) -> void:
+	if enemy_transition_active and left_fighter.is_alive():
+		pending_merge_attacks.append({
+			"damage": damage,
+			"combo_count": combo_count,
+			"origin": origin,
+			"ball_level": ball_level,
+		})
+		print("[MERGE ATTACK DEFERRED] damage=%d | pending=%d" % [
+			damage, pending_merge_attacks.size()
+		])
+		return
 	if not battle_running or not left_fighter.is_alive() or not right_fighter.is_alive():
 		print("[MERGE ATTACK SKIPPED] battle=%s | player_alive=%s | enemy_alive=%s" % [
 			str(battle_running), str(left_fighter.is_alive()), str(right_fighter.is_alive())
 		])
 		return
+	_launch_merge_projectile(damage, combo_count, origin, ball_level)
+
+
+func _launch_merge_projectile(
+	damage: int,
+	combo_count: int,
+	origin: Vector2,
+	ball_level: int
+) -> void:
 	var effect = MergeAttackEffectScene.instantiate()
 	add_child(effect)
 	left_fighter.play_cast_animation()
 	effect.hit.connect(_on_merge_projectile_hit.bind(ball_level, combo_count, origin))
 	effect.play(origin, right_fighter.global_position, BallCatalogClass.get_ball(ball_level), damage, combo_count)
+
+
+func _flush_pending_merge_attacks() -> void:
+	if pending_merge_attacks.is_empty():
+		return
+	if not battle_running or not left_fighter.is_alive() or not right_fighter.is_alive():
+		pending_merge_attacks.clear()
+		return
+	var attacks: Array[Dictionary] = pending_merge_attacks.duplicate()
+	pending_merge_attacks.clear()
+	for attack: Dictionary in attacks:
+		var attack_origin: Vector2 = attack["origin"]
+		_launch_merge_projectile(
+			int(attack["damage"]),
+			int(attack["combo_count"]),
+			attack_origin,
+			int(attack["ball_level"])
+		)
 
 
 func _on_merge_projectile_hit(damage: int, ball_level: int, combo_count: int, merge_origin: Vector2) -> void:
@@ -588,9 +632,14 @@ func _on_fighter_defeated(fighter: Fighter) -> void:
 	merge_game.set_input_enabled(false)
 	status_label.text = "적 처치!" if fighter == right_fighter else "전투 패배"
 	if fighter == right_fighter:
+		enemy_transition_active = current_enemy_index + 1 < level_data.enemies.size()
+		if not enemy_transition_active:
+			pending_merge_attacks.clear()
 		monster_action_controller.on_enemy_defeat_started()
 	await fighter.play_defeat_animation()
 	if fighter == left_fighter:
+		enemy_transition_active = false
+		pending_merge_attacks.clear()
 		GameSession.set_battle_result(false, "%s 도전 실패" % level_data.level_name)
 		get_tree().change_scene_to_file("res://scenes/battle_result.tscn")
 		return
@@ -604,8 +653,12 @@ func _on_fighter_defeated(fighter: Fighter) -> void:
 		_load_enemy(current_enemy_index)
 		merge_game.set_input_enabled(true)
 		_start_battle()
+		enemy_transition_active = false
+		_flush_pending_merge_attacks()
 		return
 
+	enemy_transition_active = false
+	pending_merge_attacks.clear()
 	level_finished = true
 	status_label.text = "모든 적 처치!"
 	await get_tree().create_timer(0.4).timeout
@@ -615,6 +668,8 @@ func _on_fighter_defeated(fighter: Fighter) -> void:
 
 func _on_merge_game_over() -> void:
 	battle_running = false
+	enemy_transition_active = false
+	pending_merge_attacks.clear()
 	GameSession.set_battle_result(false, "%s · 머지 보드 게임오버" % level_data.level_name)
 	get_tree().change_scene_to_file("res://scenes/battle_result.tscn")
 

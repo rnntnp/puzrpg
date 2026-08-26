@@ -224,7 +224,7 @@ func _on_initial_tutorial_sequence_finished() -> void:
 	if battle_running and not level_finished:
 		merge_game.set_input_enabled(true)
 		tutorial_waiting_for_first_drop = not level_data.tutorial_turn_message.is_empty()
-		_schedule_drop_prompt("클릭으로 방울을 떨어뜨리세요")
+		_schedule_drop_prompt("클릭해 방울을 떨어뜨려 보세요.")
 
 
 func _on_tutorial_control_page_shown() -> void:
@@ -349,7 +349,7 @@ func _start_attack_observation_tutorial() -> void:
 
 
 func _start_enemy_intent_tutorial() -> void:
-	var message := "적은 머리 위에 다음 행동과\n남은 턴 수를 보여줍니다."
+	var message := "적의 머리 위에 다음 행동까지\n남은 턴 수를 알려줍니다."
 	var intent_tutorial := StageIntroSequenceClass.new()
 	add_child(intent_tutorial)
 	intent_tutorial.sequence_finished.connect(_on_enemy_intent_tutorial_finished)
@@ -367,7 +367,7 @@ func _on_enemy_intent_tutorial_finished() -> void:
 	if battle_running and not level_finished:
 		merge_game.set_input_enabled(true)
 		tutorial_attack_drops_remaining = 1
-		_schedule_drop_prompt("클릭으로 방울을 떨어뜨리세요")
+		_schedule_drop_prompt("클릭해 방울을 떨어뜨려 보세요.")
 
 
 func _on_tutorial_ball_dropped() -> void:
@@ -431,7 +431,7 @@ func _show_combo_drop_prompt() -> void:
 	tutorial_drop_prompt.size = Vector2(580.0, 60.0)
 	tutorial_drop_prompt.add_theme_font_size_override("font_size", 25)
 	tutorial_drop_prompt.add_theme_constant_override("outline_size", 6)
-	tutorial_drop_prompt.text = "방울을 떨어뜨려 연속 합성을 해보세요"
+	tutorial_drop_prompt.text = "방울을 떨어뜨려 콤보 공격을 해보세요"
 	tutorial_drop_prompt.modulate.a = 1.0
 	tutorial_drop_prompt.show()
 
@@ -472,7 +472,7 @@ func _start_combo_tutorial() -> void:
 	var combo_tutorial := StageIntroSequenceClass.new()
 	add_child(combo_tutorial)
 	combo_tutorial.sequence_finished.connect(_on_combo_tutorial_sequence_finished)
-	combo_tutorial.play_combo_tutorial("연속으로 방울을 합성하면\n더 강한 콤보 공격을 가합니다.")
+	combo_tutorial.play_combo_tutorial("방울을 연속으로 합치면\n더 강한 콤보 공격을 합니다.")
 
 
 func _on_combo_tutorial_sequence_finished() -> void:
@@ -492,8 +492,8 @@ func _start_skill_tutorial_after_delay() -> void:
 	add_child(skill_tutorial)
 	skill_tutorial.sequence_finished.connect(_on_skill_tutorial_sequence_finished)
 	skill_tutorial.play_custom_spotlight_tutorial(
-		"방울을 합성하면 정령들이 마나를 채워줍니다.\n마나가 가득 차면 주인공을 눌러\n스킬을 사용할 수 있습니다.",
-		Vector2(181.0, 300.0), 112.0
+		"방울을 합치면 정령들이 마나를 채워줍니다.\n마나가 가득 차면\n주인공을 눌러 스킬을 사용하세요.",
+		Vector2(181.0, 285.0), 150.0
 	)
 
 
@@ -510,7 +510,7 @@ func _show_skill_drop_prompt() -> void:
 	if tutorial_prompt_tween != null and tutorial_prompt_tween.is_valid():
 		tutorial_prompt_tween.kill()
 	tutorial_drop_prompt.position = Vector2(120.0, 700.0)
-	tutorial_drop_prompt.size = Vector2(480.0, 56.0)
+	tutorial_drop_prompt.size = Vector2(480.0, 90.0)
 	tutorial_drop_prompt.add_theme_font_size_override("font_size", 30)
 	tutorial_drop_prompt.add_theme_constant_override("outline_size", 6)
 	tutorial_drop_prompt.text = "주인공을 눌러 스킬을 사용해 보세요."
@@ -531,9 +531,9 @@ func _start_weakness_tutorial() -> void:
 	var weakness_tutorial := StageIntroSequenceClass.new()
 	add_child(weakness_tutorial)
 	weakness_tutorial.sequence_finished.connect(_on_weakness_tutorial_sequence_finished)
-	weakness_tutorial.play_custom_box_spotlight_tutorial(
-		"스킬로 적을 약화시키면,\n일정 턴 동안 받는 피해가 증가합니다.",
-		Vector2(515.0, 150.0), Vector2(145.0, 82.0)
+	weakness_tutorial.play_custom_spotlight_tutorial(
+		"스킬을 사용하면 적이 약해져서\n효과 동안 더 큰 피해를 줄 수 있습니다.",
+		Vector2(515.0, 310.0), 70.0
 	)
 
 

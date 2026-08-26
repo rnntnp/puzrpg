@@ -52,8 +52,8 @@ const TestGimmickDataClass = preload("res://scripts/test_gimmick_data.gd")
 ## 음수로 설정하면 자동 낙하와 시간제한을 사용하지 않는다.
 @export var ball_drop_time_limit: float = 5.0
 @export_range(1, 11, 1) var max_ball_level: int = 11
-## 1.0은 기본 속도이며, 1.6은 낙하 시간이 대략 1.6배 빨라진다.
-@export_range(0.5, 3.0, 0.1) var ball_physics_speed: float = 1.6
+## 1.0은 기본 속도이며, 2.4는 낙하 시간이 대략 2.4배 빨라진다.
+@export_range(0.5, 3.0, 0.1) var ball_physics_speed: float = 2.4
 ## 공이 합쳐질 때 주변 공을 밀어내는 속도 변화량이다. 0이면 밀어내지 않는다.
 @export_range(0.0, 500.0, 5.0) var merge_push_force: float = 90.0
 ## 합성 순간의 전체 게임 배속. 1.0이면 슬로모션을 사용하지 않는다.

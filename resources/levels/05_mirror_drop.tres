@@ -43,3 +43,4 @@ player_character = ExtResource("2")
 enemies = Array[ExtResource("4")]([ExtResource("3")])
 test_gimmick = SubResource("Gimmick")
 ball_drop_time_limit = -1.0
+ball_physics_speed = 2.0

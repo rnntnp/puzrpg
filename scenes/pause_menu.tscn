@@ -1,0 +1,494 @@
+[gd_scene format=3 uid="uid://b5620f3wqxg8k"]
+
+[ext_resource type="Script" uid="uid://lyx0uppofyvm" path="res://scripts/pause_menu.gd" id="1_script"]
+[ext_resource type="FontFile" uid="uid://op5qpjre8dba" path="res://assets/fonts/nanum_square_round/NanumSquareRoundEB.ttf" id="2_font"]
+[ext_resource type="Texture2D" uid="uid://dxjcr75w0sbb1" path="res://assets/ui/icons/pause.svg" id="3_pause_icon"]
+[ext_resource type="Texture2D" uid="uid://thrmk1acju1m" path="res://assets/ui/icons/volume_slider_grabber.svg" id="4_slider_grabber"]
+
+[sub_resource type="StyleBoxFlat" id="StyleButton"]
+bg_color = Color(1, 0.84, 0.52, 1)
+border_width_left = 4
+border_width_top = 4
+border_width_right = 4
+border_width_bottom = 4
+border_color = Color(0.08, 0.17, 0.28, 1)
+corner_radius_top_left = 20
+corner_radius_top_right = 20
+corner_radius_bottom_right = 20
+corner_radius_bottom_left = 20
+shadow_color = Color(0.02, 0.06, 0.15, 0.28)
+shadow_size = 4
+shadow_offset = Vector2(0, 3)
+
+[sub_resource type="StyleBoxFlat" id="StyleButtonHover"]
+bg_color = Color(1, 0.93, 0.72, 1)
+border_width_left = 4
+border_width_top = 4
+border_width_right = 4
+border_width_bottom = 4
+border_color = Color(0.08, 0.17, 0.28, 1)
+corner_radius_top_left = 20
+corner_radius_top_right = 20
+corner_radius_bottom_right = 20
+corner_radius_bottom_left = 20
+
+[sub_resource type="StyleBoxEmpty" id="StyleFocus"]
+
+[sub_resource type="StyleBoxFlat" id="StylePanel"]
+bg_color = Color(0.72, 0.96, 0.91, 0.98)
+border_width_left = 7
+border_width_top = 7
+border_width_right = 7
+border_width_bottom = 7
+border_color = Color(0.08, 0.17, 0.28, 1)
+corner_radius_top_left = 38
+corner_radius_top_right = 38
+corner_radius_bottom_right = 38
+corner_radius_bottom_left = 38
+shadow_color = Color(0.02, 0.06, 0.15, 0.42)
+shadow_size = 12
+shadow_offset = Vector2(0, 8)
+
+[sub_resource type="StyleBoxFlat" id="StyleTitle"]
+bg_color = Color(1, 0.9, 0.65, 1)
+border_width_left = 4
+border_width_top = 4
+border_width_right = 4
+border_width_bottom = 4
+border_color = Color(0.13, 0.21, 0.3, 1)
+corner_radius_top_left = 24
+corner_radius_top_right = 24
+corner_radius_bottom_right = 24
+corner_radius_bottom_left = 24
+
+[sub_resource type="StyleBoxFlat" id="StyleSliderTrack"]
+content_margin_top = 7.0
+content_margin_bottom = 7.0
+bg_color = Color(0.13, 0.21, 0.3, 0.32)
+corner_radius_top_left = 7
+corner_radius_top_right = 7
+corner_radius_bottom_right = 7
+corner_radius_bottom_left = 7
+
+[sub_resource type="StyleBoxFlat" id="StyleSliderFill"]
+content_margin_top = 7.0
+content_margin_bottom = 7.0
+bg_color = Color(0.32, 0.72, 0.67, 1)
+corner_radius_top_left = 7
+corner_radius_top_right = 7
+corner_radius_bottom_right = 7
+corner_radius_bottom_left = 7
+
+[sub_resource type="StyleBoxFlat" id="StyleSliderFillHover"]
+content_margin_top = 7.0
+content_margin_bottom = 7.0
+bg_color = Color(0.41, 0.82, 0.75, 1)
+corner_radius_top_left = 7
+corner_radius_top_right = 7
+corner_radius_bottom_right = 7
+corner_radius_bottom_left = 7
+
+[sub_resource type="StyleBoxFlat" id="StyleExitButton"]
+bg_color = Color(0.93, 0.25, 0.25, 1)
+border_width_left = 4
+border_width_top = 4
+border_width_right = 4
+border_width_bottom = 4
+border_color = Color(0.32, 0.055, 0.075, 1)
+corner_radius_top_left = 22
+corner_radius_top_right = 22
+corner_radius_bottom_right = 22
+corner_radius_bottom_left = 22
+shadow_color = Color(0.18, 0.02, 0.04, 0.36)
+shadow_size = 5
+shadow_offset = Vector2(0, 4)
+
+[sub_resource type="StyleBoxFlat" id="StyleExitButtonPressed"]
+bg_color = Color(0.72, 0.13, 0.16, 1)
+border_width_left = 4
+border_width_top = 4
+border_width_right = 4
+border_width_bottom = 4
+border_color = Color(0.32, 0.055, 0.075, 1)
+corner_radius_top_left = 22
+corner_radius_top_right = 22
+corner_radius_bottom_right = 22
+corner_radius_bottom_left = 22
+
+[sub_resource type="StyleBoxFlat" id="StyleExitButtonHover"]
+bg_color = Color(1, 0.38, 0.35, 1)
+border_width_left = 4
+border_width_top = 4
+border_width_right = 4
+border_width_bottom = 4
+border_color = Color(0.32, 0.055, 0.075, 1)
+corner_radius_top_left = 22
+corner_radius_top_right = 22
+corner_radius_bottom_right = 22
+corner_radius_bottom_left = 22
+shadow_color = Color(0.18, 0.02, 0.04, 0.28)
+shadow_size = 7
+shadow_offset = Vector2(0, 4)
+
+[sub_resource type="StyleBoxFlat" id="StyleCloseButton"]
+bg_color = Color(1, 0.9, 0.65, 1)
+border_width_left = 4
+border_width_top = 4
+border_width_right = 4
+border_width_bottom = 4
+border_color = Color(0.13, 0.21, 0.3, 1)
+corner_radius_top_left = 31
+corner_radius_top_right = 31
+corner_radius_bottom_right = 31
+corner_radius_bottom_left = 31
+shadow_color = Color(0.02, 0.06, 0.15, 0.32)
+shadow_size = 5
+shadow_offset = Vector2(0, 3)
+
+[sub_resource type="StyleBoxFlat" id="StyleCloseButtonPressed"]
+bg_color = Color(0.92, 0.72, 0.4, 1)
+border_width_left = 4
+border_width_top = 4
+border_width_right = 4
+border_width_bottom = 4
+border_color = Color(0.13, 0.21, 0.3, 1)
+corner_radius_top_left = 31
+corner_radius_top_right = 31
+corner_radius_bottom_right = 31
+corner_radius_bottom_left = 31
+
+[sub_resource type="StyleBoxFlat" id="StyleCloseButtonHover"]
+bg_color = Color(1, 0.96, 0.8, 1)
+border_width_left = 4
+border_width_top = 4
+border_width_right = 4
+border_width_bottom = 4
+border_color = Color(0.13, 0.21, 0.3, 1)
+corner_radius_top_left = 31
+corner_radius_top_right = 31
+corner_radius_bottom_right = 31
+corner_radius_bottom_left = 31
+shadow_color = Color(0.02, 0.06, 0.15, 0.25)
+shadow_size = 7
+shadow_offset = Vector2(0, 3)
+
+[node name="PauseMenu" type="CanvasLayer" unique_id=2043909498]
+process_mode = 3
+layer = 100
+script = ExtResource("1_script")
+
+[node name="PauseButton" type="Button" parent="." unique_id=1275058673]
+offset_left = 638.0
+offset_top = 16.0
+offset_right = 702.0
+offset_bottom = 80.0
+tooltip_text = "일시정지"
+theme_override_colors/font_color = Color(0.08, 0.17, 0.28, 1)
+theme_override_colors/font_pressed_color = Color(0.08, 0.17, 0.28, 1)
+theme_override_colors/font_hover_color = Color(0.08, 0.17, 0.28, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 29
+theme_override_styles/normal = SubResource("StyleButton")
+theme_override_styles/pressed = SubResource("StyleButtonHover")
+theme_override_styles/hover = SubResource("StyleButtonHover")
+theme_override_styles/focus = SubResource("StyleFocus")
+icon = ExtResource("3_pause_icon")
+icon_alignment = 1
+
+[node name="MenuOverlay" type="Control" parent="." unique_id=10577258]
+visible = false
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Dimmer" type="ColorRect" parent="MenuOverlay" unique_id=116151734]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.02, 0.06, 0.15, 0.62)
+
+[node name="MenuPanel" type="PanelContainer" parent="MenuOverlay" unique_id=726776769]
+custom_minimum_size = Vector2(570, 300)
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -288.0
+offset_top = -350.0
+offset_right = 288.0
+offset_bottom = 84.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StylePanel")
+
+[node name="Margin" type="MarginContainer" parent="MenuOverlay/MenuPanel" unique_id=1294736994]
+layout_mode = 2
+theme_override_constants/margin_left = 32
+theme_override_constants/margin_top = 30
+theme_override_constants/margin_right = 32
+theme_override_constants/margin_bottom = 30
+
+[node name="Content" type="VBoxContainer" parent="MenuOverlay/MenuPanel/Margin" unique_id=86716637]
+layout_mode = 2
+theme_override_constants/separation = 20
+
+[node name="TitlePanel" type="PanelContainer" parent="MenuOverlay/MenuPanel/Margin/Content" unique_id=294542096]
+custom_minimum_size = Vector2(0, 82)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleTitle")
+
+[node name="Title" type="Label" parent="MenuOverlay/MenuPanel/Margin/Content/TitlePanel" unique_id=1497316520]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.08, 0.17, 0.28, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 29
+text = "일시정지"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="BgmRow" type="HBoxContainer" parent="MenuOverlay/MenuPanel/Margin/Content" unique_id=294066355]
+custom_minimum_size = Vector2(0, 70)
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="BgmLabel" type="Label" parent="MenuOverlay/MenuPanel/Margin/Content/BgmRow" unique_id=1362662812]
+custom_minimum_size = Vector2(92, 0)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.08, 0.17, 0.28, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 20
+text = "배경음"
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="BgmSlider" type="HSlider" parent="MenuOverlay/MenuPanel/Margin/Content/BgmRow" unique_id=2019910000]
+custom_minimum_size = Vector2(285, 42)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+theme_override_icons/grabber = ExtResource("4_slider_grabber")
+theme_override_icons/grabber_highlight = ExtResource("4_slider_grabber")
+theme_override_icons/grabber_disabled = ExtResource("4_slider_grabber")
+theme_override_styles/slider = SubResource("StyleSliderTrack")
+theme_override_styles/grabber_area = SubResource("StyleSliderFill")
+theme_override_styles/grabber_area_highlight = SubResource("StyleSliderFillHover")
+value = 80.0
+
+[node name="BgmValue" type="Label" parent="MenuOverlay/MenuPanel/Margin/Content/BgmRow" unique_id=1094602574]
+custom_minimum_size = Vector2(92, 0)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.08, 0.17, 0.28, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 17
+text = "80%"
+vertical_alignment = 1
+
+[node name="SfxRow" type="HBoxContainer" parent="MenuOverlay/MenuPanel/Margin/Content" unique_id=1793965741]
+custom_minimum_size = Vector2(0, 70)
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="SfxLabel" type="Label" parent="MenuOverlay/MenuPanel/Margin/Content/SfxRow" unique_id=1271987856]
+custom_minimum_size = Vector2(92, 0)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.08, 0.17, 0.28, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 20
+text = "효과음"
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="SfxSlider" type="HSlider" parent="MenuOverlay/MenuPanel/Margin/Content/SfxRow" unique_id=1736595448]
+custom_minimum_size = Vector2(285, 42)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+theme_override_icons/grabber = ExtResource("4_slider_grabber")
+theme_override_icons/grabber_highlight = ExtResource("4_slider_grabber")
+theme_override_icons/grabber_disabled = ExtResource("4_slider_grabber")
+theme_override_styles/slider = SubResource("StyleSliderTrack")
+theme_override_styles/grabber_area = SubResource("StyleSliderFill")
+theme_override_styles/grabber_area_highlight = SubResource("StyleSliderFillHover")
+value = 80.0
+
+[node name="SfxValue" type="Label" parent="MenuOverlay/MenuPanel/Margin/Content/SfxRow" unique_id=1624471215]
+custom_minimum_size = Vector2(92, 0)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.08, 0.17, 0.28, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 17
+text = "80%"
+vertical_alignment = 1
+
+[node name="ResumeButton" type="Button" parent="MenuOverlay/MenuPanel/Margin/Content" unique_id=89585062]
+visible = false
+custom_minimum_size = Vector2(0, 76)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.08, 0.17, 0.28, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 21
+theme_override_styles/normal = SubResource("StyleButton")
+theme_override_styles/pressed = SubResource("StyleButtonHover")
+theme_override_styles/hover = SubResource("StyleButtonHover")
+theme_override_styles/focus = SubResource("StyleFocus")
+text = "계속하기"
+
+[node name="ExitButton" type="Button" parent="MenuOverlay/MenuPanel/Margin/Content" unique_id=1647514065]
+custom_minimum_size = Vector2(250, 76)
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_colors/font_color = Color(1, 0.96, 0.94, 1)
+theme_override_colors/font_pressed_color = Color(1, 0.96, 0.94, 1)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 23
+theme_override_styles/normal = SubResource("StyleExitButton")
+theme_override_styles/pressed = SubResource("StyleExitButtonPressed")
+theme_override_styles/hover = SubResource("StyleExitButtonHover")
+theme_override_styles/focus = SubResource("StyleFocus")
+text = "나가기"
+
+[node name="CloseButton" type="Button" parent="MenuOverlay" unique_id=925146913]
+z_index = 2
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = 241.0
+offset_top = -365.0
+offset_right = 303.0
+offset_bottom = -303.0
+grow_horizontal = 2
+grow_vertical = 2
+tooltip_text = "닫기"
+theme_override_colors/font_color = Color(0.08, 0.17, 0.28, 1)
+theme_override_colors/font_pressed_color = Color(0.08, 0.17, 0.28, 1)
+theme_override_colors/font_hover_color = Color(0.08, 0.17, 0.28, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 72
+theme_override_styles/normal = SubResource("StyleCloseButton")
+theme_override_styles/pressed = SubResource("StyleCloseButtonPressed")
+theme_override_styles/hover = SubResource("StyleCloseButtonHover")
+theme_override_styles/focus = SubResource("StyleFocus")
+
+[node name="Glyph" type="Label" parent="MenuOverlay/CloseButton" unique_id=1889463835]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 1.0
+offset_top = 2.0
+offset_right = 1.0
+offset_bottom = 2.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(0.08, 0.17, 0.28, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 48
+text = "×"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="ConfirmationOverlay" type="Control" parent="MenuOverlay" unique_id=1294178975]
+visible = false
+z_index = 10
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Dimmer" type="ColorRect" parent="MenuOverlay/ConfirmationOverlay" unique_id=1714228708]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.02, 0.06, 0.15, 0.48)
+
+[node name="ConfirmPanel" type="PanelContainer" parent="MenuOverlay/ConfirmationOverlay" unique_id=1893489118]
+custom_minimum_size = Vector2(520, 300)
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -260.0
+offset_top = -150.0
+offset_right = 260.0
+offset_bottom = 150.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StylePanel")
+
+[node name="Margin" type="MarginContainer" parent="MenuOverlay/ConfirmationOverlay/ConfirmPanel" unique_id=898179663]
+layout_mode = 2
+theme_override_constants/margin_left = 28
+theme_override_constants/margin_top = 25
+theme_override_constants/margin_right = 28
+theme_override_constants/margin_bottom = 25
+
+[node name="Content" type="VBoxContainer" parent="MenuOverlay/ConfirmationOverlay/ConfirmPanel/Margin" unique_id=887666661]
+layout_mode = 2
+theme_override_constants/separation = 22
+
+[node name="Message" type="Label" parent="MenuOverlay/ConfirmationOverlay/ConfirmPanel/Margin/Content" unique_id=1677471541]
+custom_minimum_size = Vector2(0, 120)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.08, 0.17, 0.28, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 25
+text = "레벨 선택 화면으로
+돌아가시겠습니까?"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Buttons" type="HBoxContainer" parent="MenuOverlay/ConfirmationOverlay/ConfirmPanel/Margin/Content" unique_id=74937224]
+layout_mode = 2
+theme_override_constants/separation = 18
+alignment = 1
+
+[node name="CancelButton" type="Button" parent="MenuOverlay/ConfirmationOverlay/ConfirmPanel/Margin/Content/Buttons" unique_id=2081251243]
+custom_minimum_size = Vector2(200, 68)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.08, 0.17, 0.28, 1)
+theme_override_colors/font_focus_color = Color(0.08, 0.17, 0.28, 1)
+theme_override_colors/font_pressed_color = Color(0.08, 0.17, 0.28, 1)
+theme_override_colors/font_hover_color = Color(0.08, 0.17, 0.28, 1)
+theme_override_colors/font_hover_pressed_color = Color(0.08, 0.17, 0.28, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 19
+theme_override_styles/normal = SubResource("StyleButton")
+theme_override_styles/pressed = SubResource("StyleButtonHover")
+theme_override_styles/hover = SubResource("StyleButtonHover")
+theme_override_styles/focus = SubResource("StyleFocus")
+text = "취소"
+
+[node name="ConfirmButton" type="Button" parent="MenuOverlay/ConfirmationOverlay/ConfirmPanel/Margin/Content/Buttons" unique_id=251072657]
+custom_minimum_size = Vector2(200, 68)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.08, 0.17, 0.28, 1)
+theme_override_colors/font_focus_color = Color(0.08, 0.17, 0.28, 1)
+theme_override_colors/font_pressed_color = Color(0.08, 0.17, 0.28, 1)
+theme_override_colors/font_hover_color = Color(0.08, 0.17, 0.28, 1)
+theme_override_colors/font_hover_pressed_color = Color(0.08, 0.17, 0.28, 1)
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 19
+theme_override_styles/normal = SubResource("StyleButton")
+theme_override_styles/pressed = SubResource("StyleButtonHover")
+theme_override_styles/hover = SubResource("StyleButtonHover")
+theme_override_styles/focus = SubResource("StyleFocus")
+text = "나가기"

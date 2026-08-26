@@ -1,4 +1,4 @@
-[gd_scene load_steps=22 format=3 uid="uid://67v0ma41cql"]
+[gd_scene format=3 uid="uid://67v0ma41cql"]
 
 [ext_resource type="Script" uid="uid://qu1wuofvy7va" path="res://scripts/battle.gd" id="1"]
 [ext_resource type="PackedScene" path="res://scenes/fighter.tscn" id="2"]
@@ -18,8 +18,9 @@
 [ext_resource type="AudioStream" uid="uid://3lweonpl7yrp" path="res://assets/audio/sfx/player_hit_cute.wav" id="14_player_hit_sfx"]
 [ext_resource type="Script" uid="uid://n03lkbfsgq2s" path="res://scripts/player_skill_controller.gd" id="15_player_skill_controller"]
 [ext_resource type="PackedScene" path="res://scenes/player_skill_button.tscn" id="16_player_skill_button"]
-[ext_resource type="AudioStream" path="res://assets/audio/sfx/ingestion_swallow_gulp.ogg" id="17_ingestion_swallow_sfx"]
-[ext_resource type="AudioStream" path="res://assets/audio/sfx/ingestion_spit_buweeh.wav" id="18_ingestion_spit_sfx"]
+[ext_resource type="AudioStream" uid="uid://da4t72x45tag3" path="res://assets/audio/sfx/ingestion_swallow_gulp.ogg" id="17_ingestion_swallow_sfx"]
+[ext_resource type="AudioStream" uid="uid://ey6hb3sbk8de" path="res://assets/audio/sfx/ingestion_spit_buweeh.wav" id="18_ingestion_spit_sfx"]
+[ext_resource type="PackedScene" uid="uid://b5620f3wqxg8k" path="res://scenes/pause_menu.tscn" id="19_pause_menu"]
 
 [sub_resource type="Gradient" id="Gradient_top_center_shadow"]
 offsets = PackedFloat32Array(0, 0.42, 1)
@@ -32,86 +33,6 @@ height = 120
 fill = 1
 fill_from = Vector2(0.5, 0.5)
 fill_to = Vector2(1, 0.5)
-
-[sub_resource type="StyleBoxFlat" id="ExitButtonNormal"]
-bg_color = Color(1, 0.84, 0.52, 1)
-border_width_left = 4
-border_width_top = 4
-border_width_right = 4
-border_width_bottom = 4
-border_color = Color(0.1, 0.2, 0.29, 1)
-corner_radius_top_left = 18
-corner_radius_top_right = 18
-corner_radius_bottom_right = 18
-corner_radius_bottom_left = 18
-shadow_color = Color(0.04, 0.1, 0.2, 0.25)
-shadow_size = 4
-shadow_offset = Vector2(0, 3)
-
-[sub_resource type="StyleBoxFlat" id="ExitButtonPressed"]
-bg_color = Color(0.92, 0.7, 0.35, 1)
-border_width_left = 4
-border_width_top = 4
-border_width_right = 4
-border_width_bottom = 4
-border_color = Color(0.1, 0.2, 0.29, 1)
-corner_radius_top_left = 18
-corner_radius_top_right = 18
-corner_radius_bottom_right = 18
-corner_radius_bottom_left = 18
-
-[sub_resource type="StyleBoxFlat" id="ExitButtonHover"]
-bg_color = Color(1, 0.91, 0.69, 1)
-border_width_left = 4
-border_width_top = 4
-border_width_right = 4
-border_width_bottom = 4
-border_color = Color(0.1, 0.2, 0.29, 1)
-corner_radius_top_left = 18
-corner_radius_top_right = 18
-corner_radius_bottom_right = 18
-corner_radius_bottom_left = 18
-
-[sub_resource type="StyleBoxFlat" id="ExitDialogPanel"]
-bg_color = Color(0.72, 0.96, 0.91, 0.98)
-border_width_left = 7
-border_width_top = 7
-border_width_right = 7
-border_width_bottom = 7
-border_color = Color(0.08, 0.17, 0.28, 1)
-corner_radius_top_left = 38
-corner_radius_top_right = 38
-corner_radius_bottom_right = 38
-corner_radius_bottom_left = 38
-shadow_color = Color(0.02, 0.06, 0.15, 0.42)
-shadow_size = 12
-shadow_offset = Vector2(0, 8)
-
-[sub_resource type="StyleBoxFlat" id="ExitDialogTitle"]
-bg_color = Color(1, 0.9, 0.65, 1)
-border_width_left = 4
-border_width_top = 4
-border_width_right = 4
-border_width_bottom = 4
-border_color = Color(0.13, 0.21, 0.3, 1)
-corner_radius_top_left = 24
-corner_radius_top_right = 24
-corner_radius_bottom_right = 24
-corner_radius_bottom_left = 24
-
-[sub_resource type="StyleBoxFlat" id="ExitDialogConfirm"]
-bg_color = Color(1, 0.84, 0.52, 1)
-border_width_left = 4
-border_width_top = 4
-border_width_right = 4
-border_width_bottom = 4
-border_color = Color(0.1, 0.2, 0.29, 1)
-corner_radius_top_left = 20
-corner_radius_top_right = 20
-corner_radius_bottom_right = 20
-corner_radius_bottom_left = 20
-
-[sub_resource type="StyleBoxEmpty" id="ExitDialogButtonFocus"]
 
 [node name="Battle" type="Node2D" unique_id=1064943574]
 script = ExtResource("1")
@@ -127,11 +48,11 @@ stream = ExtResource("14_player_hit_sfx")
 volume_db = -5.0
 max_polyphony = 4
 
-[node name="IngestionSwallowSfx" type="AudioStreamPlayer" parent="."]
+[node name="IngestionSwallowSfx" type="AudioStreamPlayer" parent="." unique_id=427477775]
 stream = ExtResource("17_ingestion_swallow_sfx")
 volume_db = -4.0
 
-[node name="IngestionSpitSfx" type="AudioStreamPlayer" parent="."]
+[node name="IngestionSpitSfx" type="AudioStreamPlayer" parent="." unique_id=185716425]
 stream = ExtResource("18_ingestion_spit_sfx")
 volume_db = -4.0
 
@@ -219,22 +140,6 @@ theme_override_font_sizes/font_size = 27
 text = "LEVEL"
 horizontal_alignment = 1
 vertical_alignment = 1
-
-[node name="ExitButton" type="Button" parent="UI" unique_id=954261539]
-layout_mode = 0
-offset_left = 18.0
-offset_top = 14.0
-offset_right = 122.0
-offset_bottom = 58.0
-theme_override_colors/font_color = Color(0.08, 0.17, 0.28, 1)
-theme_override_colors/font_pressed_color = Color(0.08, 0.17, 0.28, 1)
-theme_override_colors/font_hover_color = Color(0.08, 0.17, 0.28, 1)
-theme_override_fonts/font = ExtResource("5_eb6dy")
-theme_override_font_sizes/font_size = 17
-theme_override_styles/normal = SubResource("ExitButtonNormal")
-theme_override_styles/pressed = SubResource("ExitButtonPressed")
-theme_override_styles/hover = SubResource("ExitButtonHover")
-text = "나가기"
 
 [node name="StatusLabel" type="Label" parent="UI" unique_id=1796290971]
 layout_mode = 0
@@ -344,7 +249,7 @@ offset_right = 642.0
 offset_bottom = 199.0
 alignment = 1
 
-[node name="RightAppliedStatusEffects" parent="UI" instance=ExtResource("6")]
+[node name="RightAppliedStatusEffects" parent="UI" unique_id=1134078422 instance=ExtResource("6")]
 layout_mode = 0
 offset_left = 390.0
 offset_top = 286.0
@@ -375,115 +280,7 @@ offset_bottom = 1240.0
 mouse_filter = 2
 color = Color(0.2, 0.2901961, 0.43137255, 0)
 
-[node name="ExitConfirmationLayer" type="CanvasLayer" parent="." unique_id=1234210509]
-layer = 100
-
-[node name="ExitConfirmationOverlay" type="Control" parent="ExitConfirmationLayer" unique_id=829186357]
-visible = false
-layout_mode = 3
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-
-[node name="Dimmer" type="ColorRect" parent="ExitConfirmationLayer/ExitConfirmationOverlay" unique_id=435747200]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-color = Color(0.02, 0.06, 0.15, 0.58)
-
-[node name="Dialog" type="PanelContainer" parent="ExitConfirmationLayer/ExitConfirmationOverlay" unique_id=863202821]
-custom_minimum_size = Vector2(570, 330)
-layout_mode = 1
-anchors_preset = 8
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -285.0
-offset_top = -165.0
-offset_right = 285.0
-offset_bottom = 165.0
-grow_horizontal = 2
-grow_vertical = 2
-theme_override_styles/panel = SubResource("ExitDialogPanel")
-
-[node name="Margin" type="MarginContainer" parent="ExitConfirmationLayer/ExitConfirmationOverlay/Dialog" unique_id=205500025]
-layout_mode = 2
-theme_override_constants/margin_left = 28
-theme_override_constants/margin_top = 26
-theme_override_constants/margin_right = 28
-theme_override_constants/margin_bottom = 26
-
-[node name="Content" type="VBoxContainer" parent="ExitConfirmationLayer/ExitConfirmationOverlay/Dialog/Margin" unique_id=1761484437]
-layout_mode = 2
-theme_override_constants/separation = 18
-
-[node name="TitlePanel" type="PanelContainer" parent="ExitConfirmationLayer/ExitConfirmationOverlay/Dialog/Margin/Content" unique_id=1746194806]
-custom_minimum_size = Vector2(0, 76)
-layout_mode = 2
-theme_override_styles/panel = SubResource("ExitDialogTitle")
-
-[node name="Title" type="Label" parent="ExitConfirmationLayer/ExitConfirmationOverlay/Dialog/Margin/Content/TitlePanel" unique_id=780763250]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.08, 0.17, 0.28, 1)
-theme_override_fonts/font = ExtResource("5_eb6dy")
-theme_override_font_sizes/font_size = 27
-text = "전투 나가기"
-horizontal_alignment = 1
-vertical_alignment = 1
-
-[node name="Message" type="Label" parent="ExitConfirmationLayer/ExitConfirmationOverlay/Dialog/Margin/Content" unique_id=732540198]
-custom_minimum_size = Vector2(0, 96)
-layout_mode = 2
-theme_override_colors/font_color = Color(0.08, 0.17, 0.28, 1)
-theme_override_fonts/font = ExtResource("5_eb6dy")
-theme_override_font_sizes/font_size = 18
-text = "현재 전투를 포기하고 레벨 선택으로 돌아갈까요?
-진행 중인 전투는 저장되지 않습니다."
-horizontal_alignment = 1
-vertical_alignment = 1
-
-[node name="Buttons" type="HBoxContainer" parent="ExitConfirmationLayer/ExitConfirmationOverlay/Dialog/Margin/Content" unique_id=1095291474]
-layout_mode = 2
-theme_override_constants/separation = 20
-alignment = 1
-
-[node name="CancelButton" type="Button" parent="ExitConfirmationLayer/ExitConfirmationOverlay/Dialog/Margin/Content/Buttons" unique_id=743833447]
-custom_minimum_size = Vector2(210, 66)
-layout_mode = 2
-theme_override_colors/font_color = Color(0.08, 0.17, 0.28, 1)
-theme_override_colors/font_focus_color = Color(0.08, 0.17, 0.28, 1)
-theme_override_colors/font_pressed_color = Color(0.08, 0.17, 0.28, 1)
-theme_override_colors/font_hover_color = Color(0.08, 0.17, 0.28, 1)
-theme_override_colors/font_hover_pressed_color = Color(0.08, 0.17, 0.28, 1)
-theme_override_fonts/font = ExtResource("5_eb6dy")
-theme_override_font_sizes/font_size = 19
-theme_override_styles/normal = SubResource("ExitDialogConfirm")
-theme_override_styles/pressed = SubResource("ExitButtonPressed")
-theme_override_styles/hover = SubResource("ExitButtonHover")
-theme_override_styles/focus = SubResource("ExitDialogButtonFocus")
-text = "계속 플레이"
-
-[node name="ConfirmButton" type="Button" parent="ExitConfirmationLayer/ExitConfirmationOverlay/Dialog/Margin/Content/Buttons" unique_id=70692090]
-custom_minimum_size = Vector2(210, 66)
-layout_mode = 2
-theme_override_colors/font_color = Color(0.08, 0.17, 0.28, 1)
-theme_override_colors/font_focus_color = Color(0.08, 0.17, 0.28, 1)
-theme_override_colors/font_pressed_color = Color(0.08, 0.17, 0.28, 1)
-theme_override_colors/font_hover_color = Color(0.08, 0.17, 0.28, 1)
-theme_override_colors/font_hover_pressed_color = Color(0.08, 0.17, 0.28, 1)
-theme_override_fonts/font = ExtResource("5_eb6dy")
-theme_override_font_sizes/font_size = 19
-theme_override_styles/normal = SubResource("ExitDialogConfirm")
-theme_override_styles/pressed = SubResource("ExitButtonPressed")
-theme_override_styles/hover = SubResource("ExitButtonHover")
-theme_override_styles/focus = SubResource("ExitDialogButtonFocus")
-text = "레벨 선택"
+[node name="PauseMenu" parent="." unique_id=1145382850 instance=ExtResource("19_pause_menu")]
 
 [node name="MergeGame" parent="." unique_id=252762906 instance=ExtResource("5")]
 position = Vector2(0, 390)

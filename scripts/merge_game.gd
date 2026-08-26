@@ -916,6 +916,9 @@ func _on_merge_requested(first, second) -> void:
 	var carries_ingestion_target: bool = first.ingestion_marked or second.ingestion_marked
 	var ice_target_count := int(first.ice_targeted) + int(second.ice_targeted)
 	var involved_cursed: bool = first.is_merge_cursed or second.is_merge_cursed
+	var involved_damage_background: bool = (
+		first.damage_background_marked or second.damage_background_marked
+	)
 	var source_ids: Array[int] = [first.get_instance_id(), second.get_instance_id()]
 	# 합성 충돌이 발생한 투하 턴을 고정한다. 이후 지연 연쇄 처리 중 다음 투하가
 	# 시작되어도 이 공격의 소속 턴은 바뀌지 않는다.
@@ -927,7 +930,12 @@ func _on_merge_requested(first, second) -> void:
 			or second.external_merge_token == active_external_merge_token
 		):
 			result_external_merge_token = active_external_merge_token
-	var is_external_merge := result_external_merge_token > 0
+	# A damage-background ball remains hazardous after its original external
+	# window closes. Its next merge is enemy-owned once, but the merged result
+	# is deliberately normal so the hazard cannot propagate through a chain.
+	var is_external_merge := result_external_merge_token > 0 or involved_damage_background
+	if involved_damage_background:
+		result_external_merge_token = 0
 	first.lock_for_merge()
 	second.lock_for_merge()
 	# 연쇄 접촉은 순서를 예약해 하나씩 보여준 뒤 합성한다. 실제 시간 기준이라 FPS와 무관하다.

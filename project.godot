@@ -19,6 +19,7 @@ config/icon="res://icon.svg"
 [autoload]
 
 GameSession="*res://scripts/game_session.gd"
+AudioSettings="*res://scripts/audio_settings.gd"
 UIAudioManager="*res://scripts/ui_audio_manager.gd"
 MCPRuntimeServer="*res://addons/godot_mcp_toolkit/runtime/mcp_runtime_server.gd"
 

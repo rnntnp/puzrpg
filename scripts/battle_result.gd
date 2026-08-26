@@ -16,9 +16,6 @@ extends Control
 @onready var damage_value: Label = $StatsPanel/DamageValue
 @onready var retry_button: Button = $RetryButton
 @onready var level_select_button: Button = $LevelSelectButton
-@onready var debug_preview_bar: HBoxContainer = $DebugPreviewBar
-@onready var debug_victory_button: Button = $DebugPreviewBar/VictoryButton
-@onready var debug_defeat_button: Button = $DebugPreviewBar/DefeatButton
 
 var _button_tweens: Dictionary = {}
 var _pressed_buttons: Dictionary = {}
@@ -28,9 +25,6 @@ var _character_rest_position := Vector2.ZERO
 
 func _ready() -> void:
 	var battle_won := GameSession.last_battle_won
-	debug_preview_bar.visible = OS.is_debug_build()
-	debug_victory_button.pressed.connect(_show_debug_victory)
-	debug_defeat_button.pressed.connect(_show_debug_defeat)
 	_character_rest_position = character_sprite.position
 	character_sprite.pivot_offset = character_sprite.size * 0.5
 	_setup_result_button(level_select_button)
@@ -45,7 +39,7 @@ func _ready() -> void:
 		_auto_continue()
 
 
-func _apply_result_state(battle_won: bool, use_preview_values := false) -> void:
+func _apply_result_state(battle_won: bool) -> void:
 	var level = GameSession.get_last_battle_level()
 	if level != null:
 		background.texture = level.battle_background if level.battle_background != null else level.level_select_preview
@@ -58,9 +52,9 @@ func _apply_result_state(battle_won: bool, use_preview_values := false) -> void:
 	_play_character_motion(battle_won)
 	result_label.text = "스테이지 클리어!" if battle_won else "도전 실패"
 	result_label.modulate = Color("#0b3766")
-	var gold := 150 if use_preview_values and battle_won else GameSession.last_result_gold
-	var max_combo := 12 if use_preview_values else GameSession.last_result_max_combo
-	var damage_dealt := 12430 if use_preview_values else GameSession.last_result_damage_dealt
+	var gold := GameSession.last_result_gold
+	var max_combo := GameSession.last_result_max_combo
+	var damage_dealt := GameSession.last_result_damage_dealt
 	gold_value.text = _format_number(gold)
 	max_combo_value.text = "×%s" % _format_number(max_combo)
 	damage_value.text = _format_number(damage_dealt)
@@ -89,14 +83,6 @@ func _play_character_motion(battle_won: bool) -> void:
 			character_sprite, "scale", Vector2.ONE, 0.52
 		)
 		_character_motion_tween.tween_interval(0.28)
-
-
-func _show_debug_victory() -> void:
-	_apply_result_state(true, true)
-
-
-func _show_debug_defeat() -> void:
-	_apply_result_state(false, true)
 
 
 func _format_number(value: int) -> String:

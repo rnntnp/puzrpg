@@ -36,10 +36,15 @@ var pointer_tracking := false
 var page_tween: Tween
 var start_button_tween: Tween
 var start_button_is_pressed := false
+var boss_silhouette_material: Material
+var boss_preview_material: Material
 
 
 func _ready() -> void:
 	level_preview.material = level_preview.material.duplicate()
+	boss_silhouette_material = boss_silhouette.material.duplicate() if boss_silhouette.material != null else null
+	var revealed_material := boss_silhouette.get_meta(&"_revealed_material") as Material
+	boss_preview_material = revealed_material.duplicate() if revealed_material != null else null
 	level_preview.resized.connect(_update_preview_mask_mapping)
 	viewed_level_index = GameSession.selected_level_index
 	start_button.pressed.connect(_on_start_button_pressed)
@@ -124,6 +129,7 @@ func _show_level(index: int, direction := 0) -> void:
 	reward_icon.texture = OPEN_REWARD_CHEST if level_completed else CLOSED_REWARD_CHEST
 	reward_icon.scale = Vector2.ONE * 1.3 if level_completed else Vector2.ONE
 	boss_silhouette.texture = _get_level_boss_sprite(level)
+	boss_silhouette.material = boss_preview_material if level_completed else boss_silhouette_material
 	boss_silhouette.visible = boss_silhouette.texture != null
 	placeholder_label.visible = not level_preview.visible
 	placeholder_label.text = level.image_placeholder if unlocked else "LOCKED LEVEL\n미리보기"

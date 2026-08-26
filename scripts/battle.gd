@@ -29,10 +29,6 @@ const StageIntroSequenceClass = preload("res://scripts/stage_intro_sequence.gd")
 @onready var monster_action_controller = $MonsterActionController
 @onready var player_skill_controller: PlayerSkillController = $PlayerSkillController
 @onready var merge_game = $MergeGame
-@onready var exit_button: Button = $UI/ExitButton
-@onready var exit_confirmation_overlay: Control = $ExitConfirmationLayer/ExitConfirmationOverlay
-@onready var exit_cancel_button: Button = $ExitConfirmationLayer/ExitConfirmationOverlay/Dialog/Margin/Content/Buttons/CancelButton
-@onready var exit_confirm_button: Button = $ExitConfirmationLayer/ExitConfirmationOverlay/Dialog/Margin/Content/Buttons/ConfirmButton
 @onready var enemy_hit_sfx: AudioStreamPlayer = $EnemyHitSfx
 @onready var player_hit_sfx: AudioStreamPlayer = $PlayerHitSfx
 @onready var ingestion_swallow_sfx: AudioStreamPlayer = $IngestionSwallowSfx
@@ -66,9 +62,6 @@ func get_debug_snapshot() -> Dictionary:
 
 
 func _ready() -> void:
-	exit_button.pressed.connect(_show_exit_confirmation)
-	exit_cancel_button.pressed.connect(_hide_exit_confirmation)
-	exit_confirm_button.pressed.connect(_exit_to_level_select)
 	left_fighter.health_changed.connect(_on_left_health_changed)
 	right_fighter.health_changed.connect(_on_right_health_changed)
 	left_fighter.damage_received.connect(_on_player_damage_received)
@@ -85,22 +78,6 @@ func _ready() -> void:
 	player_skill_controller.skill_used.connect(_on_tutorial_skill_used)
 	_load_level()
 	_start_battle()
-
-
-func _show_exit_confirmation() -> void:
-	if level_finished:
-		return
-	exit_confirmation_overlay.visible = true
-	exit_cancel_button.grab_focus()
-
-
-func _hide_exit_confirmation() -> void:
-	exit_confirmation_overlay.visible = false
-	exit_button.grab_focus()
-
-
-func _exit_to_level_select() -> void:
-	get_tree().change_scene_to_file("res://scenes/level_select.tscn")
 
 
 func _load_level() -> void:

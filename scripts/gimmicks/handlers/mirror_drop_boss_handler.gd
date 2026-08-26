@@ -4,7 +4,7 @@ extends TestGimmickHandler
 const BallCatalogClass = preload("res://scripts/ball_catalog.gd")
 const MergeAttackEffectScene = preload("res://scenes/merge_attack_effect.tscn")
 const MirrorFaceSheenClass = preload("res://scripts/gimmicks/visuals/mirror_face_sheen.gd")
-const ReflectionActiveSprite = preload("res://assets/characters/generated/mirror_mimic_boss_reflection_active_v2.png")
+const ReflectionActiveSprite = preload("res://assets/characters/generated/mirror_mimic_boss_reflection_active_v3.png")
 const ReflectionShineSfx: AudioStream = preload("res://assets/audio/sfx/mirror_reflection_shine.ogg")
 const ReflectionActiveEffect: StatusEffectData = preload("res://resources/effects/mirror_reflection_active.tres")
 const PHASE_NORMAL := 0
@@ -41,8 +41,6 @@ func _on_configured() -> void:
 	enemy.add_child(reflection_shine_player)
 	if not merge_game.external_merge_damage_requested.is_connected(_on_external_merge_damage_requested):
 		merge_game.external_merge_damage_requested.connect(_on_external_merge_damage_requested)
-	if not merge_game.merge_completed.is_connected(_on_merge_completed):
-		merge_game.merge_completed.connect(_on_merge_completed)
 	_enter_normal_phase()
 
 
@@ -159,7 +157,6 @@ func _execute_mirror_drop(level: int, player_drop_x: float) -> void:
 	spawned.set_damage_background_marked(true)
 	log_event("MIRROR DROP", "stage=%d player_x=%.1f boss_x=%.1f" % [level + 1, player_drop_x, spawn_x])
 	await _wait_for_mirror_resolution(spawned)
-	_clear_mirror_ball_backgrounds()
 	merge_game.end_external_merge_window()
 	mirror_external_merge_token = 0
 	if mirror_combo > 0:
@@ -189,21 +186,12 @@ func _wait_for_mirror_resolution(ball: MergeBall) -> void:
 		await get_tree().physics_frame
 
 
-func _on_merge_completed(ball: MergeBall) -> void:
-	if (
-		mirror_external_merge_token > 0
-		and is_instance_valid(ball)
-		and ball.external_merge_token == mirror_external_merge_token
-	):
-		ball.set_damage_background_marked(true)
-
-
 func _clear_mirror_ball_backgrounds() -> void:
-	if not is_instance_valid(merge_game) or mirror_external_merge_token <= 0:
+	if not is_instance_valid(merge_game):
 		return
 	for node in merge_game.get_active_balls():
 		var ball := node as MergeBall
-		if is_instance_valid(ball) and ball.external_merge_token == mirror_external_merge_token:
+		if is_instance_valid(ball) and ball.damage_background_marked:
 			ball.set_damage_background_marked(false)
 			ball.set_external_merge_token(0)
 
@@ -215,7 +203,7 @@ func _on_external_merge_damage_requested(
 	origin: Vector2,
 	ball_level: int
 ) -> void:
-	if not active or not merge_game.is_external_merge_window_active():
+	if not active:
 		return
 	mirror_last_merge_msec = Time.get_ticks_msec()
 	mirror_combo = maxi(mirror_combo, combo_count)
@@ -261,7 +249,7 @@ func _enter_normal_phase() -> void:
 	if is_instance_valid(enemy):
 		enemy.clear_visual_override()
 	if is_instance_valid(mirror_face_sheen):
-		mirror_face_sheen.visible = false
+		mirror_face_sheen.set_sheen_active(false)
 	turns_remaining = maxi(1, tuning.normal_phase_drops)
 	mirror_combo = 0
 	mirror_damage_total = 0
@@ -276,7 +264,7 @@ func _enter_mirror_phase() -> void:
 		enemy.set_visual_override(ReflectionActiveSprite)
 	if is_instance_valid(mirror_face_sheen):
 		mirror_face_sheen.sync_from_fighter(enemy)
-		mirror_face_sheen.visible = true
+		mirror_face_sheen.set_sheen_active(true)
 	if is_instance_valid(reflection_shine_player):
 		reflection_shine_player.stop()
 		reflection_shine_player.play()
@@ -365,8 +353,6 @@ func _on_cleanup() -> void:
 		merge_game.end_external_merge_window()
 		if merge_game.external_merge_damage_requested.is_connected(_on_external_merge_damage_requested):
 			merge_game.external_merge_damage_requested.disconnect(_on_external_merge_damage_requested)
-		if merge_game.merge_completed.is_connected(_on_merge_completed):
-			merge_game.merge_completed.disconnect(_on_merge_completed)
 	player_drop_recorded = false
 	last_player_level = -1
 	mirror_combo = 0

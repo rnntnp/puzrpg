@@ -1,7 +1,8 @@
-[gd_scene format=3 uid="uid://vkjhcuuhdtya"]
+[gd_scene load_steps=23 format=3 uid="uid://vkjhcuuhdtya"]
 
 [ext_resource type="Script" uid="uid://dv0btxu6ax1fw" path="res://scripts/level_select.gd" id="1_level"]
 [ext_resource type="Shader" uid="uid://ilt7qvesekx8" path="res://shaders/boss_silhouette.gdshader" id="2_silhouette"]
+[ext_resource type="Shader" uid="uid://d4knouww648y4" path="res://shaders/character_white_outline.gdshader" id="2_white_outline"]
 [ext_resource type="Theme" path="res://resources/themes/level_select_theme.tres" id="3_theme"]
 [ext_resource type="FontFile" uid="uid://op5qpjre8dba" path="res://assets/fonts/nanum_square_round/NanumSquareRoundEB.ttf" id="5_rovvv"]
 [ext_resource type="Texture2D" uid="uid://cyp3ox6awb7vi" path="res://assets/ui/level_select_extracted/main_panel.png" id="6_main_card"]
@@ -77,8 +78,13 @@ bg_color = Color(1, 1, 1, 0)
 shader = ExtResource("2_silhouette")
 shader_parameter/shadow_top = Color(0.09, 0.015, 0.14, 1)
 shader_parameter/shadow_bottom = Color(0.005, 0.003, 0.015, 1)
-shader_parameter/rim_color = Color(0.55, 0.12, 0.85, 1)
-shader_parameter/rim_strength = 0.38
+shader_parameter/outline_color = Color(1, 1, 1, 1)
+shader_parameter/outline_size = 4.2
+
+[sub_resource type="ShaderMaterial" id="BossPreviewMaterial"]
+shader = ExtResource("2_white_outline")
+shader_parameter/outline_color = Color(1, 1, 1, 1)
+shader_parameter/outline_size = 4.2
 
 [sub_resource type="StyleBoxFlat" id="TitlePanel"]
 bg_color = Color(1, 0.9, 0.65, 0.99)
@@ -341,6 +347,7 @@ vertical_alignment = 1
 [node name="BossSilhouette" type="TextureRect" parent="Content/LevelImage" unique_id=60147261]
 texture_filter = 2
 material = SubResource("SilhouetteMaterial")
+metadata/_revealed_material = SubResource("BossPreviewMaterial")
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0

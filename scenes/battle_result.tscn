@@ -380,24 +380,3 @@ theme_override_styles/normal = SubResource("RetryPanel")
 theme_override_styles/pressed = SubResource("RetryPanel")
 theme_override_styles/hover = SubResource("RetryPanel")
 text = "다시하기"
-
-[node name="DebugPreviewBar" type="HBoxContainer" parent="." unique_id=917712982]
-z_index = 20
-layout_mode = 0
-offset_left = 188.0
-offset_top = 8.0
-offset_right = 532.0
-offset_bottom = 48.0
-theme_override_constants/separation = 8
-
-[node name="VictoryButton" type="Button" parent="DebugPreviewBar" unique_id=1549067108]
-custom_minimum_size = Vector2(168, 40)
-layout_mode = 2
-theme_override_font_sizes/font_size = 17
-text = "성공 화면"
-
-[node name="DefeatButton" type="Button" parent="DebugPreviewBar" unique_id=703130886]
-custom_minimum_size = Vector2(168, 40)
-layout_mode = 2
-theme_override_font_sizes/font_size = 17
-text = "실패 화면"

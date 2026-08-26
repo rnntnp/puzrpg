@@ -2,7 +2,10 @@ class_name MirrorDropBossOverlay
 extends Node2D
 
 const BallCatalogClass = preload("res://scripts/ball_catalog.gd")
+const LEGACY_VISUAL_SCENE = preload("res://scenes/balls/visuals/ball_visual_base.tscn")
 const VISUAL_DESIGN_SIZE := 418.0
+const PREVIEW_OPACITY := 0.48
+const BACKGROUND_OPACITY := 0.58
 const PHASE_NORMAL := 0
 const PHASE_MIRROR := 1
 
@@ -12,15 +15,20 @@ var mirror_x := 0.0
 var drop_y := 0.0
 var mirror_action_active := false
 var preview_level := -1
-var preview_sprite: Sprite2D
+var preview_visual: Node2D
+var preview_background: Sprite2D
 
 
 func _ready() -> void:
-	preview_sprite = Sprite2D.new()
-	preview_sprite.name = "MirrorBallPreview"
-	preview_sprite.modulate = Color(0.0, 0.0, 0.0, 0.58)
-	preview_sprite.visible = false
-	add_child(preview_sprite)
+	preview_visual = Node2D.new()
+	preview_visual.name = "MirrorBallPreview"
+	preview_visual.visible = false
+	add_child(preview_visual)
+	preview_background = Sprite2D.new()
+	preview_background.name = "BlackBackground"
+	preview_background.modulate = Color(0.0, 0.0, 0.0, BACKGROUND_OPACITY)
+	preview_background.z_index = -1
+	preview_visual.add_child(preview_background)
 
 
 func show_state(
@@ -37,9 +45,9 @@ func show_state(
 	drop_y = spawn_y
 	mirror_action_active = action_active
 	_sync_preview_shape(ball_level)
-	if is_instance_valid(preview_sprite):
-		preview_sprite.position = Vector2(mirror_x, drop_y) + preview_sprite.get_meta(&"outline_offset", Vector2.ZERO)
-		preview_sprite.visible = phase == PHASE_MIRROR and not mirror_action_active
+	if is_instance_valid(preview_visual):
+		preview_visual.position = Vector2(mirror_x, drop_y)
+		preview_visual.visible = phase == PHASE_MIRROR and not mirror_action_active
 	queue_redraw()
 
 
@@ -57,23 +65,42 @@ func _draw() -> void:
 
 
 func _sync_preview_shape(ball_level: int) -> void:
-	if not is_instance_valid(preview_sprite) or ball_level == preview_level:
+	if not is_instance_valid(preview_visual) or ball_level == preview_level:
 		return
 	preview_level = ball_level
 	var ball_data: Resource = BallCatalogClass.get_ball(ball_level)
-	if ball_data == null or ball_data.visual_scene == null:
-		preview_sprite.visible = false
+	if ball_data == null:
+		preview_visual.visible = false
 		return
-	var visual := ball_data.visual_scene.instantiate() as Node2D
-	var shell_outline := visual.get_node_or_null("ShellOutline") as Sprite2D
-	if shell_outline == null or shell_outline.texture == null:
-		visual.free()
-		preview_sprite.visible = false
-		return
+	for child in preview_visual.get_children():
+		if child != preview_background:
+			child.free()
+	var scene: PackedScene = ball_data.visual_scene if ball_data.visual_scene != null else LEGACY_VISUAL_SCENE
+	var visual := scene.instantiate() as Node2D
+	visual.modulate = Color(1.0, 1.0, 1.0, PREVIEW_OPACITY)
+	preview_visual.add_child(visual)
 	var visual_scale: float = ball_data.get_radius() * 2.0 / VISUAL_DESIGN_SIZE
-	preview_sprite.texture = shell_outline.texture
-	preview_sprite.texture_filter = shell_outline.texture_filter
-	preview_sprite.rotation = shell_outline.rotation
-	preview_sprite.scale = shell_outline.scale * visual_scale
-	preview_sprite.set_meta(&"outline_offset", shell_outline.position * visual_scale)
-	visual.free()
+	visual.scale = Vector2.ONE * visual_scale
+	var shell_outline := visual.get_node_or_null("ShellOutline") as Sprite2D
+	if shell_outline != null and shell_outline.texture != null:
+		preview_background.texture = shell_outline.texture
+		preview_background.texture_filter = shell_outline.texture_filter
+		preview_background.position = shell_outline.position * visual_scale
+		preview_background.rotation = shell_outline.rotation
+		preview_background.scale = shell_outline.scale * visual_scale
+	else:
+		preview_background.texture = null
+	if ball_data.visual_scene == null:
+		var axolotl := visual.get_node_or_null("Axolotl") as Sprite2D
+		var shell_base := visual.get_node_or_null("ShellBase") as Sprite2D
+		var shell_shadow := visual.get_node_or_null("ShellShadow") as Sprite2D
+		if axolotl != null:
+			axolotl.texture = ball_data.sprite
+			axolotl.modulate = ball_data.sprite_modulate
+			if ball_data.sprite != null:
+				var texture_size: Vector2 = ball_data.sprite.get_size()
+				axolotl.scale = Vector2(VISUAL_DESIGN_SIZE / texture_size.x, VISUAL_DESIGN_SIZE / texture_size.y)
+		if shell_base != null:
+			shell_base.modulate = ball_data.glow_color
+		if shell_shadow != null:
+			shell_shadow.modulate = ball_data.glow_color.darkened(0.62)

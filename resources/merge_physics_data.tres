@@ -9,5 +9,5 @@ floor_friction = 1.0
 ball_friction = 1.0
 ball_linear_damp = 3.5
 ball_angular_damp = 9.0
-sleep_assist_settle_time = 1.0
+sleep_assist_settle_time = 0.55
 sleep_assist_max_displacement = 15.0

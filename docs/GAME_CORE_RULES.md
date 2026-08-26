@@ -29,6 +29,7 @@ A new mechanic may extend behavior through its own handler. It must not silently
 - The catalog currently contains 3 campaign levels followed by 50 mechanic test levels.
 - Campaign levels unlock sequentially. Every path in `test_level_paths` is always selectable.
 - The level-select start button stores the selected path in `GameSession` and opens `scenes/main.tscn`.
+- The current level-select order is explicitly controlled by `LevelCatalog.visible_level_paths`; it shows only the selected campaign/test subset while the remaining registered paths stay available in the catalog's hidden arrays for later reconnection.
 - A battle win, fighter defeat, or explicit gimmick failure opens `scenes/battle_result.tscn`. Danger-Line overflow removes the overflowing balls and damages the player; it opens the result only if that damage defeats the player.
 - `LevelData.enemies` is the existing enemy-sequence system. Enemies are loaded in array order; do not create a second wave manager.
 - The board's balls remain in the same `MergeGame` while sequential enemies change. A test handler can also retain its mechanic state by setting `preserve_board_between_enemies`.
@@ -155,7 +156,7 @@ These are not part of the numbered 1–50 test-mechanic sequence, but future dup
 
 - Campaign level 3 contains a recovery-ingestion enemy, a launch-ingestion enemy, and an alternating ingestion boss in that order.
 - After a normal attack, it telegraphs and marks the highest-stage eligible ball. On execution that ball is removed from the board and stored by stage.
-- During the response window, player merge damage first reduces ingestion durability. Breaking durability spawns the swallowed stage as an independent physics ball falling vertically from a random safe board X, without changing the player's current or queued drops, then adds 2 turns to the shared ×1.3 Weakness effect.
+- During the response window, only player merge attacks whose collision occurred after the response began reduce ingestion durability. Attacks belonging to the telegraph-ending drop (including delayed physical merges and their delayed projectiles) still damage enemy HP. Breaking durability spawns the swallowed stage as an independent physics ball falling vertically from a random safe board X, without changing the player's current or queued drops, then adds 2 turns to the shared ×1.3 Weakness effect.
 - The recovery variant heals when the response window expires. The launch variant starts with ingestion and deals configured direct player damage using the normal attack animation when the response window expires.
 - The boss has no normal attack phase. It alternates launch and recovery ingestion, immediately telegraphing the next ingestion after each success or interruption. Its launch damage scales to a configured cap while ingestion durability remains fixed.
 - The swallowed ball is not returned on monster success.

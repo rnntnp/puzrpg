@@ -49,6 +49,7 @@ var _state_version := 0
 var _ingestion_help_tween: Tween
 var _ingestion_help_active := false
 var next_action_is_ice := false
+var ingestion_response_drop_sequence_id := -1
 
 
 func configure(
@@ -84,6 +85,7 @@ func configure(
 	active_launch_damage = 0
 	launch_executions = 0
 	vulnerable_turns = 0
+	ingestion_response_drop_sequence_id = -1
 	status_effects.clear_effects()
 	applied_status_effects.clear_effects()
 	durability_bar.clear_durability()
@@ -144,13 +146,26 @@ func on_ball_dropped() -> void:
 
 
 func on_player_ball_started() -> void:
-	if using_test_gimmick or ice_skill == null or state != State.NORMAL_ATTACK:
+	if using_test_gimmick:
+		return
+	# 포식 실행 턴은 첫 착지에서 다음 공이 열리기 전에 입력을 막는다.
+	# 실제 포식 연출이 끝나고 대응 상태가 준비될 때까지 이 잠금이 유지된다.
+	if skill != null and state == State.INGESTION_TELEGRAPH and remaining_turns == 1:
+		merge_game.set_input_enabled(false)
+		return
+	if ice_skill == null or state != State.NORMAL_ATTACK:
 		return
 	if next_action_is_ice and remaining_turns == 1:
 		merge_game.set_input_enabled(false)
 
 
-func route_player_damage(damage: int, merge_result_level_index := -1, combo_count := 1, merge_origin := Vector2.ZERO) -> int:
+func route_player_damage(
+	damage: int,
+	merge_result_level_index := -1,
+	combo_count := 1,
+	merge_origin := Vector2.ZERO,
+	attack_drop_sequence_id := -1
+) -> int:
 	if damage <= 0:
 		return 0
 	var hp_damage := damage
@@ -158,7 +173,14 @@ func route_player_damage(damage: int, merge_result_level_index := -1, combo_coun
 		hp_damage = test_gimmick_controller.modify_player_damage(
 			damage, merge_result_level_index, combo_count, merge_origin
 		)
-	elif state == State.INGESTION_RESPONSE and current_durability > 0:
+	elif (
+		state == State.INGESTION_RESPONSE
+		and current_durability > 0
+		and (
+			attack_drop_sequence_id < 0
+			or attack_drop_sequence_id > ingestion_response_drop_sequence_id
+		)
+	):
 		var absorbed := mini(current_durability, hp_damage)
 		current_durability -= absorbed
 		hp_damage -= absorbed
@@ -264,6 +286,7 @@ func _execute_ingestion() -> void:
 	if not is_instance_valid(target_ball):
 		print("[INGESTION] target unavailable; retrying telegraph")
 		_enter_ingestion_telegraph()
+		merge_game.set_input_enabled(true)
 		return
 	var consumed_ball := target_ball
 	swallowed_ball_level = consumed_ball.merge_level
@@ -275,6 +298,8 @@ func _execute_ingestion() -> void:
 		enemy.get_ingestion_mouth_global_position()
 	)
 	if not consumed or not is_instance_valid(enemy) or not enemy.is_alive():
+		if is_instance_valid(enemy) and enemy.is_alive() and is_instance_valid(player) and player.is_alive():
+			merge_game.set_input_enabled(true)
 		return
 	battle.play_ingestion_swallow_sfx()
 	enemy.set_visual_override(enemy.character_data.ingestion_swallowed_sprite)
@@ -282,6 +307,7 @@ func _execute_ingestion() -> void:
 	enemy.show_ingestion_glow(swallowed_color)
 	state = State.INGESTION_RESPONSE
 	remaining_turns = skill.response_turns
+	ingestion_response_drop_sequence_id = merge_game.drop_sequence_id
 	active_durability_max = mini(
 		skill.maximum_durability,
 		skill.durability + skill.durability_increase_per_use * ingestion_executions

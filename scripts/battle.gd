@@ -577,7 +577,8 @@ func _on_merge_attack_requested(
 	combo_count: int,
 	_base_points: int,
 	origin: Vector2,
-	ball_level: int
+	ball_level: int,
+	attack_drop_sequence_id: int
 ) -> void:
 	if enemy_transition_active and left_fighter.is_alive():
 		pending_merge_attacks.append({
@@ -585,6 +586,7 @@ func _on_merge_attack_requested(
 			"combo_count": combo_count,
 			"origin": origin,
 			"ball_level": ball_level,
+			"drop_sequence_id": attack_drop_sequence_id,
 		})
 		print("[MERGE ATTACK DEFERRED] damage=%d | pending=%d" % [
 			damage, pending_merge_attacks.size()
@@ -595,19 +597,22 @@ func _on_merge_attack_requested(
 			str(battle_running), str(left_fighter.is_alive()), str(right_fighter.is_alive())
 		])
 		return
-	_launch_merge_projectile(damage, combo_count, origin, ball_level)
+	_launch_merge_projectile(damage, combo_count, origin, ball_level, attack_drop_sequence_id)
 
 
 func _launch_merge_projectile(
 	damage: int,
 	combo_count: int,
 	origin: Vector2,
-	ball_level: int
+	ball_level: int,
+	attack_drop_sequence_id: int
 ) -> void:
 	var effect = MergeAttackEffectScene.instantiate()
 	add_child(effect)
 	left_fighter.play_cast_animation()
-	effect.hit.connect(_on_merge_projectile_hit.bind(ball_level, combo_count, origin))
+	effect.hit.connect(
+		_on_merge_projectile_hit.bind(ball_level, combo_count, origin, attack_drop_sequence_id)
+	)
 	effect.play(origin, right_fighter.global_position, BallCatalogClass.get_ball(ball_level), damage, combo_count)
 
 
@@ -625,14 +630,27 @@ func _flush_pending_merge_attacks() -> void:
 			int(attack["damage"]),
 			int(attack["combo_count"]),
 			attack_origin,
-			int(attack["ball_level"])
+			int(attack["ball_level"]),
+			int(attack["drop_sequence_id"])
 		)
 
 
-func _on_merge_projectile_hit(damage: int, ball_level: int, combo_count: int, merge_origin: Vector2) -> void:
+func _on_merge_projectile_hit(
+	damage: int,
+	ball_level: int,
+	combo_count: int,
+	merge_origin: Vector2,
+	attack_drop_sequence_id: int
+) -> void:
 	if not battle_running or not right_fighter.is_alive():
 		return
-	damage = monster_action_controller.route_player_damage(damage, ball_level, combo_count, merge_origin)
+	damage = monster_action_controller.route_player_damage(
+		damage,
+		ball_level,
+		combo_count,
+		merge_origin,
+		attack_drop_sequence_id
+	)
 	if damage <= 0:
 		return
 	result_max_combo = maxi(result_max_combo, combo_count)

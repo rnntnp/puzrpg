@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="StatusEffectData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/status_effect_data.gd" id="1_status"]
+[ext_resource type="Texture2D" path="res://assets/effects/generated/status_split_warning.png" id="2_icon"]
+
+[resource]
+script = ExtResource("1_status")
+effect_id = &"split_countdown"
+display_name = "공 분열까지 남은 턴"
+icon = ExtResource("2_icon")
+play_apply_pop = true

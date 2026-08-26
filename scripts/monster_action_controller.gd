@@ -346,6 +346,7 @@ func _execute_ingestion() -> void:
 func _interrupt_ingestion() -> void:
 	_state_version += 1
 	_clear_ingestion_help()
+	battle.clear_player_damage_preview()
 	var interrupted_effect_id := (
 		IngestionEffect.effect_id if active_ingestion_is_launch else IngestionHealEffect.effect_id
 	)
@@ -373,6 +374,7 @@ func _schedule_ingestion_success() -> void:
 	swallowed_ball_level = -1
 	enemy.play_ingestion_squash()
 	if active_ingestion_is_launch:
+		battle.clear_player_damage_preview()
 		await _launch_ingested_ball_at_player(resolved_ball_level, active_launch_damage)
 		print("[INGESTION SUCCEEDED] launch_damage=%d" % active_launch_damage)
 	else:
@@ -473,6 +475,10 @@ func _update_ui() -> void:
 			status_effects.set_effect(_get_active_ingestion_effect(), remaining_turns)
 	if state == State.INGESTION_RESPONSE:
 		durability_bar.set_durability(current_durability, active_durability_max)
+		if active_ingestion_is_launch and active_launch_damage > 0:
+			battle.show_player_damage_preview(active_launch_damage)
+		else:
+			battle.clear_player_damage_preview()
 
 
 func _run_ice_turn() -> void:

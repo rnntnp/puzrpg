@@ -17,7 +17,7 @@ func hide_glow() -> void:
 func _draw() -> void:
 	for layer in range(7, 0, -1):
 		var weight := float(layer) / 7.0
-		var radius := lerpf(9.0, 34.0, weight)
+		var radius := lerpf(18.0, 68.0, weight)
 		var alpha := lerpf(0.34, 0.025, weight)
 		draw_circle(Vector2.ZERO, radius, Color(glow_color, alpha))
-	draw_circle(Vector2.ZERO, 7.0, Color(glow_color.lightened(0.35), 0.55))
+	draw_circle(Vector2.ZERO, 14.0, Color(glow_color.lightened(0.35), 0.55))

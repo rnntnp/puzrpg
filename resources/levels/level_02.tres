@@ -2,15 +2,15 @@
 
 [ext_resource type="Script" uid="uid://egcuwxnrdhmr" path="res://scripts/level_data.gd" id="1_level"]
 [ext_resource type="Resource" uid="uid://dd8t0hxokj424" path="res://resources/characters/blue_fighter.tres" id="2_player"]
-[ext_resource type="Resource" path="res://resources/characters/ice_monster.tres" id="3_enemy"]
-[ext_resource type="Resource" path="res://resources/characters/ice_monster_enhanced.tres" id="9_enhanced_enemy"]
-[ext_resource type="Resource" path="res://resources/characters/ice_monster_boss.tres" id="10_boss_enemy"]
+[ext_resource type="Resource" uid="uid://bsud55pwothis" path="res://resources/characters/ice_monster.tres" id="3_enemy"]
 [ext_resource type="Script" uid="uid://duu5mev8uwp8d" path="res://scripts/character_data.gd" id="5_character_type"]
-[ext_resource type="Texture2D" path="res://assets/backgrounds/stage_02_snow_mountain_handdrawn_v1.png" id="6_background"]
+[ext_resource type="Texture2D" uid="uid://b6wwa4mjehm65" path="res://assets/backgrounds/stage_02_snow_mountain_handdrawn_v1.png" id="6_background"]
 [ext_resource type="Texture2D" uid="uid://djrpj3bemgjio" path="res://assets/effects/generated/status_ice_simple.png" id="8_gimmick"]
-[ext_resource type="Texture2D" path="res://assets/backgrounds/stage_02_snow_mountain_handdrawn_v1_top.png" id="11_background_top"]
-[ext_resource type="Texture2D" path="res://assets/backgrounds/stage_02_snow_mountain_handdrawn_v1_middle.png" id="12_background_middle"]
-[ext_resource type="Texture2D" path="res://assets/backgrounds/stage_02_snow_mountain_handdrawn_v1_bottom.png" id="13_background_bottom"]
+[ext_resource type="Resource" uid="uid://vj6xbbyn4q28" path="res://resources/characters/ice_monster_enhanced.tres" id="9_enhanced_enemy"]
+[ext_resource type="Resource" uid="uid://d07vqu8ieij2s" path="res://resources/characters/ice_monster_boss.tres" id="10_boss_enemy"]
+[ext_resource type="Texture2D" uid="uid://dxaaqi3bqq7vn" path="res://assets/backgrounds/stage_02_snow_mountain_handdrawn_v1_top.png" id="11_background_top"]
+[ext_resource type="Texture2D" uid="uid://cttm1ykgcaigh" path="res://assets/backgrounds/stage_02_snow_mountain_handdrawn_v1_middle.png" id="12_background_middle"]
+[ext_resource type="Texture2D" uid="uid://dov8n81jvn133" path="res://assets/backgrounds/stage_02_snow_mountain_handdrawn_v1_bottom.png" id="13_background_bottom"]
 
 [resource]
 script = ExtResource("1_level")

@@ -40,6 +40,12 @@ extends Resource
 			return
 		cast_sprite = value
 		emit_changed()
+@export var attack_sprite: Texture2D:
+	set(value):
+		if attack_sprite == value:
+			return
+		attack_sprite = value
+		emit_changed()
 @export_range(-100.0, 100.0, 1.0) var cast_sprite_height_offset: float = 0.0:
 	set(value):
 		if is_equal_approx(cast_sprite_height_offset, value):

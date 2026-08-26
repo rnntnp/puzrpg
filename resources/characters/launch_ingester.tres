@@ -1,10 +1,10 @@
-[gd_resource type="Resource" script_class="CharacterData" load_steps=6 format=3]
+[gd_resource type="Resource" script_class="CharacterData" format=3 uid="uid://cw56epw2wpi8s"]
 
-[ext_resource type="Script" path="res://scripts/character_data.gd" id="1"]
+[ext_resource type="Script" uid="uid://duu5mev8uwp8d" path="res://scripts/character_data.gd" id="1"]
 [ext_resource type="Resource" path="res://resources/skills/launch_ingestion.tres" id="2"]
-[ext_resource type="Texture2D" path="res://assets/characters/generated/crystal_toad_launch_idle_v5.png" id="3_normal"]
-[ext_resource type="Texture2D" path="res://assets/characters/generated/crystal_toad_launch_telegraph_v1.png" id="4_telegraph"]
-[ext_resource type="Texture2D" path="res://assets/characters/generated/crystal_toad_launch_swallowed_v1.png" id="5_swallowed"]
+[ext_resource type="Texture2D" uid="uid://dkfwi1ufc4fr8" path="res://assets/characters/generated/crystal_toad_launch_idle_v5.png" id="3_normal"]
+[ext_resource type="Texture2D" uid="uid://dctdmtop3cait" path="res://assets/characters/generated/crystal_toad_launch_telegraph_v1.png" id="4_telegraph"]
+[ext_resource type="Texture2D" uid="uid://db5ldeoxmkkin" path="res://assets/characters/generated/crystal_toad_launch_swallowed_v1.png" id="5_swallowed"]
 
 [resource]
 script = ExtResource("1")
@@ -14,7 +14,7 @@ sprite = ExtResource("3_normal")
 ingestion_telegraph_sprite = ExtResource("4_telegraph")
 ingestion_swallowed_sprite = ExtResource("5_swallowed")
 ingestion_mouth_offset = Vector2(-58, -8)
-ingestion_belly_glow_offset = Vector2(-12, 38)
+ingestion_belly_glow_offset = Vector2(-45, 38)
 sprite_size = Vector2(235, 170)
 max_health = 500
 attack_power = 3

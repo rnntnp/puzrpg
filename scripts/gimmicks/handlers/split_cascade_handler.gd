@@ -2,6 +2,7 @@ class_name SplitCascadeHandler
 extends TestGimmickHandler
 
 const SplitCascadeConfigClass = preload("res://scripts/gimmicks/configs/split_cascade_config.gd")
+const SplitCountdownEffect: StatusEffectData = preload("res://resources/effects/split_countdown.tres")
 
 const MODE_SINGLE := 0
 const MODE_DOUBLE := 1
@@ -57,8 +58,13 @@ func on_turn_completed() -> void:
 
 func _execute_split_attack() -> void:
 	busy = true
+	battle.right_status_effects.remove_effect(SplitCountdownEffect.effect_id)
+	battle.clear_player_damage_preview()
 	debug_special_execution_count += 1
 	merge_game.set_input_enabled(false)
+	if enemy.character_data.cast_sprite != null:
+		enemy.set_visual_override(enemy.character_data.cast_sprite)
+	enemy.play_cast_animation()
 	_ensure_split_targets()
 	var targets: Array[MergeBall] = split_targets.duplicate()
 	var intended_target_count := _target_count()
@@ -76,6 +82,10 @@ func _execute_split_attack() -> void:
 		targets.sort_custom(func(a: MergeBall, b: MergeBall) -> bool: return a.position.x < b.position.x)
 		for target_index in targets.size():
 			var target: MergeBall = targets[target_index]
+			# 첫 번째 분열의 물리 반응이나 합체로 다음 대상이 제거될 수 있다.
+			# 해제된 typed 객체를 함수에 넘기기 전에 매 순서마다 다시 검증한다.
+			if not is_instance_valid(target) or target.is_queued_for_deletion() or target.merge_locked:
+				continue
 			if (await _lift_then_split_enemy_two(target)).size() == 2:
 				successful_split_count += 1
 			if target_index + 1 < targets.size() and tuning.enemy_two_inter_split_delay > 0.0:
@@ -113,6 +123,8 @@ func _execute_split_attack() -> void:
 		merge_game.set_input_enabled(true)
 		battle.status_label.text = "전투 중"
 		battle.status_label.modulate = Color.WHITE
+	if is_instance_valid(enemy):
+		enemy.clear_visual_override()
 	busy = false
 	_ensure_split_targets()
 	_update_feedback()
@@ -636,9 +648,22 @@ func _target_count() -> int:
 func _update_feedback() -> void:
 	# 분열 예고는 보드 위 연출로 전달하므로 공략용 텍스트 UI는 표시하지 않는다.
 	battle.update_gimmick_ui("", "")
+	battle.right_status_effects.set_effect(SplitCountdownEffect, turns_remaining)
+	battle.show_player_damage_preview(_predicted_split_damage())
+
+
+func _predicted_split_damage() -> int:
+	var successful_damage := _split_damage()
+	if _target_count() > 1:
+		successful_damage += _partial_split_bonus_damage()
+	return maxi(_incomplete_split_damage(), successful_damage)
 
 
 func _on_cleanup() -> void:
+	battle.right_status_effects.remove_effect(SplitCountdownEffect.effect_id)
+	battle.clear_player_damage_preview()
+	if is_instance_valid(enemy):
+		enemy.clear_visual_override()
 	_restore_lifted_target()
 	_release_suspended_cascade_balls()
 	for group: Array in collision_grace_groups:

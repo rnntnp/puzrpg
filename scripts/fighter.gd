@@ -15,6 +15,7 @@ signal defeated(fighter: Fighter)
 var current_health: int
 var base_scale: Vector2
 var _visual_tween: Tween
+var _cast_tween: Tween
 var _visual_override: Texture2D
 var _ice_eye_glow: IceEyeGlow
 
@@ -40,6 +41,7 @@ func _ready() -> void:
 
 
 func set_character_data(data: CharacterDataClass, refill_health := true) -> void:
+	_stop_cast_tween()
 	character_data = data
 	_visual_override = null
 	_apply_character_visual()
@@ -177,15 +179,37 @@ func is_alive() -> bool:
 
 
 func play_attack_animation(target: Fighter) -> void:
+	_stop_visual_tween()
 	var start_x := position.x
 	var direction: float = signf(target.global_position.x - global_position.x)
-	var tween := create_tween()
-	tween.tween_property(self, "position:x", start_x + 45.0 * direction, 0.08)
-	tween.tween_property(self, "position:x", start_x, 0.12)
+	_visual_tween = create_tween()
+	if character_data.attack_sprite != null:
+		# 먼저 반대 방향으로 힘을 모은 뒤 공격 프레임으로 바꿔 타격 자세가
+		# 한 프레임처럼 스쳐 지나가지 않게 한다.
+		_visual_tween.tween_property(self, "position:x", start_x - 10.0 * direction, 0.10)
+		_visual_tween.tween_callback(func():
+			character_sprite.texture = character_data.attack_sprite
+			var texture_size := character_data.attack_sprite.get_size()
+			if texture_size.x > 0.0 and texture_size.y > 0.0:
+				character_sprite.scale = Vector2(
+					character_data.sprite_size.x / texture_size.x,
+					character_data.sprite_size.y / texture_size.y
+				)
+				_apply_screen_space_outline()
+		)
+		_visual_tween.tween_property(self, "position:x", start_x + 45.0 * direction, 0.12).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+		_visual_tween.tween_interval(0.20)
+		_visual_tween.tween_property(self, "position:x", start_x, 0.16).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	else:
+		_visual_tween.tween_property(self, "position:x", start_x + 45.0 * direction, 0.08)
+		_visual_tween.tween_property(self, "position:x", start_x, 0.12)
+	_visual_tween.tween_callback(func():
+		_apply_current_texture()
+	)
 
 
 func play_hit_animation() -> void:
-	_stop_visual_tween()
+	_stop_visual_tween(not _is_cast_animation_active())
 	var start_position := position
 	var away_from_center := -1.0 if global_position.x < 360.0 else 1.0
 	_visual_tween = create_tween()
@@ -201,16 +225,18 @@ func play_cast_animation() -> void:
 	if character_data == null or character_data.cast_sprite == null or not is_alive():
 		return
 	_stop_visual_tween()
+	_stop_cast_tween()
 	character_sprite.texture = character_data.cast_sprite
 	character_sprite.position.y = character_data.sprite_height_offset + character_data.cast_sprite_height_offset
 	var resting_scale := character_sprite.scale
 	character_sprite.scale = resting_scale * 0.94
-	_visual_tween = create_tween()
-	_visual_tween.tween_property(character_sprite, "scale", resting_scale * 1.05, 0.18).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-	_visual_tween.tween_interval(0.32)
-	_visual_tween.tween_property(character_sprite, "scale", resting_scale, 0.2)
-	_visual_tween.tween_callback(func():
+	_cast_tween = create_tween()
+	_cast_tween.tween_property(character_sprite, "scale", resting_scale * 1.05, 0.18).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	_cast_tween.tween_interval(0.32)
+	_cast_tween.tween_property(character_sprite, "scale", resting_scale, 0.2)
+	_cast_tween.tween_callback(func():
 		_apply_current_texture()
+		_cast_tween = null
 	)
 
 
@@ -225,12 +251,22 @@ func play_ingestion_squash() -> void:
 	_visual_tween.tween_property(character_sprite, "scale", resting_scale, 0.20).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 
 
-func _stop_visual_tween() -> void:
+func _stop_visual_tween(restore_texture := true) -> void:
 	if _visual_tween != null and _visual_tween.is_valid():
 		_visual_tween.kill()
 	modulate = Color.WHITE
-	if character_data != null and character_sprite != null:
+	if restore_texture and character_data != null and character_sprite != null:
 		_apply_current_texture()
+
+
+func _is_cast_animation_active() -> bool:
+	return _cast_tween != null and _cast_tween.is_valid() and _cast_tween.is_running()
+
+
+func _stop_cast_tween() -> void:
+	if _cast_tween != null and _cast_tween.is_valid():
+		_cast_tween.kill()
+	_cast_tween = null
 
 func play_defeat_animation() -> void:
 	var defeated_scale := Vector2(base_scale.x * 1.15, 0.05)

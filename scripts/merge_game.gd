@@ -7,7 +7,8 @@ signal merge_attack_requested(
 	combo_count: int,
 	base_points: int,
 	origin: Vector2,
-	ball_level: int
+	ball_level: int,
+	drop_sequence_id: int
 )
 signal ball_dropped
 signal turn_completed
@@ -916,6 +917,9 @@ func _on_merge_requested(first, second) -> void:
 	var ice_target_count := int(first.ice_targeted) + int(second.ice_targeted)
 	var involved_cursed: bool = first.is_merge_cursed or second.is_merge_cursed
 	var source_ids: Array[int] = [first.get_instance_id(), second.get_instance_id()]
+	# 합성 충돌이 발생한 투하 턴을 고정한다. 이후 지연 연쇄 처리 중 다음 투하가
+	# 시작되어도 이 공격의 소속 턴은 바뀌지 않는다.
+	var attack_drop_sequence_id := drop_sequence_id
 	var result_external_merge_token := 0
 	if external_merge_window_active and active_external_merge_token > 0:
 		if (
@@ -966,7 +970,14 @@ func _on_merge_requested(first, second) -> void:
 	if is_external_merge:
 		external_merge_damage_requested.emit(merge_damage, attack_combo_count, earned_points, at, level)
 	else:
-		_emit_merge_attack_after_delay(merge_damage, attack_combo_count, earned_points, at, level)
+		_emit_merge_attack_after_delay(
+			merge_damage,
+			attack_combo_count,
+			earned_points,
+			at,
+			level,
+			attack_drop_sequence_id
+		)
 	print("[MERGE] %d단계 + %d단계 -> %d단계 | 획득=%d | 소유=%s | 콤보=%d | 누적=%d" % [
 		level, level, level + 1, earned_points,
 		"EXTERNAL" if is_external_merge else "PLAYER", attack_combo_count, combo_points
@@ -1156,13 +1167,21 @@ func _emit_merge_attack_after_delay(
 	count: int,
 	base_points: int,
 	origin: Vector2,
-	ball_level: int
+	ball_level: int,
+	attack_drop_sequence_id: int
 ) -> void:
 	await get_tree().create_timer(MERGE_ATTACK_DELAY).timeout
 	if not is_inside_tree():
 		return
 	print("[MERGE ATTACK REQUEST] 콤보=%d | 기본=%d | 피해=%d" % [count, base_points, damage])
-	merge_attack_requested.emit(damage, count, base_points, to_global(origin), ball_level)
+	merge_attack_requested.emit(
+		damage,
+		count,
+		base_points,
+		to_global(origin),
+		ball_level,
+		attack_drop_sequence_id
+	)
 
 func _show_combo_effect(count: int, damage: int) -> void:
 	if combo_effect_tween != null and combo_effect_tween.is_valid():

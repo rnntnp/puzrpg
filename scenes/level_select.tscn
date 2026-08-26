@@ -7,7 +7,6 @@
 [ext_resource type="FontFile" uid="uid://op5qpjre8dba" path="res://assets/fonts/nanum_square_round/NanumSquareRoundEB.ttf" id="5_rovvv"]
 [ext_resource type="Texture2D" uid="uid://cyp3ox6awb7vi" path="res://assets/ui/level_select_extracted/main_panel.png" id="6_main_card"]
 [ext_resource type="Texture2D" uid="uid://dvtlcl8ib1u01" path="res://icon.svg" id="7_rovvv"]
-[ext_resource type="Texture2D" uid="uid://c5cp11m7js8sc" path="res://assets/ui/level_select_extracted/nav_arrow_left.png" id="8_nav"]
 [ext_resource type="Texture2D" uid="uid://mxhtorak2cuf" path="res://assets/ui/level_select_casual/level_select_pond_background.png" id="10_background"]
 [ext_resource type="Material" path="res://resources/materials/level_preview_mask_material.tres" id="14_preview_mask"]
 [ext_resource type="Texture2D" uid="uid://cfeh8eiwrcg8x" path="res://assets/ui/masks/level_preview_rounded_mask.png" id="15_preview_mask_texture"]
@@ -16,6 +15,7 @@
 [ext_resource type="Texture2D" uid="uid://cywjxqlq2ge01" path="res://assets/ui/level_select_icons/reward_chest.png" id="18_reward_chest"]
 [ext_resource type="Texture2D" uid="uid://dxfc48nhk0ky2" path="res://assets/ui/level_select_casual/money_coin_axolotl.png" id="19_money_coin"]
 [ext_resource type="Texture2D" uid="uid://cdgfvyaod6g14" path="res://assets/ui/level_select_casual/reward_chest_pond.png" id="20_reward_chest_casual"]
+[ext_resource type="Texture2D" uid="uid://dsxo0ggub24xu" path="res://assets/ui/icons/nav_chevron_left.svg" id="21_nav_chevron"]
 
 [sub_resource type="StyleBoxFlat" id="HeaderPanel"]
 bg_color = Color(0.99, 0.98, 0.91, 0.99)
@@ -141,6 +141,18 @@ shadow_offset = Vector2(0, 6)
 
 [sub_resource type="StyleBoxFlat" id="NavButton"]
 bg_color = Color(1, 0.84, 0.52, 1)
+border_width_left = 5
+border_width_top = 5
+border_width_right = 5
+border_width_bottom = 5
+border_color = Color(0.1, 0.2, 0.29, 1)
+corner_radius_top_left = 28
+corner_radius_top_right = 28
+corner_radius_bottom_right = 28
+corner_radius_bottom_left = 28
+
+[sub_resource type="StyleBoxFlat" id="NavButtonHover"]
+bg_color = Color(1, 0.9, 0.64, 1)
 border_width_left = 5
 border_width_top = 5
 border_width_right = 5
@@ -664,25 +676,22 @@ theme_override_colors/font_disabled_color = Color(0.08, 0.16, 0.24, 0.35)
 theme_override_font_sizes/font_size = 58
 theme_override_styles/normal = SubResource("NavButton")
 theme_override_styles/pressed = SubResource("NavButton")
-theme_override_styles/hover = SubResource("SmallButtonHover")
+theme_override_styles/hover = SubResource("NavButtonHover")
 theme_override_styles/disabled = SubResource("NavButtonDisabled")
-text = "‹"
 
 [node name="CommonFrame" type="TextureRect" parent="PreviousButton" unique_id=641591403]
-visible = false
-show_behind_parent = true
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = -12.0
-offset_top = 19.0
-offset_right = 12.0
-offset_bottom = 11.0
+offset_left = 27.0
+offset_top = 27.0
+offset_right = -27.0
+offset_bottom = -27.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-texture = ExtResource("8_nav")
+texture = ExtResource("21_nav_chevron")
 expand_mode = 1
 stretch_mode = 5
 
@@ -697,25 +706,22 @@ theme_override_colors/font_disabled_color = Color(0.08, 0.16, 0.24, 0.35)
 theme_override_font_sizes/font_size = 58
 theme_override_styles/normal = SubResource("NavButton")
 theme_override_styles/pressed = SubResource("NavButton")
-theme_override_styles/hover = SubResource("SmallButtonHover")
+theme_override_styles/hover = SubResource("NavButtonHover")
 theme_override_styles/disabled = SubResource("NavButtonDisabled")
-text = "›"
 
 [node name="CommonFrame" type="TextureRect" parent="NextButton" unique_id=1766466448]
-visible = false
-show_behind_parent = true
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = -12.0
-offset_top = 4.0
-offset_right = 12.0
-offset_bottom = -4.0
+offset_left = 27.0
+offset_top = 27.0
+offset_right = -27.0
+offset_bottom = -27.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-texture = ExtResource("8_nav")
+texture = ExtResource("21_nav_chevron")
 expand_mode = 1
 stretch_mode = 5
 flip_h = true
@@ -783,6 +789,10 @@ offset_top = 15.0
 offset_right = 702.0
 offset_bottom = 70.0
 theme_override_colors/font_color = Color(0.08, 0.16, 0.24, 1)
+theme_override_colors/font_focus_color = Color(0.08, 0.16, 0.24, 1)
+theme_override_colors/font_pressed_color = Color(0.08, 0.16, 0.24, 1)
+theme_override_colors/font_hover_color = Color(0.08, 0.16, 0.24, 1)
+theme_override_colors/font_hover_pressed_color = Color(0.08, 0.16, 0.24, 1)
 theme_override_fonts/font = ExtResource("5_rovvv")
 theme_override_font_sizes/font_size = 18
 theme_override_styles/normal = SubResource("SmallButton")
@@ -804,6 +814,7 @@ horizontal_alignment = 1
 
 [node name="LicenseOverlay" type="Control" parent="." unique_id=242315696]
 visible = false
+z_index = 100
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0

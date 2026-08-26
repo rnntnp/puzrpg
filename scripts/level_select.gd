@@ -103,6 +103,7 @@ func _input(event: InputEvent) -> void:
 
 
 func _show_license_overlay() -> void:
+	license_overlay.move_to_front()
 	license_overlay.show()
 	license_close_button.grab_focus()
 

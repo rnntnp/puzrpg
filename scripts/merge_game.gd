@@ -856,6 +856,17 @@ func _spawn_ball(at: Vector2, level: int, contact_sequence_id: int = -1):
 			physics_data.sleep_assist_settle_time,
 			physics_data.sleep_assist_max_displacement
 		)
+		ball.configure_contact_stabilization(
+			physics_data.contact_horizontal_damp,
+			physics_data.contact_angular_damp,
+			physics_data.contact_max_angular_speed
+		)
+		ball.configure_micro_wake_guard(
+			physics_data.micro_wake_guard_enabled,
+			physics_data.micro_wake_grace_time,
+			physics_data.micro_wake_linear_threshold,
+			physics_data.micro_wake_angular_threshold
+		)
 	_enable_ball_ccd_after_spawn(ball)
 	var global_left := to_global(Vector2(board_inner_left, 0.0)).x
 	var global_right := to_global(Vector2(board_inner_right, 0.0)).x

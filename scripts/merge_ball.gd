@@ -50,12 +50,23 @@ var _hitbox_radius := 0.0
 var sleep_assist_enabled := false
 var sleep_assist_settle_time := 1.5
 var sleep_assist_max_displacement := 1.5
+var contact_horizontal_damp := 0.0
+var contact_angular_damp := 0.0
+var contact_max_angular_speed := 0.0
+var micro_wake_guard_enabled := true
+var micro_wake_grace_time := 0.08
+var micro_wake_linear_threshold := 14.0
+var micro_wake_angular_threshold := 0.35
+var _micro_wake_guard_armed := false
+var _micro_wake_tracking := false
+var _micro_wake_elapsed := 0.0
 var _sleep_assist_sample_position := Vector2.ZERO
 var _sleep_assist_sample_time := 0.0
 var _sleep_assist_sample_active := false
 
 func _ready() -> void:
 	body_entered.connect(_on_body_entered)
+	sleeping_state_changed.connect(_on_sleeping_state_changed)
 
 func setup(level: int, physics_speed: float = 1.0) -> void:
 	merge_level = clampi(level, 0, BallCatalogClass.get_max_level_index())
@@ -115,8 +126,27 @@ func configure_sleep_assist(enabled: bool, settle_time: float, max_displacement:
 	_reset_sleep_assist_sample()
 
 
+func configure_contact_stabilization(horizontal_damp: float, angular_damp: float, max_angular_speed: float) -> void:
+	contact_horizontal_damp = maxf(0.0, horizontal_damp)
+	contact_angular_damp = maxf(0.0, angular_damp)
+	contact_max_angular_speed = maxf(0.0, max_angular_speed)
+
+
+func configure_micro_wake_guard(enabled: bool, grace_time: float, linear_threshold: float, angular_threshold: float) -> void:
+	micro_wake_guard_enabled = enabled
+	micro_wake_grace_time = maxf(0.0, grace_time)
+	micro_wake_linear_threshold = maxf(0.0, linear_threshold)
+	micro_wake_angular_threshold = maxf(0.0, angular_threshold)
+	if not enabled:
+		_clear_micro_wake_guard()
+
+
 func _integrate_forces(state: PhysicsDirectBodyState2D) -> void:
-	if not horizontal_bounds_enabled or merge_locked:
+	if merge_locked:
+		return
+	if _suppress_micro_wake(state):
+		return
+	if not horizontal_bounds_enabled:
 		return
 	var radius := get_radius()
 	var transform := state.transform
@@ -138,7 +168,27 @@ func _integrate_forces(state: PhysicsDirectBodyState2D) -> void:
 			velocity.y = minf(0.0, velocity.y)
 	state.transform = transform
 	state.linear_velocity = velocity
+	_apply_contact_stabilization(state)
 	_update_sleep_assist(state)
+
+
+func _apply_contact_stabilization(state: PhysicsDirectBodyState2D) -> void:
+	if state.get_contact_count() <= 0 or is_ice_frozen or freeze:
+		return
+	var stabilized_velocity := state.linear_velocity
+	if contact_horizontal_damp > 0.0:
+		stabilized_velocity.x *= exp(-contact_horizontal_damp * state.step)
+		if absf(stabilized_velocity.x) < 0.25:
+			stabilized_velocity.x = 0.0
+	state.linear_velocity = stabilized_velocity
+	var stabilized_rotation := state.angular_velocity
+	if contact_max_angular_speed > 0.0:
+		stabilized_rotation = clampf(stabilized_rotation, -contact_max_angular_speed, contact_max_angular_speed)
+	if contact_angular_damp > 0.0:
+		stabilized_rotation *= exp(-contact_angular_damp * state.step)
+		if absf(stabilized_rotation) < 0.02:
+			stabilized_rotation = 0.0
+	state.angular_velocity = stabilized_rotation
 
 
 func _update_sleep_assist(state: PhysicsDirectBodyState2D) -> void:
@@ -163,8 +213,48 @@ func _update_sleep_assist(state: PhysicsDirectBodyState2D) -> void:
 		return
 	state.linear_velocity = Vector2.ZERO
 	state.angular_velocity = 0.0
+	_arm_micro_wake_guard()
 	state.sleeping = true
 	_reset_sleep_assist_sample()
+
+
+func _on_sleeping_state_changed() -> void:
+	if not micro_wake_guard_enabled:
+		return
+	if sleeping:
+		_arm_micro_wake_guard()
+	elif _micro_wake_guard_armed:
+		_micro_wake_tracking = true
+		_micro_wake_elapsed = 0.0
+
+
+func _suppress_micro_wake(state: PhysicsDirectBodyState2D) -> bool:
+	if not micro_wake_guard_enabled or not _micro_wake_tracking:
+		return false
+	if state.linear_velocity.length() > micro_wake_linear_threshold or absf(state.angular_velocity) > micro_wake_angular_threshold:
+		_clear_micro_wake_guard()
+		return false
+	_micro_wake_elapsed += state.step
+	if _micro_wake_elapsed < micro_wake_grace_time:
+		return false
+	state.linear_velocity = Vector2.ZERO
+	state.angular_velocity = 0.0
+	state.sleeping = true
+	_micro_wake_tracking = false
+	_micro_wake_elapsed = 0.0
+	return true
+
+
+func _arm_micro_wake_guard() -> void:
+	_micro_wake_guard_armed = true
+	_micro_wake_tracking = false
+	_micro_wake_elapsed = 0.0
+
+
+func _clear_micro_wake_guard() -> void:
+	_micro_wake_guard_armed = false
+	_micro_wake_tracking = false
+	_micro_wake_elapsed = 0.0
 
 
 func _reset_sleep_assist_sample() -> void:

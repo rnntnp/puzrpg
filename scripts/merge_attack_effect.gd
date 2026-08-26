@@ -16,25 +16,42 @@ var _impact_active := false
 var _trail_points: Array[Vector2] = []
 var _impact_target_radius := 58.0
 var _combo_count := 1
+var _dark_style := false
 
 
-func play(from_global: Vector2, to_global: Vector2, data: Resource, damage: int, combo_count: int = 1) -> void:
+func play(
+	from_global: Vector2,
+	to_global: Vector2,
+	data: Resource,
+	damage: int,
+	combo_count: int = 1,
+	effect_color_override: Color = Color.TRANSPARENT
+) -> void:
 	global_position = from_global
 	_target_position = to_global - from_global
 	_combo_count = maxi(1, combo_count)
 	projectile.texture = data.sprite
 	projectile_glow.texture = data.sprite
 	projectile.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
-	projectile.modulate = data.sprite_modulate
+	var effect_color: Color = data.glow_color
+	if effect_color_override.a > 0.0:
+		effect_color = effect_color_override
+		projectile.modulate = effect_color_override
+		_dark_style = effect_color_override.get_luminance() < 0.15
+	else:
+		projectile.modulate = data.sprite_modulate
 	var texture_size: Vector2 = projectile.texture.get_size() if projectile.texture != null else Vector2.ONE
 	var projectile_size := clampf(36.0 + data.get_radius() * 0.22 + float(_combo_count - 1) * 3.0, 42.0, 78.0)
 	projectile.scale = Vector2(projectile_size / texture_size.x, projectile_size / texture_size.y)
-	trail.default_color = data.glow_color
-	trail_glow.default_color = data.glow_color
+	trail.default_color = effect_color
+	trail_glow.default_color = effect_color
 	trail.width = 9.0 + minf(7.0, float(_combo_count - 1) * 1.5)
 	trail_glow.width = 24.0 + minf(18.0, float(_combo_count - 1) * 4.0)
 	_impact_target_radius = 54.0 + data.get_radius() * 0.22 + minf(36.0, float(_combo_count - 1) * 8.0)
-	damage_label.add_theme_color_override("font_color", data.glow_color.lerp(Color.WHITE, 0.45))
+	damage_label.add_theme_color_override(
+		"font_color",
+		Color("#d9deea") if _dark_style else effect_color.lerp(Color.WHITE, 0.45)
+	)
 	damage_label.text = "-%d" % damage
 	damage_label.position = _target_position + Vector2(-45.0, -24.0)
 	damage_label.visible = false
@@ -83,7 +100,7 @@ func _draw() -> void:
 	color.a = _impact_alpha
 	draw_circle(_target_position, _impact_radius * 0.72, Color(color, _impact_alpha * 0.16))
 	draw_arc(_target_position, _impact_radius, 0.0, TAU, 40, color, 8.0, true)
-	var hot := color.lerp(Color.WHITE, 0.65)
+	var hot := color.lerp(Color("#1d2230"), 0.35) if _dark_style else color.lerp(Color.WHITE, 0.65)
 	hot.a = _impact_alpha
 	draw_arc(_target_position, _impact_radius * 0.58, 0.0, TAU, 32, hot, 4.0, true)
 	var ray_count := 10 + mini(10, (_combo_count - 1) * 2)

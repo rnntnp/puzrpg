@@ -162,7 +162,7 @@ These are not part of the numbered 1–50 test-mechanic sequence, but future dup
 - The swallowed ball is not returned on monster success.
 - If the enemy dies while holding a ball, that stage is returned through the same independent random-X board drop.
 
-Primary runtime evidence: `resources/levels/level_02.tres`, `resources/levels/level_03.tres`, `scripts/ice_skill_controller.gd`, `scripts/monster_action_controller.gd`, and their skill Resources.
+Primary runtime evidence: `resources/levels/02_snow_mountain.tres`, `resources/levels/04_crystal_cave.tres`, `scripts/ice_skill_controller.gd`, `scripts/monster_action_controller.gd`, and their skill Resources.
 
 ## 12. Player skill gauge, Weakness, and Break
 

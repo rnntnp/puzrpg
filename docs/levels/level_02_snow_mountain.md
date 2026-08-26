@@ -1,6 +1,6 @@
 # 레벨 2 · 추운 설산
 
-팀 공유용 현재 런타임 기준 문서다. 수치와 행동은 `resources/levels/level_02.tres` 및 연결된 Character/Skill Resource를 기준으로 한다.
+팀 공유용 현재 런타임 기준 문서다. 수치와 행동은 `resources/levels/02_snow_mountain.tres` 및 연결된 Character/Skill Resource를 기준으로 한다.
 
 ## 레벨 콘셉트
 
@@ -54,7 +54,7 @@
 
 ## 구현 위치
 
-- 레벨 등록/적 순서: `resources/levels/level_02.tres`
+- 레벨 등록/적 순서: `resources/levels/02_snow_mountain.tres`
 - 적 수치: `resources/characters/ice_monster.tres`, `ice_monster_enhanced.tres`, `ice_monster_boss.tres`
 - 빙결 수치: `resources/skills/basic_ice.tres`, `enhanced_ice.tres`, `boss_ice.tres`
 - 대상 탐색/빙결 연출: `scripts/ice_skill_controller.gd`

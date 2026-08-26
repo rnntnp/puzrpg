@@ -4,7 +4,7 @@ extends TestGimmickHandler
 const BallCatalogClass = preload("res://scripts/ball_catalog.gd")
 const MergeAttackEffectScene = preload("res://scenes/merge_attack_effect.tscn")
 const MirrorFaceSheenClass = preload("res://scripts/gimmicks/visuals/mirror_face_sheen.gd")
-const ReflectionActiveSprite = preload("res://assets/characters/generated/mirror_mimic_boss_reflection_active_v3.png")
+const ReflectionActiveSprite = preload("res://assets/characters/generated/mirror_mimic_boss_reflection_active_v5_generated.png")
 const ReflectionShineSfx: AudioStream = preload("res://assets/audio/sfx/mirror_reflection_shine.ogg")
 const MirrorLandingSfx: AudioStream = preload("res://assets/audio/sfx/drop_002.ogg")
 const ReflectionActiveEffect: StatusEffectData = preload("res://resources/effects/mirror_reflection_active.tres")
@@ -253,7 +253,14 @@ func _launch_mirror_projectile(
 	if is_instance_valid(enemy):
 		enemy.play_cast_animation()
 	effect.hit.connect(_on_mirror_projectile_hit)
-	effect.play(merge_game.to_global(origin), player.global_position, ball_data, damage, combo_count)
+	effect.play(
+		merge_game.to_global(origin),
+		player.global_position,
+		ball_data,
+		damage,
+		combo_count,
+		tuning.mirror_projectile_color
+	)
 
 
 func _on_mirror_projectile_hit(damage: int) -> void:

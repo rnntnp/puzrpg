@@ -1,0 +1,54 @@
+[gd_resource type="Resource" script_class="LevelData" format=3 uid="uid://3ai6s840u1lh"]
+
+[ext_resource type="Script" uid="uid://egcuwxnrdhmr" path="res://scripts/level_data.gd" id="1_level"]
+[ext_resource type="Resource" uid="uid://dd8t0hxokj424" path="res://resources/characters/blue_fighter.tres" id="2_player"]
+[ext_resource type="Script" uid="uid://duu5mev8uwp8d" path="res://scripts/character_data.gd" id="4_character"]
+[ext_resource type="Script" uid="uid://cdi8u8433fuxs" path="res://scripts/test_gimmick_data.gd" id="5_gimmick"]
+[ext_resource type="Texture2D" uid="uid://bkfpp87a4g7cp" path="res://assets/backgrounds/generated/split_otter_bamboo_flat_candidate_b_v2.png" id="6_background"]
+[ext_resource type="Texture2D" uid="uid://dectwuovnqhe2" path="res://assets/backgrounds/generated/split_otter_bamboo_flat_candidate_b_v2_bottom.png" id="6_background_bottom"]
+[ext_resource type="Texture2D" uid="uid://dt1jlanoho1in" path="res://assets/backgrounds/generated/split_otter_bamboo_flat_candidate_b_v2_middle.png" id="6_background_middle"]
+[ext_resource type="Texture2D" uid="uid://vrstvvgk4181" path="res://assets/backgrounds/generated/split_otter_bamboo_flat_candidate_b_v2_top.png" id="6_background_top"]
+[ext_resource type="Texture2D" uid="uid://c0wjr5kpx22kk" path="res://assets/level_previews/level_01_preview.png" id="7_preview"]
+[ext_resource type="Texture2D" uid="uid://crmslp4oxnj87" path="res://assets/effects/generated/status_split_warning.png" id="8_icon"]
+[ext_resource type="Resource" uid="uid://dxdc0lr17puq2" path="res://resources/characters/split_otter_fisher.tres" id="9_enemy_1"]
+[ext_resource type="Resource" uid="uid://cy5ybt10f3g35" path="res://resources/characters/split_otter_dual_fisher.tres" id="10_enemy_2"]
+[ext_resource type="Resource" uid="uid://byg8kc75g1t32" path="res://resources/characters/split_otter_captain.tres" id="11_boss"]
+[ext_resource type="Script" uid="uid://dqybmxj3y3ho1" path="res://scripts/gimmicks/handlers/split_cascade_handler.gd" id="12_handler"]
+[ext_resource type="Script" uid="uid://c1mwgwwuycn1p" path="res://scripts/gimmicks/configs/split_cascade_config.gd" id="13_config"]
+
+[sub_resource type="Resource" id="SplitCascadeConfig"]
+script = ExtResource("13_config")
+action_intervals = Array[int]([4, 4, 4])
+split_damage = Array[int]([5, 6, 7])
+
+[sub_resource type="Resource" id="Gimmick"]
+script = ExtResource("5_gimmick")
+kind = 3
+display_name = "공 분열"
+monster_health = 500
+normal_attack_damage = 7
+handler_script = ExtResource("12_handler")
+tuning = SubResource("SplitCascadeConfig")
+enemy_healths = Array[int]([500, 800, 1100])
+preserve_board_between_enemies = true
+
+[resource]
+script = ExtResource("1_level")
+level_name = "3. 바쁜 낚시터"
+image_placeholder = "GIMMICK TEST 03"
+battle_background = ExtResource("6_background")
+battle_background_top = ExtResource("6_background_top")
+battle_background_middle = ExtResource("6_background_middle")
+battle_background_bottom = ExtResource("6_background_bottom")
+battle_background_top_height = 558.0
+level_select_preview = ExtResource("7_preview")
+stage_gimmick_icon = ExtResource("8_icon")
+stage_gimmick_name = "분열"
+reward_name = "대나무 보물상자"
+player_character = ExtResource("2_player")
+enemies = Array[ExtResource("4_character")]([ExtResource("9_enemy_1"), ExtResource("10_enemy_2"), ExtResource("11_boss")])
+test_gimmick = SubResource("Gimmick")
+ball_drop_time_limit = -1.0
+merge_hit_stop_time_scale = 0.18
+merge_hit_stop_duration = 0.2
+next_level_path = "res://resources/levels/04_crystal_cave.tres"

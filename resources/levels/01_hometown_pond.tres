@@ -35,4 +35,4 @@ fixed_drop_level = 0
 ball_drop_time_limit = -1.0
 merge_hit_stop_time_scale = 0.18
 merge_hit_stop_duration = 0.2
-next_level_path = "res://resources/levels/level_02.tres"
+next_level_path = "res://resources/levels/02_snow_mountain.tres"

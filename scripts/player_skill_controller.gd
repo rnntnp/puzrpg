@@ -15,6 +15,8 @@ var skill_data: PlayerSkillData
 var gauge_current := 0
 var configured := false
 var tutorial_skill_enabled := false
+var player_hover_tween: Tween
+var player_rest_scale := Vector2.ONE
 
 
 func configure(
@@ -27,6 +29,7 @@ func configure(
 	cleanup()
 	battle = battle_node
 	player = player_fighter
+	player_rest_scale = player.scale
 	merge_game = game
 	weakness_host = weakness_controller
 	skill_button = button
@@ -39,6 +42,8 @@ func configure(
 		merge_game.player_merge_registered.connect(_on_player_merge_registered)
 	if not skill_button.skill_pressed.is_connected(_on_skill_pressed):
 		skill_button.skill_pressed.connect(_on_skill_pressed)
+	if not skill_button.skill_hover_changed.is_connected(_on_skill_hover_changed):
+		skill_button.skill_hover_changed.connect(_on_skill_hover_changed)
 	gauge_current = 0
 	skill_button.configure(skill_data.icon, skill_data.gauge_max, skill_data.display_name)
 	_update_gauge_ui()
@@ -68,6 +73,9 @@ func cleanup() -> void:
 		merge_game.player_merge_registered.disconnect(_on_player_merge_registered)
 	if is_instance_valid(skill_button) and skill_button.skill_pressed.is_connected(_on_skill_pressed):
 		skill_button.skill_pressed.disconnect(_on_skill_pressed)
+	if is_instance_valid(skill_button) and skill_button.skill_hover_changed.is_connected(_on_skill_hover_changed):
+		skill_button.skill_hover_changed.disconnect(_on_skill_hover_changed)
+	_restore_player_hover_scale()
 	enemy = null
 	configured = false
 
@@ -120,3 +128,20 @@ func _update_gauge_ui() -> void:
 		return
 	skill_button.set_gauge(gauge_current, skill_data.gauge_max)
 	gauge_changed.emit(gauge_current, skill_data.gauge_max)
+
+
+func _on_skill_hover_changed(hovered: bool) -> void:
+	if not is_instance_valid(player):
+		return
+	if player_hover_tween != null and player_hover_tween.is_valid():
+		player_hover_tween.kill()
+	var target_scale := player_rest_scale * 1.04 if hovered else player_rest_scale
+	player_hover_tween = create_tween().set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	player_hover_tween.tween_property(player, "scale", target_scale, 0.12)
+
+
+func _restore_player_hover_scale() -> void:
+	if player_hover_tween != null and player_hover_tween.is_valid():
+		player_hover_tween.kill()
+	if is_instance_valid(player):
+		player.scale = player_rest_scale

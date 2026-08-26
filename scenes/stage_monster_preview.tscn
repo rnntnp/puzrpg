@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" uid="uid://c4ipgqjh5mxnv" path="res://scripts/stage_monster_preview.gd" id="1_script"]
 [ext_resource type="Resource" uid="uid://cy5ybt10f3g35" path="res://resources/characters/split_otter_dual_fisher.tres" id="3_253iy"]
-[ext_resource type="Resource" uid="uid://cr32kqamgs0q2" path="res://resources/levels/level_02.tres" id="4_stage"]
+[ext_resource type="Resource" uid="uid://cr32kqamgs0q2" path="res://resources/levels/02_snow_mountain.tres" id="4_stage"]
 [ext_resource type="Texture2D" uid="uid://b6wwa4mjehm65" path="res://assets/backgrounds/stage_02_snow_mountain_handdrawn_v1.png" id="4_v3ffy"]
 [ext_resource type="Texture2D" uid="uid://dxaaqi3bqq7vn" path="res://assets/backgrounds/stage_02_snow_mountain_handdrawn_v1_top.png" id="5_1cd48"]
 [ext_resource type="Texture2D" uid="uid://cttm1ykgcaigh" path="res://assets/backgrounds/stage_02_snow_mountain_handdrawn_v1_middle.png" id="6_m3nnr"]

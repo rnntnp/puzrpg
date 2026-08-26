@@ -2,6 +2,7 @@ class_name PlayerSkillButton
 extends Control
 
 signal skill_pressed
+signal skill_hover_changed(hovered: bool)
 
 @export_range(40.0, 140.0, 1.0) var interaction_radius := 108.0
 
@@ -16,6 +17,7 @@ var skill_ready := false
 var _pulse_time := 0.0
 var _shake_tween: Tween
 var _last_press_msec := -1000
+var _touch_hovered := false
 
 
 func _ready() -> void:
@@ -23,6 +25,10 @@ func _ready() -> void:
 	color_fill.visible = true
 	hit_button.visible = false
 	touch_area.gui_input.connect(_on_touch_area_gui_input)
+	touch_area.mouse_entered.connect(_on_touch_area_mouse_entered)
+	touch_area.mouse_exited.connect(_on_touch_area_mouse_exited)
+	tooltip_text = ""
+	touch_area.tooltip_text = ""
 	_update_visuals()
 
 
@@ -30,14 +36,20 @@ func configure(icon: Texture2D, maximum: int, display_name: String) -> void:
 	grayscale_icon.texture = icon
 	color_fill.texture_progress = icon
 	gauge_max = maxi(1, maximum)
-	touch_area.tooltip_text = "%s · 주인공을 눌러 사용" % display_name
+	tooltip_text = ""
+	touch_area.tooltip_text = ""
 	_update_visuals()
 
 
 func set_gauge(current: int, maximum: int) -> void:
+	var was_ready := skill_ready
 	gauge_max = maxi(1, maximum)
 	gauge_current = clampi(current, 0, gauge_max)
 	skill_ready = gauge_current >= gauge_max
+	if was_ready and not skill_ready:
+		skill_hover_changed.emit(false)
+	elif not was_ready and skill_ready and _touch_hovered:
+		skill_hover_changed.emit(true)
 	_update_visuals()
 
 
@@ -79,11 +91,8 @@ func _update_visuals() -> void:
 	set_process(skill_ready)
 	if not skill_ready:
 		_pulse_time = 0.0
-	touch_area.tooltip_text = "%s\n게이지 %d / %d" % [
-		touch_area.tooltip_text.get_slice("\n", 0),
-		gauge_current,
-		gauge_max,
-	]
+	tooltip_text = ""
+	touch_area.tooltip_text = ""
 	queue_redraw()
 
 
@@ -104,3 +113,14 @@ func _on_touch_area_gui_input(event: InputEvent) -> void:
 	_last_press_msec = now
 	accept_event()
 	skill_pressed.emit()
+
+
+func _on_touch_area_mouse_entered() -> void:
+	_touch_hovered = true
+	if skill_ready:
+		skill_hover_changed.emit(true)
+
+
+func _on_touch_area_mouse_exited() -> void:
+	_touch_hovered = false
+	skill_hover_changed.emit(false)

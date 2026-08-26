@@ -5,9 +5,9 @@
 [resource]
 script = ExtResource("1")
 telegraph_turns = 2
-durability = 10
+durability = 50
 durability_increase_per_use = 10
 maximum_durability = 70
-response_turns = 5
-heal_amount = 60
+response_turns = 4
+heal_amount = 30
 interrupted_debuff_turns = 2

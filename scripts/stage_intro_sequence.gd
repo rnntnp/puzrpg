@@ -333,7 +333,7 @@ func _show_enemy_intent_tutorial() -> void:
 	_mouse_cursor.hide()
 	_reset_page_title_layout()
 	_label.hide()
-	_guide_label.text = "적은 머리 위에 다음 행동과\n남은 턴 수를 보여줍니다."
+	_guide_label.text = "적의 머리 위에 다음 행동까지\n남은 턴 수를 알려줍니다."
 	_guide_label.show()
 	_label.modulate.a = 1.0
 	_show_click_hint_centered()
@@ -504,7 +504,6 @@ void fragment() {
 	var material := ShaderMaterial.new()
 	material.shader = shader
 	return material
-
 
 func _create_box_spotlight_material(center: Vector2, half_size: Vector2) -> ShaderMaterial:
 	var shader := Shader.new()

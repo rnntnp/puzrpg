@@ -9,12 +9,16 @@ const MODE_SINGLE := 0
 const MODE_DOUBLE := 1
 const MODE_CASCADE := 2
 const DEFAULT_TARGET_COLOR := Color("#ffd166")
+const MERGE_RESULT_GRACE_MSEC := 500
 
 var tuning: SplitCascadeConfigClass
 var enemy_mode := MODE_SINGLE
 var turns_remaining := 0
 var split_targets: Array[MergeBall] = []
-var split_target_merge_pending := false
+var pending_merge_target_slots: Array[int] = []
+var pending_split_target_slots := 0
+var split_cast_resolution_active := false
+var reserved_split_target_states: Dictionary = {}
 var collision_grace_groups: Array[Array] = []
 var lifted_target: MergeBall
 var lifted_target_collision_layer := 0
@@ -26,6 +30,10 @@ var cascade_suspended_balls: Array[MergeBall] = []
 var cascade_launch_velocities: Dictionary = {}
 var fishing_reel_players: Array[AudioStreamPlayer] = []
 var double_reel_index := 0
+var split_cast_sequence_id := 0
+var split_cast_committed := false
+var deferred_enemy_configuration := false
+var committed_split_target_color := DEFAULT_TARGET_COLOR
 
 
 func _on_configured() -> void:
@@ -43,6 +51,14 @@ func _on_configured() -> void:
 
 
 func _on_enemy_changed() -> void:
+	if split_cast_committed:
+		# A committed split belongs to the outgoing enemy. Let it finish against its
+		# snapshotted board targets, then configure the newly loaded enemy.
+		deferred_enemy_configuration = true
+		busy = true
+		return
+	_cancel_uncommitted_split_cast()
+	_release_split_target_reservations()
 	_clear_split_targets()
 	_configure_enemy()
 
@@ -58,26 +74,55 @@ func _configure_enemy() -> void:
 func on_turn_completed() -> void:
 	if not active or busy or not enemy.is_alive() or not player.is_alive():
 		return
-	_ensure_split_targets()
 	turns_remaining = maxi(0, turns_remaining - 1)
 	if turns_remaining > 0:
+		_ensure_split_targets()
 		_update_feedback()
 		return
 	await _execute_split_attack()
 
 
+func should_finish_committed_action_after_enemy_defeat() -> bool:
+	return split_cast_committed
+
+
+func _on_player_ball_dropped() -> void:
+	if not active or busy or turns_remaining != 1:
+		return
+	if not is_instance_valid(enemy) or not enemy.is_alive() or not is_instance_valid(player) or not player.is_alive():
+		return
+	# The action-triggering drop owns the final response window. Lock now so its
+	# first contact cannot reopen input before turn_completed resolves the cast.
+	merge_game.set_input_enabled(false)
+
+
 func _execute_split_attack() -> void:
+	split_cast_sequence_id += 1
+	var cast_sequence_id := split_cast_sequence_id
+	split_cast_committed = false
+	deferred_enemy_configuration = false
 	busy = true
 	battle.right_status_effects.remove_effect(SplitCountdownEffect.effect_id)
 	battle.clear_player_damage_preview()
 	debug_special_execution_count += 1
 	merge_game.set_input_enabled(false)
-	if enemy.character_data.cast_sprite != null:
-		enemy.set_visual_override(enemy.character_data.cast_sprite)
-	enemy.play_cast_animation()
-	_ensure_split_targets()
-	var targets: Array[MergeBall] = split_targets.duplicate()
+	var targets: Array[MergeBall] = await _resolve_split_cast_targets(cast_sequence_id)
+	if not _is_precommit_cast_valid(cast_sequence_id):
+		return
 	var intended_target_count := _target_count()
+	if targets.is_empty():
+		var incomplete_damage := _incomplete_split_damage()
+		if incomplete_damage > 0:
+			enemy.attack_with_damage(player, incomplete_damage)
+			log_event("SPLIT INCOMPLETE", "targets=0/%d damage=%d" % [intended_target_count, incomplete_damage])
+		_finish_uncommitted_split_action()
+		return
+	_commit_split_cast(targets, intended_target_count)
+	if not is_instance_valid(player) or not player.is_alive():
+		_release_split_target_reservations()
+		split_cast_committed = false
+		busy = false
+		return
 	double_reel_index = 0
 	_clear_split_targets()
 	var successful_split_count := 0
@@ -101,26 +146,17 @@ func _execute_split_attack() -> void:
 				successful_split_count += 1
 			if target_index + 1 < targets.size() and tuning.enemy_two_inter_split_delay > 0.0:
 				await get_tree().create_timer(tuning.enemy_two_inter_split_delay, true, false, true).timeout
-	var succeeded := successful_split_count > 0
-	if not succeeded:
-		battle.status_label.text = "CASCADE SPLIT 실패" if enemy_mode == MODE_CASCADE else "공 분열 실패"
-		battle.status_label.modulate = Color("#ff6b6b")
-		var incomplete_damage := _incomplete_split_damage()
-		enemy.attack_with_damage(player, incomplete_damage)
-		log_event("SPLIT INCOMPLETE", "targets=%d/%d damage=%d" % [targets.size(), intended_target_count, incomplete_damage])
+	if successful_split_count > 0:
+		if not deferred_enemy_configuration and is_instance_valid(enemy) and enemy.is_alive():
+			battle.status_label.text = "CASCADE SPLIT!" if enemy_mode == MODE_CASCADE else "공 분열 발동!"
+			battle.status_label.modulate = Color("#ffd166")
 	else:
-		battle.status_label.text = "CASCADE SPLIT!" if enemy_mode == MODE_CASCADE else "공 분열 발동!"
-		battle.status_label.modulate = Color("#ffd166")
-		var split_damage_amount := _split_damage()
-		if split_damage_amount > 0:
-			enemy.attack_with_damage(player, split_damage_amount)
-			log_event("SPLIT DAMAGE", "damage=%d" % split_damage_amount)
-		if successful_split_count < intended_target_count:
-			var bonus_damage := _partial_split_bonus_damage()
-			if bonus_damage > 0:
-				enemy.attack_with_damage(player, bonus_damage)
-				log_event("PARTIAL SPLIT BONUS", "successes=%d/%d damage=%d" % [successful_split_count, intended_target_count, bonus_damage])
-	turns_remaining = _action_interval(battle.current_enemy_index)
+		if not deferred_enemy_configuration and is_instance_valid(enemy) and enemy.is_alive():
+			battle.status_label.text = "CASCADE SPLIT 실패" if enemy_mode == MODE_CASCADE else "공 분열 실패"
+			battle.status_label.modulate = Color("#ff6b6b")
+		log_event("SPLIT ANIMATION INCOMPLETE", "targets=%d/%d" % [targets.size(), intended_target_count])
+	if not deferred_enemy_configuration and is_instance_valid(enemy) and enemy.is_alive():
+		turns_remaining = _action_interval(battle.current_enemy_index)
 	var recovery_duration := 0.12
 	if enemy_mode == MODE_SINGLE:
 		recovery_duration = tuning.enemy_one_recovery_duration
@@ -130,6 +166,10 @@ func _execute_split_attack() -> void:
 		recovery_duration = tuning.boss_recovery_duration
 	if recovery_duration > 0.0:
 		await get_tree().create_timer(recovery_duration, true, false, true).timeout
+	_release_split_target_reservations()
+	if deferred_enemy_configuration:
+		_finish_deferred_enemy_configuration()
+		return
 	if active and enemy.is_alive() and player.is_alive():
 		merge_game.set_input_enabled(true)
 		battle.status_label.text = "전투 중"
@@ -137,8 +177,177 @@ func _execute_split_attack() -> void:
 	if is_instance_valid(enemy):
 		enemy.clear_visual_override()
 	busy = false
+	split_cast_committed = false
+	if active and enemy.is_alive() and player.is_alive():
+		_ensure_split_targets()
+		_update_feedback()
+
+
+func _resolve_split_cast_targets(cast_sequence_id: int) -> Array[MergeBall]:
+	split_cast_resolution_active = true
+	_reserve_ready_split_targets()
+	await _wait_for_pending_split_merge_results()
+	if not _is_precommit_cast_valid(cast_sequence_id):
+		split_cast_resolution_active = false
+		return []
+	_abandon_pending_split_target_slots()
+	_prune_unusable_split_targets()
 	_ensure_split_targets()
-	_update_feedback()
+	_reserve_ready_split_targets()
+	var resolved_targets: Array[MergeBall] = split_targets.duplicate()
+	split_cast_resolution_active = false
+	return resolved_targets
+
+
+func _is_precommit_cast_valid(cast_sequence_id: int) -> bool:
+	return (
+		active
+		and cast_sequence_id == split_cast_sequence_id
+		and not split_cast_committed
+		and is_instance_valid(enemy)
+		and enemy.is_alive()
+		and is_instance_valid(player)
+		and player.is_alive()
+	)
+
+
+func _commit_split_cast(targets: Array[MergeBall], intended_target_count: int) -> void:
+	committed_split_target_color = _split_target_color()
+	split_cast_committed = true
+	if enemy.character_data.cast_sprite != null:
+		enemy.set_visual_override(enemy.character_data.cast_sprite)
+	enemy.play_cast_animation()
+	var damage := _split_damage()
+	if targets.size() < intended_target_count:
+		damage += _partial_split_bonus_damage()
+	if damage > 0:
+		enemy.attack_with_damage(player, damage)
+		log_event("SPLIT DAMAGE", "targets=%d/%d damage=%d" % [targets.size(), intended_target_count, damage])
+
+
+func _finish_uncommitted_split_action() -> void:
+	_release_split_target_reservations()
+	_clear_split_targets()
+	if active and is_instance_valid(enemy) and enemy.is_alive() and is_instance_valid(player) and player.is_alive():
+		turns_remaining = _action_interval(battle.current_enemy_index)
+		merge_game.set_input_enabled(true)
+		battle.status_label.text = "전투 중"
+		battle.status_label.modulate = Color.WHITE
+		_ensure_split_targets()
+		_update_feedback()
+	busy = false
+
+
+func _finish_deferred_enemy_configuration() -> void:
+	split_cast_committed = false
+	deferred_enemy_configuration = false
+	committed_split_target_color = DEFAULT_TARGET_COLOR
+	busy = false
+	_clear_split_targets()
+	if not active or not is_instance_valid(enemy) or not enemy.is_alive() or not is_instance_valid(player) or not player.is_alive():
+		return
+	_configure_enemy()
+	merge_game.set_input_enabled(true)
+
+
+func _cancel_uncommitted_split_cast() -> void:
+	split_cast_sequence_id += 1
+	split_cast_committed = false
+	deferred_enemy_configuration = false
+	committed_split_target_color = DEFAULT_TARGET_COLOR
+	split_cast_resolution_active = false
+	for reel_player in fishing_reel_players:
+		if is_instance_valid(reel_player):
+			reel_player.stop()
+
+
+func _wait_for_pending_split_merge_results() -> void:
+	var deadline := Time.get_ticks_msec() + MERGE_RESULT_GRACE_MSEC
+	while (
+		active
+		and (pending_split_target_slots > 0 or _has_locked_split_targets())
+		and Time.get_ticks_msec() < deadline
+	):
+		await get_tree().physics_frame
+
+
+func _has_locked_split_targets() -> bool:
+	for target: MergeBall in split_targets:
+		if is_instance_valid(target) and target.merge_locked:
+			return true
+	return false
+
+
+func _abandon_pending_split_target_slots() -> void:
+	if pending_split_target_slots <= 0:
+		return
+	for index in pending_merge_target_slots.size():
+		if pending_merge_target_slots[index] > 0:
+			pending_merge_target_slots[index] = 0
+	pending_split_target_slots = 0
+
+
+func _prune_unusable_split_targets() -> void:
+	for target: MergeBall in split_targets.duplicate():
+		if _is_valid_split_target(target):
+			continue
+		if is_instance_valid(target):
+			target.set_split_targeted(false)
+		split_targets.erase(target)
+
+
+func _reserve_ready_split_targets() -> void:
+	for target: MergeBall in split_targets:
+		_reserve_split_target(target)
+
+
+func _reserve_split_target(target: MergeBall) -> void:
+	if not _is_valid_split_target(target):
+		return
+	var target_id := target.get_instance_id()
+	if reserved_split_target_states.has(target_id):
+		return
+	reserved_split_target_states[target_id] = {
+		"target_id": target_id,
+		"collision_layer": target.collision_layer,
+		"collision_mask": target.collision_mask,
+		"freeze": target.freeze,
+		"sleeping": target.sleeping,
+		"linear_velocity": target.linear_velocity,
+		"angular_velocity": target.angular_velocity,
+	}
+	target.set_split_cast_reserved(true)
+	target.linear_velocity = Vector2.ZERO
+	target.angular_velocity = 0.0
+	target.freeze = true
+	target.collision_layer = 0
+	target.collision_mask = 0
+
+
+func _release_split_target_reservations() -> void:
+	for state: Dictionary in reserved_split_target_states.values():
+		var target_id := int(state.get("target_id", 0))
+		var target := instance_from_id(target_id) as MergeBall if target_id > 0 else null
+		if not is_instance_valid(target):
+			continue
+		target.set_split_cast_reserved(false)
+		if target.merge_locked:
+			continue
+		target.collision_layer = int(state.get("collision_layer", 1))
+		target.collision_mask = int(state.get("collision_mask", 1))
+		target.freeze = bool(state.get("freeze", false))
+		target.sleeping = bool(state.get("sleeping", false))
+		var stored_linear_velocity: Vector2 = state.get("linear_velocity", Vector2.ZERO)
+		target.linear_velocity = stored_linear_velocity
+		target.angular_velocity = float(state.get("angular_velocity", 0.0))
+	reserved_split_target_states.clear()
+
+
+func _is_valid_split_target(target: MergeBall) -> bool:
+	if not is_instance_valid(target) or target.is_queued_for_deletion() or target.merge_locked:
+		return false
+	var stage := target.merge_level + 1
+	return stage >= _minimum_target_stage() and stage <= tuning.maximum_target_stage
 
 
 func _lift_then_split_enemy_one(target: MergeBall) -> Array[MergeBall]:
@@ -354,7 +563,7 @@ func _cascade_split(target: MergeBall) -> bool:
 	log_event("CASCADE STEP 1", "stage=%d -> %d + %d" % [parent_stage, parent_stage - 1, parent_stage - 1])
 	if tuning.boss_first_generation_hold > 0.0:
 		await get_tree().create_timer(tuning.boss_first_generation_hold, true, false, true).timeout
-	if not active or not enemy.is_alive() or not player.is_alive():
+	if not active or not player.is_alive():
 		_release_suspended_cascade_balls()
 		return false
 	first_generation.sort_custom(func(a: MergeBall, b: MergeBall) -> bool: return a.position.x < b.position.x)
@@ -564,9 +773,11 @@ func _remove_collision_grace_group(balls: Array[MergeBall]) -> void:
 
 
 func _ensure_split_targets() -> void:
-	split_targets = split_targets.filter(func(ball: MergeBall) -> bool: return is_instance_valid(ball) and not ball.merge_locked)
+	split_targets = split_targets.filter(func(ball: MergeBall) -> bool:
+		return is_instance_valid(ball) and not ball.is_queued_for_deletion()
+	)
 	var target_count := _target_count()
-	if split_targets.size() >= target_count:
+	if split_targets.size() + pending_split_target_slots >= target_count:
 		_update_target_marker()
 		return
 	var candidates: Array[MergeBall] = valid_balls(_minimum_target_stage(), tuning.maximum_target_stage)
@@ -577,7 +788,7 @@ func _ensure_split_targets() -> void:
 	candidates.sort_custom(func(a: MergeBall, b: MergeBall) -> bool:
 		return a.merge_level > b.merge_level if a.merge_level != b.merge_level else _ball_top_edge(a) < _ball_top_edge(b)
 	)
-	while split_targets.size() < target_count:
+	while split_targets.size() + pending_split_target_slots < target_count:
 		var selected_target: MergeBall
 		for candidate: MergeBall in candidates:
 			if candidate in split_targets:
@@ -609,25 +820,39 @@ func _clear_split_targets() -> void:
 		if is_instance_valid(target):
 			target.set_split_targeted(false)
 	split_targets.clear()
-	split_target_merge_pending = false
+	pending_merge_target_slots.clear()
+	pending_split_target_slots = 0
+	split_cast_resolution_active = false
 
 
 func _on_merge_registered(_result_level: int, _origin: Vector2, _chain_index: int, source_ids: Array[int], _involved_cursed: bool) -> void:
+	var inherited_slot_count := 0
 	for target: MergeBall in split_targets.duplicate():
 		if is_instance_valid(target) and source_ids.has(target.get_instance_id()):
-			split_target_merge_pending = true
+			inherited_slot_count += 1
 			target.set_split_targeted(false)
 			split_targets.erase(target)
+	pending_merge_target_slots.append(inherited_slot_count)
+	pending_split_target_slots += inherited_slot_count
 	_update_target_marker()
 
 
 func _on_merge_completed(merged_ball: MergeBall) -> void:
-	if not active or not split_target_merge_pending or not is_instance_valid(merged_ball):
+	var inherited_slot_count := 0
+	if not pending_merge_target_slots.is_empty():
+		inherited_slot_count = pending_merge_target_slots.pop_front()
+	if inherited_slot_count <= 0:
 		return
-	merged_ball.set_split_targeted(true, _split_target_color())
-	split_targets.append(merged_ball)
-	split_target_merge_pending = false
+	pending_split_target_slots = maxi(0, pending_split_target_slots - inherited_slot_count)
+	if not active or not _is_valid_split_target(merged_ball):
+		_ensure_split_targets()
+		return
+	if split_targets.size() < _target_count() and not split_targets.has(merged_ball):
+		merged_ball.set_split_targeted(true, _split_target_color())
+		split_targets.append(merged_ball)
 	_ensure_split_targets()
+	if split_cast_resolution_active:
+		_reserve_ready_split_targets()
 
 
 func _update_target_marker() -> void:
@@ -638,6 +863,8 @@ func _update_target_marker() -> void:
 
 
 func _split_target_color() -> Color:
+	if split_cast_committed:
+		return committed_split_target_color
 	if is_instance_valid(enemy) and enemy.character_data != null:
 		return enemy.character_data.health_bar_color
 	return DEFAULT_TARGET_COLOR
@@ -696,6 +923,10 @@ func _predicted_split_damage() -> int:
 
 
 func _on_cleanup() -> void:
+	split_cast_sequence_id += 1
+	split_cast_committed = false
+	deferred_enemy_configuration = false
+	committed_split_target_color = DEFAULT_TARGET_COLOR
 	for reel_player in fishing_reel_players:
 		if is_instance_valid(reel_player):
 			reel_player.stop()
@@ -705,6 +936,7 @@ func _on_cleanup() -> void:
 		enemy.clear_visual_override()
 	_restore_lifted_target()
 	_release_suspended_cascade_balls()
+	_release_split_target_reservations()
 	for group: Array in collision_grace_groups:
 		for first_index in group.size():
 			if not is_instance_valid(group[first_index]):

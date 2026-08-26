@@ -76,6 +76,17 @@ func should_preserve_between_enemies() -> bool:
 	return data != null and data.preserve_board_between_enemies
 
 
+func should_finish_committed_action_after_enemy_defeat() -> bool:
+	if not is_instance_valid(active_handler) or not active_handler.has_method("should_finish_committed_action_after_enemy_defeat"):
+		return false
+	return bool(active_handler.call("should_finish_committed_action_after_enemy_defeat"))
+
+
+func wait_until_handler_idle() -> void:
+	while is_instance_valid(active_handler) and bool(active_handler.get("busy")):
+		await get_tree().process_frame
+
+
 func cleanup() -> void:
 	if is_instance_valid(active_handler):
 		active_handler.call("cleanup")

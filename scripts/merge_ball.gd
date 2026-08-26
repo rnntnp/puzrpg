@@ -25,6 +25,7 @@ var ice_durability := 0
 var ice_targeted := false
 var ice_cast_reserved := false
 var split_targeted := false
+var split_cast_reserved := false
 var split_target_color := Color("#ffd166")
 var horizontal_bounds_enabled := false
 var horizontal_bound_left := 0.0
@@ -336,6 +337,10 @@ func set_split_targeted(targeted: bool, marker_color: Color = Color("#ffd166")) 
 	queue_redraw()
 
 
+func set_split_cast_reserved(reserved: bool) -> void:
+	split_cast_reserved = reserved
+
+
 func freeze_in_ice(durability: int) -> void:
 	if merge_locked:
 		return
@@ -475,10 +480,10 @@ func _on_body_entered(body: Node) -> void:
 
 
 func _try_request_merge(body: Node) -> bool:
-	if merge_locked or is_ice_frozen or ice_cast_reserved or not body is MergeBall:
+	if merge_locked or is_ice_frozen or ice_cast_reserved or split_cast_reserved or not body is MergeBall:
 		return false
 	var other := body as MergeBall
-	if other.merge_locked or other.is_ice_frozen or other.ice_cast_reserved:
+	if other.merge_locked or other.is_ice_frozen or other.ice_cast_reserved or other.split_cast_reserved:
 		return false
 	if other.merge_level != merge_level:
 		return false

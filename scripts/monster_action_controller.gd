@@ -217,6 +217,9 @@ func on_enemy_defeated() -> void:
 	applied_status_effects.remove_effect(WeaknessEffect.effect_id)
 	if using_test_gimmick:
 		var has_next_enemy: bool = battle.current_enemy_index + 1 < battle.level_data.enemies.size()
+		if not has_next_enemy and test_gimmick_controller.should_finish_committed_action_after_enemy_defeat():
+			using_test_gimmick = false
+			return
 		if not has_next_enemy or not test_gimmick_controller.should_preserve_between_enemies():
 			test_gimmick_controller.cleanup()
 		using_test_gimmick = false

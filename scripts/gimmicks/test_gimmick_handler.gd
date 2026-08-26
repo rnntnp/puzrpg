@@ -34,6 +34,10 @@ func on_turn_completed() -> void:
 	pass
 
 
+func should_finish_committed_action_after_enemy_defeat() -> bool:
+	return false
+
+
 func transition_enemy(enemy_fighter: Fighter) -> void:
 	enemy = enemy_fighter
 	active = data != null

@@ -27,6 +27,7 @@ const StageIntroSequenceClass = preload("res://scripts/stage_intro_sequence.gd")
 @onready var background_artwork: TextureRect = $BackgroundArtwork
 @onready var layered_background: LayeredBattleBackground = $LayeredBackground
 @onready var monster_action_controller = $MonsterActionController
+@onready var test_gimmick_controller: TestGimmickController = $MonsterActionController/TestGimmickController
 @onready var player_skill_controller: PlayerSkillController = $PlayerSkillController
 @onready var merge_game = $MergeGame
 @onready var enemy_hit_sfx: AudioStreamPlayer = $EnemyHitSfx
@@ -193,7 +194,8 @@ func _start_battle() -> void:
 		intro_sequence.play_story(level_data.opening_sequence, level_data.opening_story_images)
 		return
 	battle_running = true
-	merge_game.set_input_enabled(true)
+	if level_data.test_gimmick == null or not test_gimmick_controller.busy:
+		merge_game.set_input_enabled(true)
 	status_label.text = ""
 	status_label.modulate = Color.WHITE
 	_start_tutorial_sequence()
@@ -653,13 +655,21 @@ func _on_fighter_defeated(fighter: Fighter) -> void:
 		return
 	player_skill_controller.on_enemy_defeated()
 	monster_action_controller.on_enemy_defeated()
+	if (
+		fighter == right_fighter
+		and current_enemy_index + 1 >= level_data.enemies.size()
+		and test_gimmick_controller.should_finish_committed_action_after_enemy_defeat()
+	):
+		await test_gimmick_controller.wait_until_handler_idle()
+		test_gimmick_controller.cleanup()
 
 	current_enemy_index += 1
 	if current_enemy_index < level_data.enemies.size():
 		status_label.text = "다음 적 등장!"
 		await get_tree().create_timer(0.7).timeout
 		_load_enemy(current_enemy_index)
-		merge_game.set_input_enabled(true)
+		if level_data.test_gimmick == null or not test_gimmick_controller.busy:
+			merge_game.set_input_enabled(true)
 		_start_battle()
 		enemy_transition_active = false
 		_flush_pending_merge_attacks()

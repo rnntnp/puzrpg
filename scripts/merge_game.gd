@@ -548,6 +548,7 @@ func reset_gimmick_state() -> void:
 			ball.set_submerged(false)
 			ball.set_merge_curse(false)
 			ball.set_rewind_turns(0)
+			ball.set_split_cast_reserved(false)
 			ball.vertical_floor_bound_enabled = true
 			if not ball.merge_locked:
 				ball.collision_layer = 1
@@ -906,6 +907,8 @@ func _on_merge_requested(first, second) -> void:
 		or second.merge_locked
 		or first.ice_cast_reserved
 		or second.ice_cast_reserved
+		or first.split_cast_reserved
+		or second.split_cast_reserved
 		or first.merge_level >= max_level_index
 	):
 		return

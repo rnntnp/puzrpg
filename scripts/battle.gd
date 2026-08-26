@@ -266,7 +266,7 @@ func _show_ingestion_response_tutorial() -> void:
 		200.0,
 		true,
 		-1.0,
-		Vector2(590.0, 145.0)
+		Vector2(644.0, 145.0)
 	)
 
 

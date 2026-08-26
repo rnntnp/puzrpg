@@ -1,7 +1,7 @@
 class_name TutorialPointerArrow
 extends Node2D
 
-const SHAFT_END := Vector2(108.0, 104.0)
+const SHAFT_END := Vector2(56.0, 120.0)
 const OUTLINE_COLOR := Color(0.02, 0.03, 0.07, 0.98)
 const FILL_COLOR := Color("#ffd166")
 

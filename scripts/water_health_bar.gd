@@ -90,12 +90,12 @@ func _refresh_value_text() -> void:
 func _refresh_fill_size() -> void:
 	if not is_instance_valid(full_health_fill):
 		return
-	var health_ratio := clampf(_displayed_health_ratio, 0.0, 1.0)
+	var health_ratio := _get_displayed_health_fill_ratio()
 	full_health_fill.visible = health_ratio > 0.0
 	if not full_health_fill.visible:
 		return
 	full_health_fill.size = Vector2(_full_fill_size.x * health_ratio, _full_fill_size.y)
-	_refresh_fill_style(durability_active and current_durability > 0)
+	_refresh_fill_style(_has_visible_durability())
 
 
 func _animate_health_ratio(target_ratio: float) -> void:
@@ -126,8 +126,9 @@ func _refresh_damage_preview() -> void:
 	damage_preview_fill.visible = visible_damage > 0 and current_health > 0
 	if not damage_preview_fill.visible:
 		return
-	var current_ratio := clampf(float(current_health) / float(maximum_health), 0.0, 1.0)
-	var remaining_ratio := clampf(float(current_health - visible_damage) / float(maximum_health), 0.0, 1.0)
+	var display_capacity := _get_display_capacity()
+	var current_ratio := clampf(float(current_health) / display_capacity, 0.0, 1.0)
+	var remaining_ratio := clampf(float(current_health - visible_damage) / display_capacity, 0.0, 1.0)
 	damage_preview_fill.position = Vector2(
 		full_health_fill.position.x + _full_fill_size.x * remaining_ratio,
 		full_health_fill.position.y
@@ -145,12 +146,12 @@ func _refresh_damage_preview() -> void:
 func _refresh_durability() -> void:
 	if not is_instance_valid(durability_fill) or not is_instance_valid(full_health_fill):
 		return
-	durability_fill.visible = durability_active and current_durability > 0
+	durability_fill.visible = _has_visible_durability()
 	_refresh_fill_size()
 	if not durability_fill.visible:
 		return
-	var health_ratio := clampf(_displayed_health_ratio, 0.0, 1.0)
-	var durability_ratio := float(current_durability) / float(maximum_health)
+	var health_ratio := _get_displayed_health_fill_ratio()
+	var durability_ratio := float(current_durability) / _get_display_capacity()
 	durability_fill.position = Vector2(
 		full_health_fill.position.x + _full_fill_size.x * health_ratio,
 		full_health_fill.position.y
@@ -163,6 +164,21 @@ func _refresh_durability() -> void:
 		health_ratio <= 0.0001,
 		true
 	)
+
+
+func _has_visible_durability() -> bool:
+	return durability_active and current_durability > 0
+
+
+func _get_display_capacity() -> float:
+	if _has_visible_durability():
+		return float(maximum_health + maximum_durability)
+	return float(maximum_health)
+
+
+func _get_displayed_health_fill_ratio() -> float:
+	var displayed_health := clampf(_displayed_health_ratio, 0.0, 1.0) * float(maximum_health)
+	return clampf(displayed_health / _get_display_capacity(), 0.0, 1.0)
 
 func _refresh_fill_style(flatten_right := false) -> void:
 	if not is_instance_valid(full_health_fill):

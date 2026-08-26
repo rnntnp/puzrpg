@@ -171,32 +171,36 @@ func route_player_damage(
 ) -> int:
 	if damage <= 0:
 		return 0
-	var hp_damage := damage
+	var routed_damage := damage
 	if using_test_gimmick:
-		hp_damage = test_gimmick_controller.modify_player_damage(
+		routed_damage = test_gimmick_controller.modify_player_damage(
 			damage, merge_result_level_index, combo_count, merge_origin
 		)
-	elif (
-		state == State.INGESTION_RESPONSE
+	if routed_damage > 0 and vulnerable_turns > 0:
+		routed_damage = roundi(
+			float(routed_damage) * WeaknessEffect.incoming_damage_multiplier
+		)
+	if (
+		not using_test_gimmick
+		and routed_damage > 0
+		and state == State.INGESTION_RESPONSE
 		and current_durability > 0
 		and (
 			attack_drop_sequence_id < 0
 			or attack_drop_sequence_id > ingestion_response_drop_sequence_id
 		)
 	):
-		var absorbed := mini(current_durability, hp_damage)
+		var absorbed := mini(current_durability, routed_damage)
 		current_durability -= absorbed
-		hp_damage -= absorbed
+		routed_damage -= absorbed
 		_update_ui()
 		print("[INGESTION DURABILITY] damage=%d | remaining=%d" % [absorbed, current_durability])
 		# 내구도를 뚫고 HP까지 피해를 주는 타격은 take_damage()의 기존 피드백을 사용한다.
-		if absorbed > 0 and hp_damage <= 0:
+		if absorbed > 0 and routed_damage <= 0:
 			battle.play_enemy_durability_hit_feedback(absorbed)
 		if current_durability <= 0:
 			_interrupt_ingestion()
-	if hp_damage > 0 and vulnerable_turns > 0:
-		hp_damage = roundi(float(hp_damage) * WeaknessEffect.incoming_damage_multiplier)
-	return hp_damage
+	return routed_damage
 
 
 func add_weakness_turns(turns: int) -> int:
@@ -313,7 +317,7 @@ func _execute_ingestion() -> void:
 	enemy.play_ingestion_squash()
 	enemy.show_ingestion_glow(swallowed_color)
 	state = State.INGESTION_RESPONSE
-	remaining_turns = skill.response_turns
+	remaining_turns = skill.get_response_turns(active_ingestion_is_launch)
 	ingestion_response_drop_sequence_id = merge_game.drop_sequence_id
 	active_durability_max = mini(
 		skill.maximum_durability,

@@ -15,6 +15,8 @@ extends Resource
 @export_range(0, 999, 1) var durability_increase_per_use: int = 0
 @export_range(1, 999, 1) var maximum_durability: int = 7
 @export_range(1, 20, 1) var response_turns: int = 3
+@export_range(0, 20, 1) var launch_response_turns: int = 0
+@export_range(0, 20, 1) var heal_response_turns: int = 0
 
 @export_category("성공 효과")
 @export_range(0, 9999, 1) var heal_amount: int = 25
@@ -24,3 +26,8 @@ extends Resource
 
 @export_category("저지 효과")
 @export_range(0, 20, 1) var interrupted_debuff_turns: int = 2
+
+
+func get_response_turns(is_launch: bool) -> int:
+	var mode_turns := launch_response_turns if is_launch else heal_response_turns
+	return mode_turns if mode_turns > 0 else response_turns

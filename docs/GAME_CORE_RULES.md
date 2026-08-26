@@ -158,7 +158,7 @@ These are not part of the numbered 1–50 test-mechanic sequence, but future dup
 - After a normal attack, it telegraphs and marks the highest-stage eligible ball. On execution that ball is removed from the board and stored by stage.
 - During the response window, only player merge attacks whose collision occurred after the response began reduce ingestion durability. Attacks belonging to the telegraph-ending drop (including delayed physical merges and their delayed projectiles) still damage enemy HP. Breaking durability spawns the swallowed stage as an independent physics ball falling vertically from a random safe board X, without changing the player's current or queued drops, then adds 2 turns to the shared ×1.3 Weakness effect.
 - The recovery variant heals when the response window expires. The launch variant starts with ingestion and deals configured direct player damage using the normal attack animation when the response window expires.
-- The boss has no normal attack phase. It alternates launch and recovery ingestion, immediately telegraphing the next ingestion after each success or interruption. Its launch damage scales to a configured cap while ingestion durability remains fixed.
+- The boss has no normal attack phase. It alternates launch and recovery ingestion, immediately telegraphing the next ingestion after each success or interruption. Launch ingestion currently gives 4 response turns, while recovery ingestion gives 3; its launch damage scales to a configured cap while ingestion durability remains fixed.
 - The swallowed ball is not returned on monster success.
 - If the enemy dies while holding a ball, that stage is returned through the same independent random-X board drop.
 
@@ -166,13 +166,13 @@ Primary runtime evidence: `resources/levels/level_02.tres`, `resources/levels/le
 
 ## 12. Player skill gauge, Weakness, and Break
 
-- `CharacterData.player_skill` optionally enables the shared player skill system. The current blue player uses a maximum gauge of 300 and adds 2 turns to Weakness in `resources/skills/player_weakness.tres`; the shared ×1.3 incoming HP-damage multiplier lives in `resources/effects/ingestion_vulnerable.tres`.
+- `CharacterData.player_skill` optionally enables the shared player skill system. The current blue player uses a maximum gauge of 300 and adds 2 turns to Weakness in `resources/skills/player_weakness.tres`; the shared ×1.3 incoming merge-damage multiplier lives in `resources/effects/ingestion_vulnerable.tres`.
 - Every player-owned normal merge immediately grants the result ball's `BallData.merge_score` as gauge. Combo scaling, routed/final damage, defenses, ingestion durability, and damage multipliers do not change this gain.
 - Enemy-owned external merges, overflow removal, mechanic removals, and non-merge damage grant no gauge.
 - Gauge is capped at its maximum, starts at 0 for each stage, persists across the stage's enemy sequence, and is discarded when the battle scene ends.
 - At maximum gauge, the player may use the skill between completed drops while a living current enemy exists and board input is available. Use resets the gauge to 0.
 - Weakness belongs to the current enemy. Player skill use and ingestion interruption add their configured turns to the same remaining-turn counter and status icon. It loses one turn at each completed player turn and is removed on enemy defeat instead of transferring to the next enemy.
-- Weakness multiplies the merge projectile damage remaining after the existing ingestion/test-gimmick routing, immediately before enemy HP damage. It does not amplify ingestion durability damage or alter gauge gain.
+- Weakness multiplies merge projectile damage once after test-gimmick routing and before ingestion routing, so it increases both ingestion-durability damage and any HP damage left after durability absorption. It does not alter gauge gain.
 - The icon above the player fills from grayscale to color bottom-to-top; full charge adds a pulsing aura. The enemy's existing status-effect bar displays Weakness and its remaining turns.
 - The inspected runtime still has no generic Break meter shared by all enemies. Ingestion durability is an interruptible mechanic-specific shield, and numbered mechanics using “BREAK” feedback are not a shared Break subsystem.
 

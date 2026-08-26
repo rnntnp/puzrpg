@@ -48,6 +48,8 @@ var _ice_target_outline: Sprite2D
 var _ice_targeted_visual := false
 var _target_wave_color := ice_target_wave_color
 var _background_fill: Sprite2D
+var _damage_inner_sprite_original_modulate := Color.WHITE
+var _damage_inner_sprite_modulate_saved := false
 
 
 func _ready() -> void:
@@ -96,12 +98,31 @@ func set_targeted_visual(enabled: bool, color: Color) -> void:
 	_update_outline_width()
 
 
-func set_background_fill(enabled: bool, color: Color = Color.BLACK) -> void:
+func set_background_fill(
+	enabled: bool,
+	color: Color = Color.BLACK,
+	darken_inner_sprite: bool = false
+) -> void:
 	_setup_background_fill()
 	if _background_fill == null:
 		return
 	_background_fill.modulate = color
 	_background_fill.visible = enabled
+	_set_damage_inner_sprite_darkened(enabled and darken_inner_sprite)
+
+
+func _set_damage_inner_sprite_darkened(darkened: bool) -> void:
+	var axolotl := get_node_or_null("Axolotl") as Sprite2D
+	if axolotl == null:
+		return
+	if darkened:
+		if not _damage_inner_sprite_modulate_saved:
+			_damage_inner_sprite_original_modulate = axolotl.modulate
+			_damage_inner_sprite_modulate_saved = true
+		axolotl.modulate = Color.BLACK
+	elif _damage_inner_sprite_modulate_saved:
+		axolotl.modulate = _damage_inner_sprite_original_modulate
+		_damage_inner_sprite_modulate_saved = false
 
 
 func _setup_background_fill() -> void:

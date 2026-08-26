@@ -5,6 +5,7 @@ extends Control
 
 const SWIPE_THRESHOLD := 65.0
 const PREVIEW_VERTICAL_OFFSET_PIXELS := -350.0
+const BOSS_PREVIEW_OUTLINE_SCREEN_WIDTH := 4.2
 
 @onready var content: Control = $Content
 @onready var level_name_label: Label = $Content/LevelName
@@ -46,6 +47,7 @@ func _ready() -> void:
 	var revealed_material := boss_silhouette.get_meta(&"_revealed_material") as Material
 	boss_preview_material = revealed_material.duplicate() if revealed_material != null else null
 	level_preview.resized.connect(_update_preview_mask_mapping)
+	boss_silhouette.resized.connect(_update_boss_preview_outline)
 	viewed_level_index = GameSession.selected_level_index
 	start_button.pressed.connect(_on_start_button_pressed)
 	start_button.mouse_entered.connect(_on_start_button_mouse_entered)
@@ -131,6 +133,7 @@ func _show_level(index: int, direction := 0) -> void:
 	boss_silhouette.texture = _get_level_boss_sprite(level)
 	boss_silhouette.material = boss_preview_material if level_completed else boss_silhouette_material
 	boss_silhouette.visible = boss_silhouette.texture != null
+	_update_boss_preview_outline.call_deferred()
 	placeholder_label.visible = not level_preview.visible
 	placeholder_label.text = level.image_placeholder if unlocked else "LOCKED LEVEL\n미리보기"
 	lock_overlay.visible = not unlocked
@@ -147,6 +150,20 @@ func _show_level(index: int, direction := 0) -> void:
 	combo_test_button.disabled = not unlocked
 	if direction != 0:
 		_play_page_transition(direction)
+
+
+func _update_boss_preview_outline() -> void:
+	if boss_silhouette.texture == null or not boss_silhouette.material is ShaderMaterial:
+		return
+	var texture_size := boss_silhouette.texture.get_size()
+	if texture_size.x <= 0.0 or texture_size.y <= 0.0:
+		return
+	var displayed_scale := minf(
+		boss_silhouette.size.x / texture_size.x,
+		boss_silhouette.size.y / texture_size.y
+	)
+	var source_pixel_width := BOSS_PREVIEW_OUTLINE_SCREEN_WIDTH / maxf(displayed_scale, 0.001)
+	(boss_silhouette.material as ShaderMaterial).set_shader_parameter("outline_size", source_pixel_width)
 
 
 func _setup_start_button_pivot() -> void:

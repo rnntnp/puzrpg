@@ -22,6 +22,10 @@ mirror_damage_scale = 0.2
 mirror_drop_delay = 0.2
 mirror_merge_quiet_time = 0.5
 player_turn_return_delay = 0.1
+mirror_landing_pitch_scale = 0.55
+mirror_merge_pitch_scale = 0.62
+mirror_merge_effect_scale = 1.35
+mirror_merge_effect_color = Color(0.0666667, 0.0823529, 0.133333, 1)
 
 [sub_resource type="Resource" id="Gimmick"]
 script = ExtResource("5")

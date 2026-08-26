@@ -490,8 +490,8 @@ func _start_skill_tutorial_after_delay() -> void:
 	add_child(skill_tutorial)
 	skill_tutorial.sequence_finished.connect(_on_skill_tutorial_sequence_finished)
 	skill_tutorial.play_custom_spotlight_tutorial(
-		"방울을 합성하면 정령들이 마나를 채워줍니다.\n마나가 가득 차면 클릭해\n스킬을 사용할 수 있습니다.",
-		Vector2(181.0, 198.0), 62.0
+		"방울을 합성하면 정령들이 마나를 채워줍니다.\n마나가 가득 차면 주인공을 눌러\n스킬을 사용할 수 있습니다.",
+		Vector2(181.0, 300.0), 112.0
 	)
 
 
@@ -511,7 +511,7 @@ func _show_skill_drop_prompt() -> void:
 	tutorial_drop_prompt.size = Vector2(480.0, 56.0)
 	tutorial_drop_prompt.add_theme_font_size_override("font_size", 30)
 	tutorial_drop_prompt.add_theme_constant_override("outline_size", 6)
-	tutorial_drop_prompt.text = "스킬 아이콘을 클릭해 보세요."
+	tutorial_drop_prompt.text = "주인공을 눌러 스킬을 사용해 보세요."
 	tutorial_drop_prompt.modulate.a = 1.0
 	tutorial_drop_prompt.show()
 

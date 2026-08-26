@@ -9,12 +9,19 @@ var _combo_count := 1
 var _large_merge := false
 
 
-func play(at: Vector2, color: Color, ball_radius: float, combo_count: int, ball_level: int) -> void:
+func play(
+	at: Vector2,
+	color: Color,
+	ball_radius: float,
+	combo_count: int,
+	ball_level: int,
+	size_multiplier := 1.0
+) -> void:
 	position = at
 	_color = color
 	_combo_count = maxi(1, combo_count)
 	_large_merge = ball_level >= 6
-	_size_factor = clampf(0.78 + ball_radius / 170.0, 0.9, 1.55)
+	_size_factor = clampf(0.78 + ball_radius / 170.0, 0.9, 1.55) * maxf(1.0, size_multiplier)
 	var ray_count := 12 + mini(12, (_combo_count - 1) * 3) + (6 if _large_merge else 0)
 	for index in ray_count:
 		var angle := TAU * float(index) / float(ray_count) + randf_range(-0.12, 0.12)

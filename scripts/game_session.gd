@@ -21,7 +21,7 @@ var last_result_max_combo := 0
 var last_result_damage_dealt := 0
 var developer_autoplay_enabled := false
 var developer_combo_test_requested := false
-var money := 12450
+var money := 0
 
 
 func _ready() -> void:
@@ -121,7 +121,7 @@ func select_level(index: int) -> bool:
 func _load_progress() -> void:
 	var config := ConfigFile.new()
 	if config.load(PROGRESS_SAVE_PATH) == OK:
-		money = maxi(0, int(config.get_value("progress", "money", 12450)))
+		money = maxi(0, int(config.get_value("progress", "money", 0)))
 		highest_completed_level_index = clampi(
 			int(config.get_value("progress", "highest_completed", -1)),
 			-1,

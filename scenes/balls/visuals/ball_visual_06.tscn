@@ -30,11 +30,8 @@ shader = ExtResource("6_i1emw")
 shader_parameter/shell_mask_texture = ExtResource("7_nhikw")
 shader_parameter/edge_clear_texel_width = 9.0
 
-[sub_resource type="CircleShape2D" id="CircleShape2D_6nx0a"]
-radius = 52.999985
-
-[sub_resource type="CircleShape2D" id="CircleShape2D_rnwhy"]
-radius = 151.58493
+[sub_resource type="ConvexPolygonShape2D" id="ConvexPolygonShape_rounded_pentagon"]
+points = PackedVector2Array(154.577, -55.637, 169.736, -27.818, 174.789, 0, 169.736, 27.818, 154.577, 55.637, 100.681, 129.819, 78.908, 152.832, 54.013, 166.234, 25.994, 170.025, -5.147, 164.205, -92.353, 135.869, -120.968, 122.274, -141.407, 102.738, -153.671, 77.263, -157.758, 45.847, -157.758, -45.847, -153.671, -77.263, -141.407, -102.738, -120.968, -122.274, -92.353, -135.869, -5.147, -164.205, 25.994, -170.025, 54.013, -166.234, 78.908, -152.832, 100.681, -129.819)
 
 [node name="BallVisual06" unique_id=639394593 instance=ExtResource("1_base")]
 tint_color = Color(0.84204525, 0.69722426, 1, 1)
@@ -77,30 +74,4 @@ position = Vector2(18, 0)
 rotation = -0.26731703
 
 [node name="HitboxBody" parent="HitboxAuthoring" index="0"]
-position = Vector2(40.02148, -108.2741)
-rotation = -0.6433581
-shape = SubResource("CircleShape2D_6nx0a")
-
-[node name="HitboxBody2" type="CollisionShape2D" parent="HitboxAuthoring" index="1" unique_id=675832015]
-position = Vector2(-101.578384, -68.25563)
-rotation = -0.6433581
-shape = SubResource("CircleShape2D_6nx0a")
-
-[node name="HitboxBody3" type="CollisionShape2D" parent="HitboxAuthoring" index="2" unique_id=560393077]
-position = Vector2(-100.75963, 68.82948)
-rotation = -0.6433581
-shape = SubResource("CircleShape2D_6nx0a")
-
-[node name="HitboxBody4" type="CollisionShape2D" parent="HitboxAuthoring" index="3" unique_id=9280687]
-position = Vector2(36.27693, 113.617714)
-rotation = -0.6433581
-shape = SubResource("CircleShape2D_6nx0a")
-
-[node name="HitboxBody5" type="CollisionShape2D" parent="HitboxAuthoring" index="4" unique_id=717819382]
-position = Vector2(123.92645, 1.7983856)
-rotation = -0.6433581
-shape = SubResource("CircleShape2D_6nx0a")
-
-[node name="HitboxLeftLobe" parent="HitboxAuthoring" index="5"]
-position = Vector2(-1.3085785, -6.5793314)
-shape = SubResource("CircleShape2D_rnwhy")
+shape = SubResource("ConvexPolygonShape_rounded_pentagon")

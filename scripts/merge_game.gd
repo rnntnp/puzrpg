@@ -111,6 +111,9 @@ var external_merge_window_active := false
 var external_merge_combo_count := 0
 var external_merge_token_serial := 0
 var active_external_merge_token := 0
+var external_merge_sfx_pitch_scale := 1.0
+var external_merge_effect_color := Color.TRANSPARENT
+var external_merge_effect_scale := 1.0
 var board_inner_left := 96.0
 var board_inner_right := 624.0
 var board_inner_top := 0.0
@@ -246,6 +249,18 @@ func end_external_merge_window() -> void:
 
 func is_external_merge_window_active() -> bool:
 	return external_merge_window_active
+
+
+func set_external_merge_feedback(pitch_scale: float, effect_color: Color, effect_scale: float) -> void:
+	external_merge_sfx_pitch_scale = clampf(pitch_scale, 0.25, 2.0)
+	external_merge_effect_color = effect_color
+	external_merge_effect_scale = clampf(effect_scale, 1.0, 2.0)
+
+
+func clear_external_merge_feedback() -> void:
+	external_merge_sfx_pitch_scale = 1.0
+	external_merge_effect_color = Color.TRANSPARENT
+	external_merge_effect_scale = 1.0
 
 
 func remove_gimmick_ball(ball: MergeBall) -> void:
@@ -971,7 +986,7 @@ func _on_merge_requested(first, second) -> void:
 	if not is_external_merge:
 		player_merge_registered.emit(earned_points, level)
 	merge_registered.emit(level, at, attack_combo_count, source_ids, involved_cursed)
-	_spawn_merge_burst(at, merged_ball_data, attack_combo_count)
+	_spawn_merge_burst(at, merged_ball_data, attack_combo_count, is_external_merge)
 	var merge_damage := _calculate_merge_damage(earned_points, attack_combo_count)
 	if not is_external_merge and attack_combo_count >= 2:
 		_show_combo_effect(attack_combo_count, merge_damage)
@@ -998,14 +1013,21 @@ func _on_merge_requested(first, second) -> void:
 		ice_target_count,
 		source_ids,
 		attack_combo_count,
-		result_external_merge_token
+		result_external_merge_token,
+		is_external_merge
 	)
 
 
-func _spawn_merge_burst(at: Vector2, data: Resource, merge_combo_count: int) -> void:
+func _spawn_merge_burst(at: Vector2, data: Resource, merge_combo_count: int, is_external_merge := false) -> void:
 	var burst = MergeBurstEffectScene.instantiate()
 	add_child(burst)
-	burst.play(at, data.glow_color, data.get_radius(), merge_combo_count, data.level)
+	var burst_color: Color = data.glow_color
+	var burst_scale := 1.0
+	if is_external_merge:
+		if external_merge_effect_color.a > 0.0:
+			burst_color = external_merge_effect_color
+		burst_scale = external_merge_effect_scale
+	burst.play(at, burst_color, data.get_radius(), merge_combo_count, data.level, burst_scale)
 
 
 func _spawn_merged_ball(
@@ -1015,7 +1037,8 @@ func _spawn_merged_ball(
 	ice_target_count: int = 0,
 	source_ids: Array[int] = [],
 	merge_combo_count: int = 1,
-	external_merge_token: int = 0
+	external_merge_token: int = 0,
+	is_external_merge := false
 ) -> void:
 	var merged_ball = _spawn_ball(at, level)
 	if is_instance_valid(merged_ball):
@@ -1026,14 +1049,17 @@ func _spawn_merged_ball(
 	if ice_target_count > 0 and is_instance_valid(merged_ball):
 		ice_telegraph_merge_resolved.emit(merged_ball, source_ids, ice_target_count)
 	if is_instance_valid(merged_ball):
-		_play_merge_sfx(merge_combo_count)
+		_play_merge_sfx(
+			merge_combo_count,
+			external_merge_sfx_pitch_scale if is_external_merge else 1.0
+		)
 		merge_completed.emit(merged_ball)
 	if not is_instance_valid(merged_ball) or merge_push_force <= 0.0:
 		return
 	_apply_merge_push(at, merged_ball)
 
 
-func _play_merge_sfx(merge_combo_count: int) -> void:
+func _play_merge_sfx(merge_combo_count: int, pitch_multiplier := 1.0) -> void:
 	var player := AudioStreamPlayer.new()
 	player.stream = merge_sfx.stream
 	player.volume_db = merge_sfx.volume_db
@@ -1041,7 +1067,7 @@ func _play_merge_sfx(merge_combo_count: int) -> void:
 		maxi(merge_combo_count - 1, 0) * MERGE_PITCH_SEMITONES_PER_COMBO,
 		MERGE_PITCH_MAX_SEMITONES
 	)
-	player.pitch_scale = pow(2.0, float(semitones) / 12.0)
+	player.pitch_scale = maxf(0.25, pitch_multiplier) * pow(2.0, float(semitones) / 12.0)
 	add_child(player)
 	player.finished.connect(player.queue_free)
 	# The 1.104 s source waveform stays flat until about 0.176 s. Keep a

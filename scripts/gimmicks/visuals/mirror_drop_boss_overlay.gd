@@ -4,8 +4,6 @@ extends Node2D
 const BallCatalogClass = preload("res://scripts/ball_catalog.gd")
 const LEGACY_VISUAL_SCENE = preload("res://scenes/balls/visuals/ball_visual_base.tscn")
 const VISUAL_DESIGN_SIZE := 418.0
-const PREVIEW_OPACITY := 0.48
-const BACKGROUND_OPACITY := 0.58
 const PHASE_NORMAL := 0
 const PHASE_MIRROR := 1
 
@@ -26,7 +24,7 @@ func _ready() -> void:
 	add_child(preview_visual)
 	preview_background = Sprite2D.new()
 	preview_background.name = "BlackBackground"
-	preview_background.modulate = Color(0.0, 0.0, 0.0, BACKGROUND_OPACITY)
+	preview_background.modulate = Color.BLACK
 	preview_background.z_index = -1
 	preview_visual.add_child(preview_background)
 
@@ -77,7 +75,10 @@ func _sync_preview_shape(ball_level: int) -> void:
 			child.free()
 	var scene: PackedScene = ball_data.visual_scene if ball_data.visual_scene != null else LEGACY_VISUAL_SCENE
 	var visual := scene.instantiate() as Node2D
-	visual.modulate = Color(1.0, 1.0, 1.0, PREVIEW_OPACITY)
+	# Only the shell background is black. Keep gloss and the inner sprite at
+	# their authored colors; stage 1 is the exception because its large inner
+	# sprite hides nearly all of the black background.
+	visual.modulate = Color.WHITE
 	preview_visual.add_child(visual)
 	var visual_scale: float = ball_data.get_radius() * 2.0 / VISUAL_DESIGN_SIZE
 	visual.scale = Vector2.ONE * visual_scale
@@ -90,6 +91,9 @@ func _sync_preview_shape(ball_level: int) -> void:
 		preview_background.scale = shell_outline.scale * visual_scale
 	else:
 		preview_background.texture = null
+	var preview_axolotl := visual.get_node_or_null("Axolotl") as Sprite2D
+	if preview_axolotl != null and ball_level == 0:
+		preview_axolotl.modulate = Color.BLACK
 	if ball_data.visual_scene == null:
 		var axolotl := visual.get_node_or_null("Axolotl") as Sprite2D
 		var shell_base := visual.get_node_or_null("ShellBase") as Sprite2D

@@ -2,6 +2,7 @@ class_name Fighter
 extends Polygon2D
 
 const CharacterDataClass = preload("res://scripts/character_data.gd")
+const IceEyeGlowClass = preload("res://scripts/effects/ice_eye_glow.gd")
 
 signal health_changed(current_health: int, max_health: int)
 signal damage_received(amount: int)
@@ -15,6 +16,7 @@ var current_health: int
 var base_scale: Vector2
 var _visual_tween: Tween
 var _visual_override: Texture2D
+var _ice_eye_glow: IceEyeGlow
 
 var max_health: int:
 	get: return character_data.max_health
@@ -29,6 +31,8 @@ var enemy_attack_drop_interval: int:
 func _ready() -> void:
 	base_scale = scale
 	assert(character_data != null, "%s에 CharacterData가 지정되지 않았습니다." % name)
+	_ice_eye_glow = IceEyeGlowClass.new()
+	add_child(_ice_eye_glow)
 	if character_sprite.material != null:
 		character_sprite.material = character_sprite.material.duplicate()
 	_apply_character_visual()
@@ -79,6 +83,16 @@ func hide_ingestion_glow() -> void:
 	ingestion_belly_glow.hide_glow()
 
 
+func show_ice_eye_glow() -> void:
+	if _ice_eye_glow != null and character_data != null:
+		_ice_eye_glow.show_glow(character_data.ice_eye_positions)
+
+
+func hide_ice_eye_glow() -> void:
+	if _ice_eye_glow != null:
+		_ice_eye_glow.hide_glow()
+
+
 func get_ingestion_mouth_global_position() -> Vector2:
 	return to_global(character_data.ingestion_mouth_offset)
 
@@ -95,6 +109,7 @@ func _apply_current_texture() -> void:
 		character_data.sprite_horizontal_offset,
 		character_data.sprite_height_offset
 	)
+	character_sprite.flip_h = character_data.sprite_flip_h
 	character_sprite.texture = _visual_override if _visual_override != null else character_data.sprite
 	character_sprite.visible = character_sprite.texture != null
 	if character_sprite.texture == null:

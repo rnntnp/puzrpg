@@ -6,8 +6,7 @@ const SplitCascadeConfigClass = preload("res://scripts/gimmicks/configs/split_ca
 const MODE_SINGLE := 0
 const MODE_DOUBLE := 1
 const MODE_CASCADE := 2
-const NORMAL_TARGET_COLOR := Color("#ffd166")
-const BOSS_TARGET_COLOR := Color("#ff6b9d")
+const DEFAULT_TARGET_COLOR := Color("#ffd166")
 
 var tuning: SplitCascadeConfigClass
 var enemy_mode := MODE_SINGLE
@@ -591,7 +590,9 @@ func _update_target_marker() -> void:
 
 
 func _split_target_color() -> Color:
-	return BOSS_TARGET_COLOR if enemy_mode == MODE_CASCADE else NORMAL_TARGET_COLOR
+	if is_instance_valid(enemy) and enemy.character_data != null:
+		return enemy.character_data.health_bar_color
+	return DEFAULT_TARGET_COLOR
 
 
 func _action_interval(enemy_index: int) -> int:
@@ -633,15 +634,8 @@ func _target_count() -> int:
 
 
 func _update_feedback() -> void:
-	var action_name := "CASCADE SPLIT" if enemy_mode == MODE_CASCADE else "공 분열"
-	var detail: String
-	if enemy_mode == MODE_CASCADE:
-		detail = "예고 공 1개 · 왼쪽 낙하 + 오른쪽 재분열"
-	elif enemy_mode == MODE_DOUBLE:
-		detail = "예고 공 2개 · 왼쪽부터 순차 분열"
-	else:
-		detail = "예고 공 1개 · 1단계 분열"
-	battle.update_gimmick_ui("다음: %s · %d턴" % [action_name, turns_remaining], detail)
+	# 분열 예고는 보드 위 연출로 전달하므로 공략용 텍스트 UI는 표시하지 않는다.
+	battle.update_gimmick_ui("", "")
 
 
 func _on_cleanup() -> void:

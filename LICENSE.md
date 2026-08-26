@@ -12,3 +12,11 @@
 These sounds are used as part of this game and must not be redistributed as a
 standalone sound-effects pack. Keep a copy of the original download and its
 license terms with the project records.
+
+## Cartoon - Gulp!
+
+- Creator: Breviceps
+- Source: https://freesound.org/people/Breviceps/sounds/450624/
+- License: Creative Commons Zero 1.0 (CC0)
+- Project file:
+  - `assets/audio/sfx/ingestion_swallow_gulp.ogg` — converted from the source-page OGG preview

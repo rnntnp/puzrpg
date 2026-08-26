@@ -319,6 +319,10 @@ func set_split_targeted(targeted: bool, marker_color: Color = Color("#ffd166")) 
 	split_targeted = targeted
 	if targeted:
 		split_target_color = marker_color
+	if visual_container.get_child_count() > 0:
+		var visual := visual_container.get_child(0)
+		if visual != null and visual.has_method("set_targeted_visual"):
+			visual.call("set_targeted_visual", targeted, split_target_color)
 	queue_redraw()
 
 
@@ -429,9 +433,6 @@ func _draw() -> void:
 		draw_arc(Vector2.ZERO, radius - 3.0, 0.0, TAU, 40, Color("#162033"), 5.0, true)
 	if danger_marked:
 		draw_arc(Vector2.ZERO, radius + 12.0, 0.0, TAU, 40, Color("#ff4d5f"), 7.0, true)
-	if split_targeted:
-		var split_marker_radius := get_radius()
-		draw_arc(Vector2.ZERO, split_marker_radius + 4.0, 0.0, TAU, 40, split_target_color, 4.0, true)
 	if is_enlarged:
 		draw_arc(Vector2.ZERO, radius + 7.0, 0.0, TAU, 40, Color("#ff9f43"), 6.0, true)
 	if is_heavy:

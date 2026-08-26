@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="CharacterData" format=3 uid="uid://dxdc0lr17puq2"]
+
+[ext_resource type="Script" uid="uid://duu5mev8uwp8d" path="res://scripts/character_data.gd" id="1"]
+[ext_resource type="Texture2D" uid="uid://0j6exh6bs5dm" path="res://assets/characters/generated/split_otter_fisher_v2.png" id="2"]
+
+[resource]
+script = ExtResource("1")
+display_name = "분열 낚시꾼"
+health_bar_color = Color(0.7549951, 0.540544, 0.22895694, 1)
+sprite = ExtResource("2")
+sprite_flip_h = true
+sprite_size = Vector2(208, 180)
+shadow_scale = Vector2(1.05, 1)
+max_health = 500
+attack_power = 5
+enemy_attack_drop_interval = 4

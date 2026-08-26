@@ -61,7 +61,8 @@ material = SubResource("ShaderMaterial_yj40p")
 position = Vector2(21, 0)
 
 [node name="ShellGloss" parent="." index="4"]
-position = Vector2(21, 0)
+position = Vector2(30.5, 3.5)
+scale = Vector2(0.95454544, 0.9832536)
 
 [node name="HitboxAuthoring" parent="." index="5"]
 position = Vector2(21, 0)

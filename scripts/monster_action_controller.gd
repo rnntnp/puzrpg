@@ -17,6 +17,8 @@ const IceEffect: StatusEffectData = preload("res://resources/effects/ice_countdo
 const IceSkillDataClass = preload("res://scripts/ice_skill_data.gd")
 const IceSkillControllerClass = preload("res://scripts/ice_skill_controller.gd")
 const HealCrossParticleBurstClass = preload("res://scripts/heal_cross_particle_burst.gd")
+const BallCatalogClass = preload("res://scripts/ball_catalog.gd")
+const IngestionLaunchProjectileClass = preload("res://scripts/ingestion_launch_projectile.gd")
 const INGESTION_HELP_TEXT := "내구도를 파괴해서 포식을 저지하세요!"
 const HELP_YELLOW := Color("#ffe34f")
 const HELP_MAGENTA := Color("#ff4fc8")
@@ -114,6 +116,7 @@ func on_ball_dropped() -> void:
 	if remaining_turns > 0:
 		if ice_skill != null and next_action_is_ice and remaining_turns == 1:
 			var target_count := ice_controller.begin_telegraph()
+			enemy.show_ice_eye_glow()
 			if ice_skill.deals_direct_damage:
 				var has_full_target_count := target_count >= ice_skill.freeze_count
 				battle.show_player_damage_preview(
@@ -209,6 +212,8 @@ func on_enemy_defeated() -> void:
 
 func on_enemy_defeat_started() -> void:
 	_state_version += 1
+	if is_instance_valid(enemy):
+		enemy.hide_ice_eye_glow()
 	if ice_controller != null:
 		ice_controller.cancel_pending_on_enemy_defeat()
 
@@ -217,6 +222,7 @@ func _enter_normal_attack() -> void:
 	_clear_ingestion_help()
 	enemy.clear_visual_override()
 	enemy.hide_ingestion_glow()
+	enemy.hide_ice_eye_glow()
 	state = State.NORMAL_ATTACK
 	remaining_turns = (
 		ice_skill.ice_action_interval
@@ -232,6 +238,7 @@ func _enter_normal_attack() -> void:
 		battle.clear_player_damage_preview()
 		if remaining_turns == 1:
 			ice_controller.begin_telegraph()
+			enemy.show_ice_eye_glow()
 	else:
 		status_effects.remove_effect(IceEffect.effect_id)
 		status_effects.set_effect(EnemyAttackEffect, remaining_turns)
@@ -336,10 +343,11 @@ func _schedule_ingestion_success() -> void:
 	if version != _state_version or state != State.INGESTION_RESPONSE or current_durability <= 0:
 		return
 	_state_version += 1
+	var resolved_ball_level := swallowed_ball_level
 	swallowed_ball_level = -1
 	enemy.play_ingestion_squash()
 	if active_ingestion_is_launch:
-		enemy.attack_with_damage(player, active_launch_damage)
+		await _launch_ingested_ball_at_player(resolved_ball_level, active_launch_damage)
 		print("[INGESTION SUCCEEDED] launch_damage=%d" % active_launch_damage)
 	else:
 		enemy.heal(skill.heal_amount)
@@ -349,6 +357,25 @@ func _schedule_ingestion_success() -> void:
 		print("[INGESTION SUCCEEDED] heal=%d" % skill.heal_amount)
 	if player.is_alive():
 		_enter_post_ingestion_state()
+
+
+func _launch_ingested_ball_at_player(level: int, damage: int) -> void:
+	var ball_data := BallCatalogClass.get_ball(level) as BallData
+	if ball_data == null:
+		player.take_damage(damage)
+		return
+	var projectile := IngestionLaunchProjectileClass.new() as IngestionLaunchProjectile
+	get_tree().current_scene.add_child(projectile)
+	battle.play_ingestion_spit_sfx()
+	projectile.play(
+		enemy.get_ingestion_mouth_global_position(),
+		player.global_position.x,
+		ball_data
+	)
+	await projectile.crossed_player
+	if is_instance_valid(player) and player.is_alive():
+		player.take_damage(damage)
+	await projectile.flight_finished
 
 
 func _enter_post_ingestion_state() -> void:
@@ -432,8 +459,11 @@ func _run_ice_turn() -> void:
 	if ice_skill.deals_direct_damage:
 		enemy.attack(player)
 		if not player.is_alive():
+			enemy.hide_ice_eye_glow()
 			return
 	var frozen_count: int = await ice_controller.execute_telegraphed()
+	if is_instance_valid(enemy):
+		enemy.hide_ice_eye_glow()
 	if action_version != _state_version:
 		return
 	if ice_skill.deals_direct_damage and frozen_count < ice_skill.freeze_count:

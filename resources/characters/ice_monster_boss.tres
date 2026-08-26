@@ -9,6 +9,7 @@ script = ExtResource("1")
 display_name = "설원 설인 대장"
 health_bar_color = Color(0.38, 0.7, 0.96, 1)
 sprite = ExtResource("3_sprite")
+ice_eye_positions = Array[Vector2]([Vector2(-21.5, -28.2), Vector2(15.7, -25.7)])
 sprite_size = Vector2(210, 210)
 sprite_height_offset = 10.0
 shadow_scale = Vector2(2, 1.5)

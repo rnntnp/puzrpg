@@ -1,16 +1,18 @@
-[gd_resource type="Resource" script_class="LevelData" load_steps=15 format=3]
+[gd_resource type="Resource" script_class="LevelData" load_steps=17 format=3]
 
 [ext_resource type="Script" path="res://scripts/level_data.gd" id="1_level"]
 [ext_resource type="Resource" path="res://resources/characters/blue_fighter.tres" id="2_player"]
-[ext_resource type="Resource" path="res://resources/characters/red_fighter.tres" id="3_enemy"]
 [ext_resource type="Script" path="res://scripts/character_data.gd" id="4_character"]
 [ext_resource type="Script" path="res://scripts/test_gimmick_data.gd" id="5_gimmick"]
-[ext_resource type="Texture2D" path="res://assets/backgrounds/stage_01_moonlit_pond.png" id="6_background"]
+[ext_resource type="Texture2D" path="res://assets/backgrounds/generated/split_otter_bamboo_flat_candidate_b_v2.png" id="6_background"]
+[ext_resource type="Texture2D" path="res://assets/backgrounds/generated/split_otter_bamboo_flat_candidate_b_v2_top.png" id="6_background_top"]
+[ext_resource type="Texture2D" path="res://assets/backgrounds/generated/split_otter_bamboo_flat_candidate_b_v2_middle.png" id="6_background_middle"]
+[ext_resource type="Texture2D" path="res://assets/backgrounds/generated/split_otter_bamboo_flat_candidate_b_v2_bottom.png" id="6_background_bottom"]
 [ext_resource type="Texture2D" path="res://assets/level_previews/level_01_preview.png" id="7_preview"]
 [ext_resource type="Texture2D" path="res://assets/effects/generated/status_attack.png" id="8_icon"]
-[ext_resource type="Resource" path="res://resources/characters/prototype_gimmick_enemy_1.tres" id="9_enemy_1"]
-[ext_resource type="Resource" path="res://resources/characters/prototype_gimmick_enemy_2.tres" id="10_enemy_2"]
-[ext_resource type="Resource" path="res://resources/characters/prototype_gimmick_boss.tres" id="11_boss"]
+[ext_resource type="Resource" path="res://resources/characters/split_otter_fisher.tres" id="9_enemy_1"]
+[ext_resource type="Resource" path="res://resources/characters/split_otter_dual_fisher.tres" id="10_enemy_2"]
+[ext_resource type="Resource" path="res://resources/characters/split_otter_captain.tres" id="11_boss"]
 [ext_resource type="Script" path="res://scripts/gimmicks/handlers/split_cascade_handler.gd" id="12_handler"]
 [ext_resource type="Script" path="res://scripts/gimmicks/configs/split_cascade_config.gd" id="13_config"]
 
@@ -87,6 +89,10 @@ script = ExtResource("1_level")
 level_name = "기믹 03 · 공 분열"
 image_placeholder = "GIMMICK TEST 03"
 battle_background = ExtResource("6_background")
+battle_background_top = ExtResource("6_background_top")
+battle_background_middle = ExtResource("6_background_middle")
+battle_background_bottom = ExtResource("6_background_bottom")
+battle_background_top_height = 558.0
 level_select_preview = ExtResource("7_preview")
 recommended_ball_level = 5
 stage_gimmick_icon = ExtResource("8_icon")

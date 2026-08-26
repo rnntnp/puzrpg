@@ -28,6 +28,12 @@ extends Resource
 			return
 		sprite = value
 		emit_changed()
+@export var sprite_flip_h: bool = false:
+	set(value):
+		if sprite_flip_h == value:
+			return
+		sprite_flip_h = value
+		emit_changed()
 @export var cast_sprite: Texture2D:
 	set(value):
 		if cast_sprite == value:
@@ -44,6 +50,7 @@ extends Resource
 @export var ingestion_swallowed_sprite: Texture2D
 @export var ingestion_mouth_offset: Vector2 = Vector2(-55.0, 0.0)
 @export var ingestion_belly_glow_offset: Vector2 = Vector2(-8.0, 38.0)
+@export var ice_eye_positions: Array[Vector2] = []
 @export var sprite_modulate: Color = Color.WHITE:
 	set(value):
 		if sprite_modulate == value:

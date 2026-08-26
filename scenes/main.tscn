@@ -18,8 +18,8 @@
 [ext_resource type="AudioStream" uid="uid://3lweonpl7yrp" path="res://assets/audio/sfx/player_hit_cute.wav" id="14_player_hit_sfx"]
 [ext_resource type="Script" uid="uid://n03lkbfsgq2s" path="res://scripts/player_skill_controller.gd" id="15_player_skill_controller"]
 [ext_resource type="PackedScene" path="res://scenes/player_skill_button.tscn" id="16_player_skill_button"]
-[ext_resource type="AudioStream" path="res://assets/audio/sfx/bubble_pop_05.mp3" id="17_ingestion_swallow_sfx"]
-[ext_resource type="AudioStream" path="res://assets/audio/sfx/drop_002.ogg" id="18_ingestion_spit_sfx"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/ingestion_swallow_gulp.ogg" id="17_ingestion_swallow_sfx"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/ingestion_spit_buweeh.wav" id="18_ingestion_spit_sfx"]
 
 [sub_resource type="Gradient" id="Gradient_top_center_shadow"]
 offsets = PackedFloat32Array(0, 0.42, 1)
@@ -130,12 +130,10 @@ max_polyphony = 4
 [node name="IngestionSwallowSfx" type="AudioStreamPlayer" parent="."]
 stream = ExtResource("17_ingestion_swallow_sfx")
 volume_db = -4.0
-pitch_scale = 0.82
 
 [node name="IngestionSpitSfx" type="AudioStreamPlayer" parent="."]
 stream = ExtResource("18_ingestion_spit_sfx")
 volume_db = -4.0
-pitch_scale = 1.18
 
 [node name="MonsterActionController" type="Node" parent="." unique_id=1522200351]
 script = ExtResource("8")

@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="CharacterData" format=3 uid="uid://byg8kc75g1t32"]
+
+[ext_resource type="Script" uid="uid://duu5mev8uwp8d" path="res://scripts/character_data.gd" id="1"]
+[ext_resource type="Texture2D" uid="uid://clo4eidq777hp" path="res://assets/characters/generated/split_otter_captain_v2.png" id="2"]
+
+[resource]
+script = ExtResource("1")
+display_name = "분열 함대 선장"
+health_bar_color = Color(0.80126345, 4.1151793e-06, 8.663535e-07, 1)
+sprite = ExtResource("2")
+sprite_size = Vector2(245, 163)
+shadow_scale = Vector2(1.18, 1)
+max_health = 1000
+attack_power = 7
+enemy_attack_drop_interval = 4

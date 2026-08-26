@@ -32,3 +32,4 @@ ball_drop_time_limit = -1.0
 merge_hit_stop_time_scale = 0.18
 merge_hit_stop_duration = 0.2
 next_level_path = "res://resources/levels/05_mirror_drop.tres"
+ingestion_tutorial_enabled = true

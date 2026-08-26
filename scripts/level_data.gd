@@ -39,6 +39,8 @@ const TestGimmickDataClass = preload("res://scripts/test_gimmick_data.gd")
 @export_multiline var tutorial_turn_message: String = ""
 ## 적 공격을 본 뒤, 방울 진화표와 함께 표시하는 안내다.
 @export var tutorial_evolution_messages: PackedStringArray = []
+## 포식 스테이지에 진입할 때 포식 대상 지정 안내를 표시한다.
+@export var ingestion_tutorial_enabled := false
 ## 0은 표시 단계 1이다. 음수면 기존 랜덤 드롭 풀을 사용한다.
 @export_range(-1, 10, 1) var fixed_drop_level: int = -1
 

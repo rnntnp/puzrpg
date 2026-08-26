@@ -8,6 +8,7 @@ const LOGO_FADE_DURATION := 0.45
 const LOGO_HOLD_DURATION := 0.7
 const TutorialMouseCursorClass = preload("res://scripts/tutorial_mouse_cursor.gd")
 const TutorialControlArrowClass = preload("res://scripts/tutorial_control_arrow.gd")
+const TutorialPointerArrowClass = preload("res://scripts/tutorial_pointer_arrow.gd")
 
 var _pages: PackedStringArray = []
 var _story_images: Array[Texture2D] = []
@@ -22,6 +23,10 @@ var _custom_spotlight_tutorial := false
 var _custom_spotlight_center := Vector2.ZERO
 var _custom_spotlight_radius := 72.0
 var _custom_spotlight_box_half_size := Vector2.ZERO
+var _custom_spotlight_dimmed := true
+var _custom_click_hint_right_aligned := false
+var _custom_message_y := -1.0
+var _custom_pointer_arrow_position := Vector2.INF
 var _control_center_x := 360.0
 var _backdrop: ColorRect
 var _label: Label
@@ -29,6 +34,7 @@ var _story_image: TextureRect
 var _guide_panel: Panel
 var _guide_label: Label
 var _click_hint: Label
+var _pointer_arrow: Node2D
 var _control_arrow: TutorialControlArrow
 var _mouse_cursor: TutorialMouseCursor
 
@@ -92,7 +98,14 @@ func play_combo_tutorial(message: String) -> void:
 	_play(PackedStringArray([message]))
 
 
-func play_custom_spotlight_tutorial(message: String, center: Vector2, radius := 72.0) -> void:
+func play_custom_spotlight_tutorial(
+	message: String,
+	center: Vector2,
+	radius := 72.0,
+	click_hint_right_aligned := false,
+	message_y := -1.0,
+	pointer_arrow_position := Vector2.INF
+) -> void:
 	_logo_first = false
 	_enemy_intent_tutorial = false
 	_control_only_tutorial = false
@@ -103,10 +116,21 @@ func play_custom_spotlight_tutorial(message: String, center: Vector2, radius := 
 	_custom_spotlight_center = center
 	_custom_spotlight_radius = radius
 	_custom_spotlight_box_half_size = Vector2.ZERO
+	_custom_spotlight_dimmed = true
+	_custom_click_hint_right_aligned = click_hint_right_aligned
+	_custom_message_y = message_y
+	_custom_pointer_arrow_position = pointer_arrow_position
 	_play(PackedStringArray([message]))
 
 
-func play_custom_box_spotlight_tutorial(message: String, center: Vector2, half_size: Vector2) -> void:
+func play_custom_box_spotlight_tutorial(
+	message: String,
+	center: Vector2,
+	half_size: Vector2,
+	click_hint_right_aligned := false,
+	message_y := -1.0,
+	dim_background := true
+) -> void:
 	_logo_first = false
 	_enemy_intent_tutorial = false
 	_control_only_tutorial = false
@@ -116,6 +140,9 @@ func play_custom_box_spotlight_tutorial(message: String, center: Vector2, half_s
 	_custom_spotlight_tutorial = true
 	_custom_spotlight_center = center
 	_custom_spotlight_box_half_size = half_size
+	_custom_spotlight_dimmed = dim_background
+	_custom_click_hint_right_aligned = click_hint_right_aligned
+	_custom_message_y = message_y
 	_play(PackedStringArray([message]))
 
 
@@ -194,6 +221,10 @@ func _build_overlay() -> void:
 	_backdrop.add_child(_click_hint)
 	_setup_click_hint_visuals()
 
+	_pointer_arrow = TutorialPointerArrowClass.new()
+	_pointer_arrow.hide()
+	_backdrop.add_child(_pointer_arrow)
+
 	_control_arrow = TutorialControlArrowClass.new()
 	_control_arrow.position = Vector2(_control_center_x - 110.0, 610.0)
 	_control_arrow.hide()
@@ -261,6 +292,7 @@ func _show_click_hint_centered() -> void:
 func _show_current_page() -> void:
 	_label.text = _pages[_page_index]
 	_story_image.hide()
+	_pointer_arrow.hide()
 	if _logo_first and _page_index == 0:
 		_set_spotlight(false)
 		_guide_label.hide()
@@ -408,7 +440,10 @@ func _show_combo_tutorial() -> void:
 
 
 func _show_custom_spotlight_tutorial() -> void:
-	if _custom_spotlight_box_half_size != Vector2.ZERO:
+	if not _custom_spotlight_dimmed:
+		_backdrop.material = null
+		_backdrop.color = Color.TRANSPARENT
+	elif _custom_spotlight_box_half_size != Vector2.ZERO:
 		_backdrop.material = _create_box_spotlight_material(_custom_spotlight_center, _custom_spotlight_box_half_size)
 	else:
 		_backdrop.material = _create_spotlight_material_at(_custom_spotlight_center, _custom_spotlight_radius)
@@ -416,14 +451,24 @@ func _show_custom_spotlight_tutorial() -> void:
 	_control_arrow.hide()
 	_mouse_cursor.hide()
 	_label.hide()
-	_guide_label.position = Vector2(70.0, 500.0)
+	_guide_label.position = Vector2(70.0, 500.0 if _custom_message_y < 0.0 else _custom_message_y)
 	_guide_label.size = Vector2(580.0, 130.0)
 	_guide_label.add_theme_font_size_override("font_size", 31)
 	_guide_label.add_theme_color_override("font_color", Color(0.95, 0.98, 1.0, 1.0))
 	_guide_label.add_theme_constant_override("outline_size", 7)
 	_guide_label.text = _pages[_page_index]
 	_guide_label.show()
-	_show_click_hint_centered()
+	_pointer_arrow.visible = _custom_pointer_arrow_position.is_finite()
+	if _pointer_arrow.visible:
+		_pointer_arrow.position = _custom_pointer_arrow_position
+	if _custom_click_hint_right_aligned:
+		_click_hint.set_anchors_preset(Control.PRESET_TOP_LEFT)
+		_click_hint.position = Vector2(430.0, 1060.0)
+		_click_hint.size = Vector2(210.0, 42.0)
+		_click_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	else:
+		_layout_click_hint_centered()
+	_click_hint.show()
 
 
 func _set_combo_stack_spotlight() -> void:

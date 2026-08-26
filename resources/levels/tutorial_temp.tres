@@ -15,7 +15,7 @@
 
 [resource]
 script = ExtResource("1_level")
-level_name = "튜토리얼_임시"
+level_name = "1. 고향 연못"
 image_placeholder = "TUTORIAL TEMP\nLEVEL IMAGE"
 battle_background = ExtResource("5_background")
 battle_background_top = ExtResource("8_background_top")

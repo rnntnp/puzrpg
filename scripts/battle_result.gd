@@ -5,6 +5,7 @@ extends Control
 @export_file("*.tscn") var battle_scene_path := "res://scenes/main.tscn"
 
 @onready var background: TextureRect = $Background
+@onready var layered_background: LayeredBattleBackground = $LayeredBackground
 @onready var victory_glow_effect: TextureRect = $VictoryGlowEffect
 @onready var defeat_top_gradient_effect: TextureRect = $DefeatTopGradientEffect
 @onready var character_sprite: TextureRect = $CharacterSprite
@@ -42,7 +43,22 @@ func _ready() -> void:
 func _apply_result_state(battle_won: bool) -> void:
 	var level = GameSession.get_last_battle_level()
 	if level != null:
-		background.texture = level.battle_background if level.battle_background != null else level.level_select_preview
+		var has_layered_background: bool = (
+			level.battle_background_top != null
+			and level.battle_background_middle != null
+			and level.battle_background_bottom != null
+		)
+		layered_background.visible = has_layered_background
+		background.visible = not has_layered_background
+		if has_layered_background:
+			layered_background.configure(
+				level.battle_background_top,
+				level.battle_background_middle,
+				level.battle_background_bottom,
+				level.battle_background_top_height
+			)
+		else:
+			background.texture = level.battle_background if level.battle_background != null else level.level_select_preview
 		stage_name_label.text = level.level_name
 	victory_glow_effect.visible = battle_won
 	defeat_top_gradient_effect.visible = not battle_won

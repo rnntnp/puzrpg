@@ -8,7 +8,9 @@ uniform float mask_rotation = 0.0;
 uniform vec2 mask_sprite_scale = vec2(1.0);
 
 void fragment() {
-	vec4 sprite_color = texture(TEXTURE, UV);
+	// Preserve Sprite2D.self_modulate/modulate so mechanic visuals can tint
+	// the masked axolotl itself instead of only affecting shell overlays.
+	vec4 sprite_color = texture(TEXTURE, UV) * COLOR;
 	vec2 mask_size = vec2(textureSize(mask_texture, 0));
 	vec2 centered_pixel = (UV - vec2(0.5)) * mask_size * mask_sprite_scale + mask_offset_pixels;
 	float cosine = cos(-mask_rotation);

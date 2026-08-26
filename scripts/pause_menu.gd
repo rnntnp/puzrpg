@@ -2,6 +2,7 @@ class_name PauseMenu
 extends CanvasLayer
 
 const LEVEL_SELECT_SCENE := "res://scenes/level_select.tscn"
+const SFX_PREVIEW_STREAM: AudioStream = preload("res://assets/audio/sfx/ui_click_003.ogg")
 
 @onready var pause_button: Button = $PauseButton
 @onready var menu_overlay: Control = $MenuOverlay
@@ -18,10 +19,18 @@ const LEVEL_SELECT_SCENE := "res://scenes/level_select.tscn"
 
 var exit_button_tween: Tween
 var exit_button_is_pressed := false
+var sfx_preview_player: AudioStreamPlayer
 
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
+	sfx_preview_player = AudioStreamPlayer.new()
+	sfx_preview_player.name = "SfxVolumePreview"
+	sfx_preview_player.process_mode = Node.PROCESS_MODE_ALWAYS
+	sfx_preview_player.stream = SFX_PREVIEW_STREAM
+	sfx_preview_player.bus = &"SFX"
+	sfx_preview_player.volume_db = -4.0
+	add_child(sfx_preview_player)
 	pause_button.pressed.connect(_open_menu)
 	close_button.pressed.connect(_close_menu)
 	resume_button.pressed.connect(_close_menu)
@@ -34,10 +43,10 @@ func _ready() -> void:
 	_setup_exit_button_pivot.call_deferred()
 	exit_cancel_button.pressed.connect(_hide_exit_confirmation)
 	exit_confirm_button.pressed.connect(_exit_to_level_select)
-	bgm_slider.value_changed.connect(_on_bgm_volume_changed)
-	sfx_slider.value_changed.connect(_on_sfx_volume_changed)
 	bgm_slider.value = AudioSettings.bgm_volume * 100.0
 	sfx_slider.value = AudioSettings.sfx_volume * 100.0
+	bgm_slider.value_changed.connect(_on_bgm_volume_changed)
+	sfx_slider.value_changed.connect(_on_sfx_volume_changed)
 	_update_volume_labels()
 
 
@@ -90,6 +99,7 @@ func _on_bgm_volume_changed(value: float) -> void:
 func _on_sfx_volume_changed(value: float) -> void:
 	AudioSettings.set_sfx_volume(value / 100.0)
 	_update_volume_labels()
+	sfx_preview_player.play()
 
 
 func _update_volume_labels() -> void:

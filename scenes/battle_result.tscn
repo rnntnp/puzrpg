@@ -6,6 +6,7 @@
 [ext_resource type="Texture2D" uid="uid://6s4f4ytdwfk0" path="res://assets/backgrounds/stage_01_moonlit_pond_handdrawn_v4_clear.png" id="4_fallback_background"]
 [ext_resource type="Texture2D" uid="uid://dl5rgfbubimw" path="res://assets/ui/results/open_reward_chest_pond.png" id="5_open_chest"]
 [ext_resource type="Texture2D" uid="uid://dxfc48nhk0ky2" path="res://assets/ui/level_select_casual/money_coin_axolotl.png" id="6_flk2c"]
+[ext_resource type="Script" uid="uid://ck6ggsqikukgw" path="res://scripts/layered_battle_background.gd" id="7_layered_background"]
 
 [sub_resource type="Gradient" id="Gradient_victory_glow"]
 offsets = PackedFloat32Array(0, 0.35, 0.72, 1)
@@ -138,6 +139,31 @@ mouse_filter = 2
 texture = ExtResource("4_fallback_background")
 expand_mode = 1
 stretch_mode = 6
+
+[node name="LayeredBackground" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("7_layered_background")
+
+[node name="Top" type="TextureRect" parent="LayeredBackground"]
+layout_mode = 0
+mouse_filter = 2
+expand_mode = 1
+
+[node name="Middle" type="TextureRect" parent="LayeredBackground"]
+layout_mode = 0
+mouse_filter = 2
+expand_mode = 1
+
+[node name="Bottom" type="TextureRect" parent="LayeredBackground"]
+layout_mode = 0
+mouse_filter = 2
+expand_mode = 1
 
 [node name="BackgroundWash" type="ColorRect" parent="." unique_id=2002573961]
 layout_mode = 1

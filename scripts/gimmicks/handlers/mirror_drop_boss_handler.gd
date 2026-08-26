@@ -6,6 +6,7 @@ const MergeAttackEffectScene = preload("res://scenes/merge_attack_effect.tscn")
 const MirrorFaceSheenClass = preload("res://scripts/gimmicks/visuals/mirror_face_sheen.gd")
 const ReflectionActiveSprite = preload("res://assets/characters/generated/mirror_mimic_boss_reflection_active_v3.png")
 const ReflectionShineSfx: AudioStream = preload("res://assets/audio/sfx/mirror_reflection_shine.ogg")
+const MirrorLandingSfx: AudioStream = preload("res://assets/audio/sfx/drop_002.ogg")
 const ReflectionActiveEffect: StatusEffectData = preload("res://resources/effects/mirror_reflection_active.tres")
 const PHASE_NORMAL := 0
 const PHASE_MIRROR := 1
@@ -14,6 +15,7 @@ var tuning: MirrorDropBossConfig
 var overlay: MirrorDropBossOverlay
 var mirror_face_sheen: Sprite2D
 var reflection_shine_player: AudioStreamPlayer
+var mirror_landing_player: AudioStreamPlayer
 var phase := PHASE_NORMAL
 var turns_remaining := 0
 var last_player_level := -1
@@ -39,6 +41,17 @@ func _on_configured() -> void:
 	reflection_shine_player.stream = ReflectionShineSfx
 	reflection_shine_player.volume_db = -4.0
 	enemy.add_child(reflection_shine_player)
+	mirror_landing_player = AudioStreamPlayer.new()
+	mirror_landing_player.stream = MirrorLandingSfx
+	mirror_landing_player.pitch_scale = tuning.mirror_landing_pitch_scale
+	mirror_landing_player.volume_db = -3.0
+	mirror_landing_player.bus = &"SFX"
+	merge_game.add_child(mirror_landing_player)
+	merge_game.set_external_merge_feedback(
+		tuning.mirror_merge_pitch_scale,
+		tuning.mirror_merge_effect_color,
+		tuning.mirror_merge_effect_scale
+	)
 	if not merge_game.external_merge_damage_requested.is_connected(_on_external_merge_damage_requested):
 		merge_game.external_merge_damage_requested.connect(_on_external_merge_damage_requested)
 	_enter_normal_phase()
@@ -130,7 +143,6 @@ func _execute_mirror_drop(level: int, player_drop_x: float) -> void:
 	mirror_combo = 0
 	mirror_damage_total = 0
 	result_text = ""
-	mirror_action_active = true
 	battle.status_label.text = "보스의 미러 드롭!"
 	battle.status_label.modulate = Color("#8be9fd")
 	_update_feedback()
@@ -155,6 +167,11 @@ func _execute_mirror_drop(level: int, player_drop_x: float) -> void:
 		_update_feedback()
 		return
 	spawned.set_damage_background_marked(true)
+	spawned.first_contact.connect(_play_mirror_landing_sfx, CONNECT_ONE_SHOT)
+	# Keep the black preview visible through the wind-up, then hand it off only
+	# after the real mirror ball exists and has received its black background.
+	mirror_action_active = true
+	_refresh_overlay()
 	log_event("MIRROR DROP", "stage=%d player_x=%.1f boss_x=%.1f" % [level + 1, player_drop_x, spawn_x])
 	await _wait_for_mirror_resolution(spawned)
 	merge_game.end_external_merge_window()
@@ -184,6 +201,11 @@ func _wait_for_mirror_resolution(ball: MergeBall) -> void:
 		if Time.get_ticks_msec() - mirror_last_merge_msec >= quiet_msec:
 			return
 		await get_tree().physics_frame
+
+
+func _play_mirror_landing_sfx(_ball: MergeBall) -> void:
+	if is_instance_valid(mirror_landing_player):
+		mirror_landing_player.play()
 
 
 func _clear_mirror_ball_backgrounds() -> void:
@@ -348,9 +370,14 @@ func _on_cleanup() -> void:
 		reflection_shine_player.stop()
 		reflection_shine_player.queue_free()
 	reflection_shine_player = null
+	if is_instance_valid(mirror_landing_player):
+		mirror_landing_player.stop()
+		mirror_landing_player.queue_free()
+	mirror_landing_player = null
 	if is_instance_valid(merge_game):
 		_clear_mirror_ball_backgrounds()
 		merge_game.end_external_merge_window()
+		merge_game.clear_external_merge_feedback()
 		if merge_game.external_merge_damage_requested.is_connected(_on_external_merge_damage_requested):
 			merge_game.external_merge_damage_requested.disconnect(_on_external_merge_damage_requested)
 	player_drop_recorded = false

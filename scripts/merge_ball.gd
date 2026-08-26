@@ -305,7 +305,7 @@ func set_damage_background_marked(marked: bool) -> void:
 	if visual_container.get_child_count() > 0:
 		var visual := visual_container.get_child(0)
 		if visual != null and visual.has_method("set_background_fill"):
-			visual.call("set_background_fill", marked, Color.BLACK)
+			visual.call("set_background_fill", marked, Color.BLACK, merge_level == 0)
 	queue_redraw()
 
 

@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="CharacterData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/character_data.gd" id="1_data"]
+[ext_resource type="Texture2D" path="res://assets/characters/generated/mirror_mimic_boss_idle_v2.png" id="2_sprite"]
+
+[resource]
+script = ExtResource("1_data")
+display_name = "깨진 손거울 미믹"
+health_bar_color = Color(0.34, 0.58, 0.61, 1)
+sprite = ExtResource("2_sprite")
+sprite_size = Vector2(180, 180)
+shadow_scale = Vector2(0.84, 0.8)
+max_health = 1000
+attack_power = 0
+enemy_attack_drop_interval = 3

@@ -11,7 +11,7 @@ const PREVIEW_VERTICAL_OFFSET_PIXELS := -350.0
 @onready var placeholder_label: Label = $Content/LevelImage/PlaceholderText
 @onready var level_preview: TextureRect = $Content/LevelImage/PreviewBackground
 @onready var boss_silhouette: TextureRect = $Content/LevelImage/BossSilhouette
-@onready var lock_overlay: ColorRect = $Content/LevelImage/LockOverlay
+@onready var lock_overlay: TextureRect = $Content/LevelImage/LockOverlay
 @onready var lock_label: Label = $Content/LevelImage/LockOverlay/LockLabel
 @onready var start_button: Button = $Content/StartButton
 @onready var start_button_frame: Panel = $Content/StartButton/CommonFrame
@@ -25,6 +25,10 @@ const PREVIEW_VERTICAL_OFFSET_PIXELS := -350.0
 @onready var gimmick_value: Label = $Content/InfoCardLeft/Value
 @onready var gimmick_icon: TextureRect = $Content/InfoCardLeft/Icon
 @onready var reward_value: Label = $Content/InfoCardLeft3/Value
+@onready var reward_icon: TextureRect = $Content/InfoCardLeft3/Icon
+
+const CLOSED_REWARD_CHEST: Texture2D = preload("res://assets/ui/level_select_casual/reward_chest_pond.png")
+const OPEN_REWARD_CHEST: Texture2D = preload("res://assets/ui/results/open_reward_chest_pond.png")
 
 var viewed_level_index := 0
 var pointer_start := Vector2.ZERO
@@ -46,6 +50,8 @@ func _ready() -> void:
 	start_button.focus_entered.connect(_on_start_button_focus_entered)
 	start_button.focus_exited.connect(_on_start_button_focus_exited)
 	_setup_start_button_pivot.call_deferred()
+	_setup_reward_icon_pivot.call_deferred()
+	reward_icon.resized.connect(_setup_reward_icon_pivot)
 	previous_button.pressed.connect(_show_previous_level)
 	next_button.pressed.connect(_show_next_level)
 	autoplay_button.visible = OS.is_debug_build()
@@ -114,6 +120,9 @@ func _show_level(index: int, direction := 0) -> void:
 	level_preview.visible = level_preview.texture != null
 	_update_preview_mask_mapping.call_deferred()
 	_update_level_info(level)
+	var level_completed := GameSession.is_level_completed(index)
+	reward_icon.texture = OPEN_REWARD_CHEST if level_completed else CLOSED_REWARD_CHEST
+	reward_icon.scale = Vector2.ONE * 1.3 if level_completed else Vector2.ONE
 	boss_silhouette.texture = _get_level_boss_sprite(level)
 	boss_silhouette.visible = boss_silhouette.texture != null
 	placeholder_label.visible = not level_preview.visible
@@ -196,6 +205,10 @@ func _update_level_info(level: LevelData) -> void:
 	gimmick_value.text = level.stage_gimmick_name
 	gimmick_icon.texture = level.stage_gimmick_icon
 	reward_value.text = level.reward_name
+
+
+func _setup_reward_icon_pivot() -> void:
+	reward_icon.pivot_offset = reward_icon.size * 0.5
 
 
 func _update_money_display(amount: int) -> void:

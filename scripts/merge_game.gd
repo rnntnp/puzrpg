@@ -1147,14 +1147,14 @@ func _trigger_game_over() -> void:
 func set_input_enabled(enabled: bool) -> void:
 	input_locked = not enabled
 	is_aiming = false
-	next_panel.visible = enabled and not is_game_over
+	next_panel.visible = not is_game_over
 	if enabled and (dropped_ball_has_landed or not drop_sequence_active) and not is_game_over:
 		can_drop = true
 		drop_time_remaining = drop_time_limit
 	_update_drop_preview_visibility()
 
 func _update_drop_preview_visibility() -> void:
-	var should_show := can_drop and not input_locked and not is_game_over
+	var should_show := can_drop and not is_game_over
 	guide_line.visible = should_show
 	preview_holder.visible = should_show
 

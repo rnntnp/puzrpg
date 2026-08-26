@@ -3,6 +3,7 @@ extends TestGimmickHandler
 
 const SplitCascadeConfigClass = preload("res://scripts/gimmicks/configs/split_cascade_config.gd")
 const SplitCountdownEffect: StatusEffectData = preload("res://resources/effects/split_countdown.tres")
+const FishingReelSfx: AudioStream = preload("res://assets/audio/sfx/fishing_reel_wind.ogg")
 
 const MODE_SINGLE := 0
 const MODE_DOUBLE := 1
@@ -23,9 +24,18 @@ var lifted_target_original_scale := Vector2.ONE
 var lifted_target_original_modulate := Color.WHITE
 var cascade_suspended_balls: Array[MergeBall] = []
 var cascade_launch_velocities: Dictionary = {}
+var fishing_reel_players: Array[AudioStreamPlayer] = []
+var double_reel_index := 0
 
 
 func _on_configured() -> void:
+	if fishing_reel_players.is_empty():
+		for _index in 2:
+			var reel_player := AudioStreamPlayer.new()
+			reel_player.stream = FishingReelSfx
+			reel_player.volume_db = -7.0
+			add_child(reel_player)
+			fishing_reel_players.append(reel_player)
 	tuning = data.tuning as SplitCascadeConfigClass
 	if tuning == null:
 		tuning = SplitCascadeConfigClass.new()
@@ -68,6 +78,7 @@ func _execute_split_attack() -> void:
 	_ensure_split_targets()
 	var targets: Array[MergeBall] = split_targets.duplicate()
 	var intended_target_count := _target_count()
+	double_reel_index = 0
 	_clear_split_targets()
 	var successful_split_count := 0
 	if enemy_mode == MODE_CASCADE:
@@ -145,7 +156,7 @@ func _lift_then_split_enemy_one(target: MergeBall) -> Array[MergeBall]:
 
 
 func _lift_then_split_enemy_two(target: MergeBall) -> Array[MergeBall]:
-	return await _lift_then_split_airborne(
+	var result := await _lift_then_split_airborne(
 		target,
 		tuning.enemy_two_anticipation_duration,
 		tuning.enemy_two_lift_min_duration,
@@ -156,6 +167,8 @@ func _lift_then_split_enemy_two(target: MergeBall) -> Array[MergeBall]:
 		tuning.enemy_one_horizontal_speed_per_radius,
 		tuning.enemy_one_horizontal_speed_max
 	)
+	double_reel_index += 1
+	return result
 
 
 func _lift_then_split_airborne(
@@ -234,8 +247,15 @@ func _lift_then_split_airborne(
 		_restore_lifted_target()
 		return []
 	var tween := create_gimmick_tween()
+	var active_reel_player := _play_lift_reel()
+	if enemy_mode == MODE_CASCADE and is_instance_valid(active_reel_player):
+		var reel_pitch_swing := create_gimmick_tween()
+		reel_pitch_swing.tween_property(active_reel_player, "pitch_scale", 0.62, lift_duration * 0.48).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+		reel_pitch_swing.tween_property(active_reel_player, "pitch_scale", 1.02, lift_duration * 0.52).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 	tween.tween_property(target, "position", target_position, lift_duration).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 	await tween.finished
+	if is_instance_valid(active_reel_player):
+		active_reel_player.stop()
 	if not active or not is_instance_valid(target) or target.merge_locked:
 		_restore_lifted_target()
 		return []
@@ -273,6 +293,22 @@ func _current_stack_fill_ratio(bounds: Rect2) -> float:
 	var usable_height := maxf(1.0, bounds.end.y - merge_game.danger_line_y)
 	var occupied_height := clampf(bounds.end.y - uppermost_top_edge, 0.0, usable_height)
 	return occupied_height / usable_height
+
+
+func _play_lift_reel() -> AudioStreamPlayer:
+	if fishing_reel_players.is_empty():
+		return null
+	var player_index := 0
+	var pitch_scale := 1.0
+	if enemy_mode == MODE_DOUBLE:
+		player_index = double_reel_index % fishing_reel_players.size()
+		pitch_scale = 0.96 if player_index == 0 else 1.06
+	elif enemy_mode == MODE_CASCADE:
+		pitch_scale = 0.90
+	var reel_player := fishing_reel_players[player_index]
+	reel_player.pitch_scale = pitch_scale
+	reel_player.play()
+	return reel_player
 
 
 func _restore_lifted_target() -> void:
@@ -660,6 +696,9 @@ func _predicted_split_damage() -> int:
 
 
 func _on_cleanup() -> void:
+	for reel_player in fishing_reel_players:
+		if is_instance_valid(reel_player):
+			reel_player.stop()
 	battle.right_status_effects.remove_effect(SplitCountdownEffect.effect_id)
 	battle.clear_player_damage_preview()
 	if is_instance_valid(enemy):

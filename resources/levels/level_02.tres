@@ -30,4 +30,4 @@ enemies = Array[ExtResource("5_character_type")]([ExtResource("3_enemy"), ExtRes
 ball_drop_time_limit = -1.0
 merge_hit_stop_time_scale = 0.18
 merge_hit_stop_duration = 0.2
-next_level_path = "res://resources/levels/level_03.tres"
+next_level_path = "res://resources/levels/test_03_split.tres"

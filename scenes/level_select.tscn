@@ -9,6 +9,7 @@
 [ext_resource type="Texture2D" uid="uid://c5cp11m7js8sc" path="res://assets/ui/level_select_extracted/nav_arrow_left.png" id="8_nav"]
 [ext_resource type="Texture2D" uid="uid://mxhtorak2cuf" path="res://assets/ui/level_select_casual/level_select_pond_background.png" id="10_background"]
 [ext_resource type="Material" path="res://resources/materials/level_preview_mask_material.tres" id="14_preview_mask"]
+[ext_resource type="Texture2D" path="res://assets/ui/masks/level_preview_rounded_mask.png" id="15_preview_mask_texture"]
 [ext_resource type="Texture2D" uid="uid://j08g6fp5qsiq" path="res://assets/ui/level_select_icons/enemy_turn.png" id="16_enemy_turn"]
 [ext_resource type="Texture2D" uid="uid://diw8e6ahibw5w" path="res://assets/effects/generated/status_attack.png" id="17_gimmick"]
 [ext_resource type="Texture2D" uid="uid://cywjxqlq2ge01" path="res://assets/ui/level_select_icons/reward_chest.png" id="18_reward_chest"]
@@ -354,16 +355,22 @@ mouse_filter = 2
 expand_mode = 1
 stretch_mode = 5
 
-[node name="LockOverlay" type="ColorRect" parent="Content/LevelImage" unique_id=275126490]
+[node name="LockOverlay" type="TextureRect" parent="Content/LevelImage" unique_id=275126490]
 visible = false
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+offset_left = 37.0
+offset_top = -53.0
+offset_right = -45.0
+offset_bottom = 10.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-color = Color(0.035, 0.05, 0.08, 0.78)
+self_modulate = Color(0.035, 0.05, 0.08, 0.78)
+texture = ExtResource("15_preview_mask_texture")
+expand_mode = 1
 
 [node name="LockLabel" type="Label" parent="Content/LevelImage/LockOverlay" unique_id=170145439]
 layout_mode = 1

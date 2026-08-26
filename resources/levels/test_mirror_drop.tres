@@ -1,15 +1,18 @@
-[gd_resource type="Resource" script_class="LevelData" load_steps=12 format=3]
+[gd_resource type="Resource" script_class="LevelData" load_steps=15 format=3]
 
 [ext_resource type="Script" path="res://scripts/level_data.gd" id="1"]
 [ext_resource type="Resource" path="res://resources/characters/blue_fighter.tres" id="2"]
-[ext_resource type="Resource" path="res://resources/characters/prototype_gimmick_boss.tres" id="3"]
+[ext_resource type="Resource" path="res://resources/characters/mirror_mimic_boss.tres" id="3"]
 [ext_resource type="Script" path="res://scripts/character_data.gd" id="4"]
 [ext_resource type="Script" path="res://scripts/test_gimmick_data.gd" id="5"]
-[ext_resource type="Texture2D" path="res://assets/backgrounds/stage_01_moonlit_pond.png" id="6"]
+[ext_resource type="Texture2D" path="res://assets/backgrounds/generated/mirror_vanity_charcoal_flat_v1.png" id="6"]
 [ext_resource type="Texture2D" path="res://assets/level_previews/level_01_preview.png" id="7"]
 [ext_resource type="Texture2D" path="res://assets/effects/generated/status_attack.png" id="8"]
 [ext_resource type="Script" path="res://scripts/gimmicks/handlers/mirror_drop_boss_handler.gd" id="9_handler"]
 [ext_resource type="Script" path="res://scripts/gimmicks/configs/mirror_drop_boss_config.gd" id="10_config"]
+[ext_resource type="Texture2D" path="res://assets/backgrounds/generated/mirror_vanity_charcoal_flat_v1_top.png" id="11_background_top"]
+[ext_resource type="Texture2D" path="res://assets/backgrounds/generated/mirror_vanity_charcoal_flat_v1_middle.png" id="12_background_middle"]
+[ext_resource type="Texture2D" path="res://assets/backgrounds/generated/mirror_vanity_charcoal_flat_v1_bottom.png" id="13_background_bottom"]
 
 [sub_resource type="Resource" id="MirrorDropBossConfig"]
 script = ExtResource("10_config")
@@ -35,12 +38,15 @@ tuning = SubResource("MirrorDropBossConfig")
 script = ExtResource("1")
 level_name = "기믹 30 · 미러 드롭 보스"
 battle_background = ExtResource("6")
+battle_background_top = ExtResource("11_background_top")
+battle_background_middle = ExtResource("12_background_middle")
+battle_background_bottom = ExtResource("13_background_bottom")
+battle_background_top_height = 508.0
 level_select_preview = ExtResource("7")
 stage_gimmick_icon = ExtResource("8")
 stage_gimmick_name = "미러 드롭 보스"
 reward_name = "미러 드롭 보스 플레이테스트"
 player_character = ExtResource("2")
 enemies = Array[ExtResource("4")]([ExtResource("3")])
-is_gimmick_test_level = true
 test_gimmick = SubResource("Gimmick")
 ball_drop_time_limit = -1.0

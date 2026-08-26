@@ -46,3 +46,25 @@ Keep this list limited to external resources that are currently referenced by th
 - License: Creative Commons CC0 1.0
 - License text: https://creativecommons.org/publicdomain/zero/1.0/
 - Attribution required: no
+
+### Fishing Reel, Fast
+
+- Project file: `assets/audio/sfx/fishing_reel_wind.ogg`
+- Runtime use: ball-lift phase of the Ball Split mechanic
+- Creator: Joseph SARDIN
+- Source: https://bigsoundbank.com/moulinet-de-peche-rapide-s1435.html
+- License: Creative Commons CC0 1.0
+- License text: https://creativecommons.org/publicdomain/zero/1.0/
+- Attribution required: no
+- Local edit: selected a 5-second section, converted to 48 kHz mono Ogg Vorbis, loudness-normalized, and faded out
+
+### Anime Shine Sound Effect
+
+- Project file: `assets/audio/sfx/mirror_reflection_shine.ogg`
+- Runtime use: one-shot shine accent when the Mirror Drop boss enters Mirror Phase
+- Creator: ALEXIS_GAMING_CAM
+- Source: https://pixabay.com/sound-effects/film-special-effects-anime-shine-sound-effect-346114/
+- License: Pixabay Content License
+- License text: https://pixabay.com/service/license-summary/
+- Attribution required: no
+- Local edit: converted from the source MP3 to Ogg Vorbis

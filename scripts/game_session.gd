@@ -6,6 +6,7 @@ const DEFAULT_LEVEL_PATH := "res://resources/levels/tutorial_temp.tres"
 const LevelDataClass = preload("res://scripts/level_data.gd")
 const PROGRESS_SAVE_PATH := "user://progress.cfg"
 const LEVEL_CATALOG: LevelCatalog = preload("res://resources/catalogs/main_level_catalog.tres")
+const PLAYTEST_UNLOCK_ALL_LEVELS := true
 
 var level_paths: Array[String] = LEVEL_CATALOG.get_all_level_paths()
 
@@ -93,9 +94,19 @@ func get_current_level_index() -> int:
 func is_level_unlocked(index: int) -> bool:
 	if index < 0 or index >= level_paths.size():
 		return false
+	if PLAYTEST_UNLOCK_ALL_LEVELS:
+		return true
 	if LEVEL_CATALOG.is_test_level_path(level_paths[index]):
 		return true
 	return index <= mini(highest_completed_level_index + 1, level_paths.size() - 1)
+
+
+func is_level_completed(index: int) -> bool:
+	if index < 0 or index >= level_paths.size():
+		return false
+	if LEVEL_CATALOG.is_test_level_path(level_paths[index]):
+		return false
+	return index <= highest_completed_level_index
 
 
 func select_level(index: int) -> bool:

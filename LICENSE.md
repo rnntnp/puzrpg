@@ -20,3 +20,21 @@ license terms with the project records.
 - License: Creative Commons Zero 1.0 (CC0)
 - Project file:
   - `assets/audio/sfx/ingestion_swallow_gulp.ogg` — converted from the source-page OGG preview
+
+## Fishing Reel, Fast
+
+- Creator: Joseph SARDIN
+- Source: https://bigsoundbank.com/moulinet-de-peche-rapide-s1435.html
+- License: Creative Commons Zero 1.0 (CC0)
+- License text: https://creativecommons.org/publicdomain/zero/1.0/
+- Project file:
+  - `assets/audio/sfx/fishing_reel_wind.ogg` — five-second excerpt converted to 48 kHz mono Ogg Vorbis, loudness-normalized, and faded out
+
+## Anime Shine Sound Effect
+
+- Creator: ALEXIS_GAMING_CAM
+- Source: https://pixabay.com/sound-effects/film-special-effects-anime-shine-sound-effect-346114/
+- License: Pixabay Content License
+- License text: https://pixabay.com/service/license-summary/
+- Project file:
+  - `assets/audio/sfx/mirror_reflection_shine.ogg` — converted from the source MP3 to Ogg Vorbis

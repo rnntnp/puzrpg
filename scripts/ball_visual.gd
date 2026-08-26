@@ -47,6 +47,7 @@ var _is_frozen_visual := false
 var _ice_target_outline: Sprite2D
 var _ice_targeted_visual := false
 var _target_wave_color := ice_target_wave_color
+var _background_fill: Sprite2D
 
 
 func _ready() -> void:
@@ -54,6 +55,7 @@ func _ready() -> void:
 	_update_outline_width()
 	_setup_frozen_sheen()
 	_setup_ice_target_outline()
+	_setup_background_fill()
 
 
 func _process(_delta: float) -> void:
@@ -92,6 +94,33 @@ func set_targeted_visual(enabled: bool, color: Color) -> void:
 		_ice_target_outline.visible = enabled
 	_last_global_scale = -1.0
 	_update_outline_width()
+
+
+func set_background_fill(enabled: bool, color: Color = Color.BLACK) -> void:
+	_setup_background_fill()
+	if _background_fill == null:
+		return
+	_background_fill.modulate = color
+	_background_fill.visible = enabled
+
+
+func _setup_background_fill() -> void:
+	if _background_fill != null and is_instance_valid(_background_fill):
+		return
+	var shell_outline := get_node_or_null("ShellOutline") as Sprite2D
+	if shell_outline == null or shell_outline.texture == null:
+		return
+	_background_fill = Sprite2D.new()
+	_background_fill.name = "DamageBackgroundFill"
+	_background_fill.texture = shell_outline.texture
+	_background_fill.texture_filter = shell_outline.texture_filter
+	_background_fill.position = shell_outline.position
+	_background_fill.rotation = shell_outline.rotation
+	_background_fill.scale = shell_outline.scale
+	_background_fill.z_index = -1
+	_background_fill.modulate = Color.BLACK
+	_background_fill.visible = false
+	add_child(_background_fill)
 
 
 func _setup_frozen_sheen() -> void:

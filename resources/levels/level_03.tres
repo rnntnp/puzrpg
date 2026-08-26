@@ -31,3 +31,4 @@ enemies = Array[ExtResource("4")]([ExtResource("3"), ExtResource("8_launch"), Ex
 ball_drop_time_limit = -1.0
 merge_hit_stop_time_scale = 0.18
 merge_hit_stop_duration = 0.2
+next_level_path = "res://resources/levels/test_mirror_drop.tres"

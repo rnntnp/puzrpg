@@ -44,6 +44,7 @@ var rewind_turns := 0
 var bumper_cooldown_until_msec := 0
 var danger_marked := false
 var external_merge_token := 0
+var damage_background_marked := false
 var _hitbox_radius := 0.0
 var sleep_assist_enabled := false
 var sleep_assist_settle_time := 1.5
@@ -296,6 +297,15 @@ func set_ingestion_marked(marked: bool, effect_color := Color("#c477ff")) -> voi
 
 func set_external_merge_token(token: int) -> void:
 	external_merge_token = maxi(0, token)
+
+
+func set_damage_background_marked(marked: bool) -> void:
+	damage_background_marked = marked
+	if visual_container.get_child_count() > 0:
+		var visual := visual_container.get_child(0)
+		if visual != null and visual.has_method("set_background_fill"):
+			visual.call("set_background_fill", marked, Color.BLACK)
+	queue_redraw()
 
 
 func set_ice_targeted(targeted: bool) -> void:

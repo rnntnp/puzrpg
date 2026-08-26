@@ -6,6 +6,9 @@ extends Control
 const SWIPE_THRESHOLD := 65.0
 const PREVIEW_VERTICAL_OFFSET_PIXELS := -350.0
 const BOSS_PREVIEW_OUTLINE_SCREEN_WIDTH := 4.2
+const OPEN_REWARD_CHEST_SCALE := 1.56
+const OPEN_REWARD_CHEST_OFFSET := Vector2(0.0, -20.0)
+const OPEN_REWARD_CHEST_Z_INDEX := 3
 
 @onready var content: Control = $Content
 @onready var level_name_label: Label = $Content/LevelName
@@ -23,6 +26,9 @@ const BOSS_PREVIEW_OUTLINE_SCREEN_WIDTH := 4.2
 @onready var page_label: Label = $PageLabel
 @onready var swipe_hint: Label = $SwipeHint
 @onready var money_value: Label = $MoneyDisplay/Value
+@onready var license_button: Button = $LicenseButton
+@onready var license_overlay: Control = $LicenseOverlay
+@onready var license_close_button: Button = $LicenseOverlay/Panel/CloseButton
 @onready var gimmick_value: Label = $Content/InfoCardLeft/Value
 @onready var gimmick_icon: TextureRect = $Content/InfoCardLeft/Icon
 @onready var reward_value: Label = $Content/InfoCardLeft3/Value
@@ -39,6 +45,7 @@ var start_button_tween: Tween
 var start_button_is_pressed := false
 var boss_silhouette_material: Material
 var boss_preview_material: Material
+var reward_icon_base_position := Vector2.ZERO
 
 
 func _ready() -> void:
@@ -46,6 +53,7 @@ func _ready() -> void:
 	boss_silhouette_material = boss_silhouette.material.duplicate() if boss_silhouette.material != null else null
 	var revealed_material := boss_silhouette.get_meta(&"_revealed_material") as Material
 	boss_preview_material = revealed_material.duplicate() if revealed_material != null else null
+	reward_icon_base_position = reward_icon.position
 	level_preview.resized.connect(_update_preview_mask_mapping)
 	boss_silhouette.resized.connect(_update_boss_preview_outline)
 	viewed_level_index = GameSession.selected_level_index
@@ -67,6 +75,8 @@ func _ready() -> void:
 	combo_test_button.visible = OS.is_debug_build()
 	combo_test_button.pressed.connect(_on_combo_test_button_pressed)
 	GameSession.money_changed.connect(_update_money_display)
+	license_button.pressed.connect(_show_license_overlay)
+	license_close_button.pressed.connect(_hide_license_overlay)
 	_update_money_display(GameSession.get_money())
 	_show_level(viewed_level_index)
 	_play_swipe_hint()
@@ -75,6 +85,11 @@ func _ready() -> void:
 
 
 func _input(event: InputEvent) -> void:
+	if license_overlay.visible:
+		if event.is_action_pressed("ui_cancel"):
+			_hide_license_overlay()
+			get_viewport().set_input_as_handled()
+		return
 	if event is InputEventScreenTouch:
 		if event.pressed:
 			_begin_swipe(event.position)
@@ -85,6 +100,16 @@ func _input(event: InputEvent) -> void:
 			_begin_swipe(event.position)
 		else:
 			_end_swipe(event.position)
+
+
+func _show_license_overlay() -> void:
+	license_overlay.show()
+	license_close_button.grab_focus()
+
+
+func _hide_license_overlay() -> void:
+	license_overlay.hide()
+	license_button.grab_focus()
 
 
 func _begin_swipe(position: Vector2) -> void:
@@ -129,7 +154,9 @@ func _show_level(index: int, direction := 0) -> void:
 	_update_level_info(level)
 	var level_completed := GameSession.is_level_completed(index)
 	reward_icon.texture = OPEN_REWARD_CHEST if level_completed else CLOSED_REWARD_CHEST
-	reward_icon.scale = Vector2.ONE * 1.3 if level_completed else Vector2.ONE
+	reward_icon.scale = Vector2.ONE * OPEN_REWARD_CHEST_SCALE if level_completed else Vector2.ONE
+	reward_icon.position = reward_icon_base_position + OPEN_REWARD_CHEST_OFFSET if level_completed else reward_icon_base_position
+	reward_icon.z_index = OPEN_REWARD_CHEST_Z_INDEX if level_completed else 0
 	boss_silhouette.texture = _get_level_boss_sprite(level)
 	boss_silhouette.material = boss_preview_material if level_completed else boss_silhouette_material
 	boss_silhouette.visible = boss_silhouette.texture != null

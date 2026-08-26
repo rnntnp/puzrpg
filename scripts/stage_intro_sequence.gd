@@ -180,9 +180,6 @@ func _build_overlay() -> void:
 	_backdrop.add_child(_guide_label)
 
 	_click_hint = Label.new()
-	_click_hint.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
-	_click_hint.offset_top = -120.0
-	_click_hint.offset_bottom = -80.0
 	_click_hint.add_theme_font_size_override("font_size", 26)
 	_click_hint.add_theme_color_override("font_color", Color.WHITE)
 	_click_hint.add_theme_color_override("font_outline_color", Color(0.02, 0.03, 0.07, 0.98))
@@ -192,8 +189,10 @@ func _build_overlay() -> void:
 	_click_hint.add_theme_constant_override("shadow_offset_y", 2)
 	_click_hint.text = "클릭해서 계속"
 	_click_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_click_hint.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_click_hint.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_backdrop.add_child(_click_hint)
+	_setup_click_hint_visuals()
 
 	_control_arrow = TutorialControlArrowClass.new()
 	_control_arrow.position = Vector2(_control_center_x - 110.0, 610.0)
@@ -205,6 +204,58 @@ func _build_overlay() -> void:
 	_mouse_cursor.scale = Vector2(0.38, 0.38)
 	_mouse_cursor.hide()
 	_backdrop.add_child(_mouse_cursor)
+
+
+func _setup_click_hint_visuals() -> void:
+	_layout_click_hint_centered()
+	var radial_shadow := ColorRect.new()
+	radial_shadow.name = "RadialShadow"
+	radial_shadow.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	radial_shadow.show_behind_parent = true
+	radial_shadow.set_anchors_preset(Control.PRESET_FULL_RECT)
+	radial_shadow.offset_left = -88.0
+	radial_shadow.offset_top = -34.0
+	radial_shadow.offset_right = 88.0
+	radial_shadow.offset_bottom = 34.0
+	radial_shadow.material = _create_click_hint_shadow_material()
+	_click_hint.add_child(radial_shadow)
+
+
+func _create_click_hint_shadow_material() -> ShaderMaterial:
+	var shader := Shader.new()
+	shader.code = """
+shader_type canvas_item;
+
+void fragment() {
+	vec2 centered = UV - vec2(0.5);
+	float radial_distance = length(centered * vec2(2.0, 2.8));
+	float alpha = (1.0 - smoothstep(0.04, 0.52, radial_distance)) * 0.82;
+	COLOR = vec4(0.0, 0.0, 0.0, alpha);
+}
+"""
+	var material := ShaderMaterial.new()
+	material.shader = shader
+	return material
+
+
+func _layout_click_hint_centered() -> void:
+	_click_hint.anchor_left = 0.5
+	_click_hint.anchor_top = 1.0
+	_click_hint.anchor_right = 0.5
+	_click_hint.anchor_bottom = 1.0
+	_click_hint.offset_left = -260.0
+	_click_hint.offset_top = -132.0
+	_click_hint.offset_right = 260.0
+	_click_hint.offset_bottom = -76.0
+	_click_hint.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	_click_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_click_hint.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_click_hint.pivot_offset = Vector2(260.0, 28.0)
+
+
+func _show_click_hint_centered() -> void:
+	_layout_click_hint_centered()
+	_click_hint.show()
 
 
 func _show_current_page() -> void:
@@ -247,11 +298,7 @@ func _show_current_page() -> void:
 	_mouse_cursor.hide()
 	_reset_page_title_layout()
 	_label.show()
-	_click_hint.set_anchors_preset(Control.PRESET_TOP_LEFT)
-	_click_hint.position = Vector2(120.0, 1160.0)
-	_click_hint.size = Vector2(480.0, 48.0)
-	_click_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_click_hint.show()
+	_show_click_hint_centered()
 	_label.modulate.a = 1.0
 
 
@@ -271,16 +318,11 @@ func _show_story_image_page() -> bool:
 	_story_image.texture = texture
 	_story_image.show()
 	_guide_panel.hide()
-	_click_hint.set_anchors_preset(Control.PRESET_TOP_LEFT)
-	_click_hint.position = Vector2(170.0, 1192.0)
-	_click_hint.size = Vector2(380.0, 60.0)
-	_click_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_click_hint.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_click_hint.add_theme_color_override("font_color", Color.WHITE)
 	_click_hint.add_theme_color_override("font_outline_color", Color(0.02, 0.03, 0.07, 0.98))
 	_click_hint.add_theme_color_override("font_shadow_color", Color(0.0, 0.0, 0.0, 0.95))
 	_click_hint.add_theme_constant_override("outline_size", 3)
-	_click_hint.show()
+	_show_click_hint_centered()
 	return true
 
 
@@ -294,7 +336,7 @@ func _show_enemy_intent_tutorial() -> void:
 	_guide_label.text = "적은 머리 위에 다음 행동과\n남은 턴 수를 보여줍니다."
 	_guide_label.show()
 	_label.modulate.a = 1.0
-	_click_hint.show()
+	_show_click_hint_centered()
 
 
 func _show_drop_control_tutorial() -> void:
@@ -313,11 +355,7 @@ func _show_drop_control_tutorial() -> void:
 	_guide_label.show()
 	_control_arrow.show()
 	_mouse_cursor.show()
-	_click_hint.set_anchors_preset(Control.PRESET_TOP_LEFT)
-	_click_hint.position = Vector2(430.0, 1060.0)
-	_click_hint.size = Vector2(200.0, 42.0)
-	_click_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	_click_hint.show()
+	_show_click_hint_centered()
 	tutorial_control_page_shown.emit()
 
 
@@ -334,7 +372,7 @@ func _show_turn_tutorial() -> void:
 	_guide_label.add_theme_constant_override("outline_size", 7)
 	_guide_label.text = _pages[_page_index]
 	_guide_label.show()
-	_click_hint.show()
+	_show_click_hint_centered()
 
 
 func _show_evolution_tutorial() -> void:
@@ -350,7 +388,7 @@ func _show_evolution_tutorial() -> void:
 	_guide_label.add_theme_constant_override("outline_size", 7)
 	_guide_label.text = _pages[_page_index]
 	_guide_label.show()
-	_click_hint.show()
+	_show_click_hint_centered()
 
 
 func _show_combo_tutorial() -> void:
@@ -366,11 +404,7 @@ func _show_combo_tutorial() -> void:
 	_guide_label.add_theme_constant_override("outline_size", 7)
 	_guide_label.text = _pages[_page_index]
 	_guide_label.show()
-	_click_hint.set_anchors_preset(Control.PRESET_TOP_LEFT)
-	_click_hint.position = Vector2(430.0, 1060.0)
-	_click_hint.size = Vector2(210.0, 42.0)
-	_click_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	_click_hint.show()
+	_show_click_hint_centered()
 
 
 func _show_custom_spotlight_tutorial() -> void:
@@ -389,7 +423,7 @@ func _show_custom_spotlight_tutorial() -> void:
 	_guide_label.add_theme_constant_override("outline_size", 7)
 	_guide_label.text = _pages[_page_index]
 	_guide_label.show()
-	_click_hint.show()
+	_show_click_hint_centered()
 
 
 func _set_combo_stack_spotlight() -> void:

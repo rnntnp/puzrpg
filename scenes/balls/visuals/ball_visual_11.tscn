@@ -8,27 +8,34 @@
 [ext_resource type="Shader" uid="uid://b3hciqwdmjwqs" path="res://shaders/ball_shell_shadow_inset.gdshader" id="6_usfxy"]
 [ext_resource type="Texture2D" uid="uid://bwjasioimwasf" path="res://assets/balls/generated/orb_shell_candidates/candidate_06/orb_06_fill.png" id="7_qx4ch"]
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_lrvnb"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_canne"]
 resource_local_to_scene = true
 shader = ExtResource("2_canne")
 shader_parameter/outline_color = Color(0.9, 0.612, 0.072, 0.95)
 shader_parameter/outline_color_texel_width = 3.888372093023256
 shader_parameter/outline_total_texel_width = 5.832558139534884
 shader_parameter/outline_expand_texels = 6.0
+shader_parameter/frozen_enabled = false
+shader_parameter/frozen_outer_color = Color(1, 1, 1, 1)
+shader_parameter/frozen_outer_texel_width = 6.804651162790698
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_l3obd"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_usfxy"]
 resource_local_to_scene = true
 shader = ExtResource("3_shape_mask_shader")
 shader_parameter/mask_texture = ExtResource("4_axolotl_mask")
+shader_parameter/mask_offset_pixels = Vector2(0, 0)
+shader_parameter/mask_rotation = 0.0
+shader_parameter/mask_sprite_scale = Vector2(1, 1)
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_qhvd7"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_qx4ch"]
 resource_local_to_scene = true
 shader = ExtResource("6_usfxy")
 shader_parameter/shell_mask_texture = ExtResource("7_qx4ch")
 shader_parameter/edge_clear_texel_width = 9.0
 
-[sub_resource type="CircleShape2D" id="CircleShape_hitbox_local"]
-radius = 203.02217
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_rnwhy"]
+radius = 182.0
+height = 384.0
 
 [node name="BallVisual11" unique_id=1993655266 instance=ExtResource("1_base")]
 tint_color = Color(1, 0.68, 0.08, 1)
@@ -37,18 +44,18 @@ tint_color = Color(1, 0.68, 0.08, 1)
 modulate = Color(1, 0.68, 0.08, 1)
 
 [node name="ShellOutline" parent="." index="1"]
-material = SubResource("ShaderMaterial_lrvnb")
+material = SubResource("ShaderMaterial_canne")
 position = Vector2(13, 0)
 
 [node name="Axolotl" parent="." index="2"]
-material = SubResource("ShaderMaterial_l3obd")
+material = SubResource("ShaderMaterial_usfxy")
 position = Vector2(2.5000763, 10.499924)
 scale = Vector2(0.44757587, 0.44757587)
 texture = ExtResource("2_axolotl_source")
 
 [node name="ShellShadow" parent="." index="3"]
 modulate = Color(0.38, 0.2584, 0.030399999, 1)
-material = SubResource("ShaderMaterial_qhvd7")
+material = SubResource("ShaderMaterial_qx4ch")
 position = Vector2(13, 0)
 
 [node name="ShellGloss" parent="." index="4"]
@@ -58,5 +65,5 @@ position = Vector2(13, 0)
 position = Vector2(13, 0)
 
 [node name="HitboxBody" parent="HitboxAuthoring" index="0"]
-position = Vector2(-12, 5)
-shape = SubResource("CircleShape_hitbox_local")
+position = Vector2(-13, 5)
+shape = SubResource("CapsuleShape2D_rnwhy")

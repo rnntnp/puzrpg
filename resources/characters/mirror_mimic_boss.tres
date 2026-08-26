@@ -1,7 +1,7 @@
-[gd_resource type="Resource" script_class="CharacterData" load_steps=3 format=3]
+[gd_resource type="Resource" script_class="CharacterData" format=3 uid="uid://dv64dhgq0stki"]
 
-[ext_resource type="Script" path="res://scripts/character_data.gd" id="1_data"]
-[ext_resource type="Texture2D" path="res://assets/characters/generated/mirror_mimic_boss_idle_v5_generated.png" id="2_sprite"]
+[ext_resource type="Script" uid="uid://duu5mev8uwp8d" path="res://scripts/character_data.gd" id="1_data"]
+[ext_resource type="Texture2D" uid="uid://but5f161woaqa" path="res://assets/characters/generated/mirror_mimic_boss_idle_v5_generated.png" id="2_sprite"]
 
 [resource]
 script = ExtResource("1_data")
@@ -12,4 +12,3 @@ sprite_size = Vector2(180, 180)
 shadow_scale = Vector2(0.84, 0.8)
 max_health = 1000
 attack_power = 0
-enemy_attack_drop_interval = 3

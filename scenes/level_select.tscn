@@ -1,4 +1,4 @@
-[gd_scene load_steps=23 format=3 uid="uid://vkjhcuuhdtya"]
+[gd_scene format=3 uid="uid://vkjhcuuhdtya"]
 
 [ext_resource type="Script" uid="uid://dv0btxu6ax1fw" path="res://scripts/level_select.gd" id="1_level"]
 [ext_resource type="Shader" uid="uid://ilt7qvesekx8" path="res://shaders/boss_silhouette.gdshader" id="2_silhouette"]
@@ -10,7 +10,7 @@
 [ext_resource type="Texture2D" uid="uid://c5cp11m7js8sc" path="res://assets/ui/level_select_extracted/nav_arrow_left.png" id="8_nav"]
 [ext_resource type="Texture2D" uid="uid://mxhtorak2cuf" path="res://assets/ui/level_select_casual/level_select_pond_background.png" id="10_background"]
 [ext_resource type="Material" path="res://resources/materials/level_preview_mask_material.tres" id="14_preview_mask"]
-[ext_resource type="Texture2D" path="res://assets/ui/masks/level_preview_rounded_mask.png" id="15_preview_mask_texture"]
+[ext_resource type="Texture2D" uid="uid://cfeh8eiwrcg8x" path="res://assets/ui/masks/level_preview_rounded_mask.png" id="15_preview_mask_texture"]
 [ext_resource type="Texture2D" uid="uid://j08g6fp5qsiq" path="res://assets/ui/level_select_icons/enemy_turn.png" id="16_enemy_turn"]
 [ext_resource type="Texture2D" uid="uid://diw8e6ahibw5w" path="res://assets/effects/generated/status_attack.png" id="17_gimmick"]
 [ext_resource type="Texture2D" uid="uid://cywjxqlq2ge01" path="res://assets/ui/level_select_icons/reward_chest.png" id="18_reward_chest"]
@@ -85,6 +85,8 @@ shader_parameter/outline_size = 4.2
 shader = ExtResource("2_white_outline")
 shader_parameter/outline_color = Color(1, 1, 1, 1)
 shader_parameter/outline_size = 4.2
+shader_parameter/outer_fade_color = Color(0, 0, 0, 0)
+shader_parameter/outer_fade_size = 0.0
 
 [sub_resource type="StyleBoxFlat" id="TitlePanel"]
 bg_color = Color(1, 0.9, 0.65, 0.99)
@@ -347,7 +349,6 @@ vertical_alignment = 1
 [node name="BossSilhouette" type="TextureRect" parent="Content/LevelImage" unique_id=60147261]
 texture_filter = 2
 material = SubResource("SilhouetteMaterial")
-metadata/_revealed_material = SubResource("BossPreviewMaterial")
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -361,9 +362,11 @@ grow_vertical = 2
 mouse_filter = 2
 expand_mode = 1
 stretch_mode = 5
+metadata/_revealed_material = SubResource("BossPreviewMaterial")
 
 [node name="LockOverlay" type="TextureRect" parent="Content/LevelImage" unique_id=275126490]
 visible = false
+self_modulate = Color(0.035, 0.05, 0.08, 0.78)
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -375,7 +378,6 @@ offset_bottom = 10.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-self_modulate = Color(0.035, 0.05, 0.08, 0.78)
 texture = ExtResource("15_preview_mask_texture")
 expand_mode = 1
 
@@ -416,19 +418,19 @@ vertical_alignment = 1
 
 [node name="InfoCardLeft" type="Panel" parent="Content" unique_id=1055374800]
 layout_mode = 0
-offset_left = 78.0
-offset_top = 726.0
-offset_right = 352.0
-offset_bottom = 921.0
+offset_left = 82.0
+offset_top = 729.0
+offset_right = 356.0
+offset_bottom = 924.0
 mouse_filter = 2
 theme_override_styles/panel = SubResource("InfoPanel")
 
 [node name="Title" type="Label" parent="Content/InfoCardLeft" unique_id=1421378644]
 layout_mode = 0
 offset_left = 8.0
-offset_top = 24.0
+offset_top = 131.0
 offset_right = 266.0
-offset_bottom = 50.0
+offset_bottom = 157.0
 theme_override_colors/font_color = Color(0.045, 0.13, 0.29, 1)
 theme_override_fonts/font = ExtResource("5_rovvv")
 theme_override_font_sizes/font_size = 17
@@ -439,10 +441,10 @@ vertical_alignment = 1
 [node name="Icon" type="TextureRect" parent="Content/InfoCardLeft" unique_id=626212803]
 texture_filter = 2
 layout_mode = 0
-offset_left = 98.0
-offset_top = 62.0
-offset_right = 176.0
-offset_bottom = 129.0
+offset_left = 71.0
+offset_top = 16.0
+offset_right = 207.20895
+offset_bottom = 133.0
 mouse_filter = 2
 texture = ExtResource("17_gimmick")
 expand_mode = 1
@@ -451,9 +453,9 @@ stretch_mode = 5
 [node name="Value" type="Label" parent="Content/InfoCardLeft" unique_id=477953796]
 layout_mode = 0
 offset_left = 8.0
-offset_top = 136.0
+offset_top = 154.0
 offset_right = 266.0
-offset_bottom = 170.0
+offset_bottom = 188.0
 theme_override_colors/font_color = Color(0.07, 0.3, 0.67, 1)
 theme_override_fonts/font = ExtResource("5_rovvv")
 theme_override_font_sizes/font_size = 23
@@ -510,14 +512,15 @@ vertical_alignment = 1
 
 [node name="InfoCardLeft3" type="Panel" parent="Content" unique_id=701321650]
 layout_mode = 0
-offset_left = 368.0
-offset_top = 726.0
-offset_right = 642.0
-offset_bottom = 921.0
+offset_left = 364.0
+offset_top = 729.0
+offset_right = 638.0
+offset_bottom = 924.0
 mouse_filter = 2
 theme_override_styles/panel = SubResource("InfoPanel")
 
 [node name="Title" type="Label" parent="Content/InfoCardLeft3" unique_id=1924471421]
+visible = false
 layout_mode = 0
 offset_left = 8.0
 offset_top = 24.0
@@ -533,10 +536,10 @@ vertical_alignment = 1
 [node name="Icon" type="TextureRect" parent="Content/InfoCardLeft3" unique_id=519024901]
 texture_filter = 4
 layout_mode = 0
-offset_left = 57.0
-offset_top = 52.0
-offset_right = 217.0
-offset_bottom = 135.0
+offset_left = 10.650604
+offset_top = 16.0
+offset_right = 268.96387
+offset_bottom = 150.0
 mouse_filter = 2
 texture = ExtResource("20_reward_chest_casual")
 expand_mode = 1
@@ -545,9 +548,9 @@ stretch_mode = 5
 [node name="Value" type="Label" parent="Content/InfoCardLeft3" unique_id=1760508790]
 layout_mode = 0
 offset_left = 5.0
-offset_top = 136.0
+offset_top = 154.0
 offset_right = 269.0
-offset_bottom = 170.0
+offset_bottom = 188.0
 theme_override_colors/font_color = Color(0.07, 0.3, 0.67, 1)
 theme_override_fonts/font = ExtResource("5_rovvv")
 theme_override_font_sizes/font_size = 23
@@ -769,9 +772,23 @@ offset_bottom = 54.0
 theme_override_colors/font_color = Color(0.045, 0.13, 0.29, 1)
 theme_override_fonts/font = ExtResource("5_rovvv")
 theme_override_font_sizes/font_size = 31
-text = "12,450"
+text = "0"
 horizontal_alignment = 1
 vertical_alignment = 1
+
+[node name="LicenseButton" type="Button" parent="." unique_id=1367242474]
+layout_mode = 0
+offset_left = 538.0
+offset_top = 15.0
+offset_right = 702.0
+offset_bottom = 70.0
+theme_override_colors/font_color = Color(0.08, 0.16, 0.24, 1)
+theme_override_fonts/font = ExtResource("5_rovvv")
+theme_override_font_sizes/font_size = 18
+theme_override_styles/normal = SubResource("SmallButton")
+theme_override_styles/pressed = SubResource("SmallButton")
+theme_override_styles/hover = SubResource("SmallButtonHover")
+text = "라이선스"
 
 [node name="SwipeHint" type="Label" parent="." unique_id=1091007002]
 visible = false
@@ -784,3 +801,81 @@ theme_override_colors/font_color = Color(1, 1, 1, 0.82)
 theme_override_font_sizes/font_size = 14
 text = "‹  좌우로 스와이프  ›"
 horizontal_alignment = 1
+
+[node name="LicenseOverlay" type="Control" parent="." unique_id=242315696]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Dim" type="ColorRect" parent="LicenseOverlay" unique_id=13435948]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.015, 0.055, 0.1, 0.78)
+
+[node name="Panel" type="Panel" parent="LicenseOverlay" unique_id=1079735457]
+layout_mode = 0
+offset_left = 60.0
+offset_top = 330.0
+offset_right = 660.0
+offset_bottom = 950.0
+theme_override_styles/panel = SubResource("HeaderPanel")
+
+[node name="Title" type="Label" parent="LicenseOverlay/Panel" unique_id=1084845529]
+layout_mode = 0
+offset_left = 42.0
+offset_top = 30.0
+offset_right = 558.0
+offset_bottom = 88.0
+theme_override_colors/font_color = Color(0.045, 0.13, 0.29, 1)
+theme_override_fonts/font = ExtResource("5_rovvv")
+theme_override_font_sizes/font_size = 32
+text = "오디오 라이선스"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Contents" type="RichTextLabel" parent="LicenseOverlay/Panel" unique_id=583947356]
+layout_mode = 0
+offset_left = 55.0
+offset_top = 115.0
+offset_right = 545.0
+offset_bottom = 480.0
+mouse_filter = 2
+theme_override_colors/default_color = Color(0.08, 0.16, 0.24, 1)
+theme_override_fonts/normal_font = ExtResource("5_rovvv")
+theme_override_fonts/bold_font = ExtResource("5_rovvv")
+theme_override_font_sizes/normal_font_size = 19
+theme_override_font_sizes/bold_font_size = 22
+bbcode_enabled = true
+text = "[center][b]Free Ice Sound Effects Pack[/b][/center]
+
+[b]제작자[/b]  Hove Audio
+[b]사용 파일[/b]  Ice_Hit_5.wav, Ice_Breaking_2.wav
+[b]라이선스[/b]  원본 페이지에 명시된 Royalty Free 에셋 팩
+
+[b]원본 페이지[/b]
+https://hoveaudio.itch.io/free-ice-sound-effects-pack
+
+게임 내 얼음 생성 및 파괴 효과음으로 사용했습니다."
+fit_content = true
+
+[node name="CloseButton" type="Button" parent="LicenseOverlay/Panel" unique_id=1865961446]
+layout_mode = 0
+offset_left = 190.0
+offset_top = 515.0
+offset_right = 410.0
+offset_bottom = 580.0
+theme_override_colors/font_color = Color(0.08, 0.16, 0.24, 1)
+theme_override_fonts/font = ExtResource("5_rovvv")
+theme_override_font_sizes/font_size = 22
+theme_override_styles/normal = SubResource("SmallButton")
+theme_override_styles/pressed = SubResource("SmallButton")
+theme_override_styles/hover = SubResource("SmallButtonHover")
+text = "닫기"

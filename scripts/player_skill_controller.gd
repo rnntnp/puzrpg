@@ -1,6 +1,10 @@
 class_name PlayerSkillController
 extends Node
 
+const PlayerSkillBreakEffectClass = preload("res://scripts/effects/player_skill_break_effect.gd")
+const SkillReadySfx: AudioStream = preload("res://assets/audio/sfx/mirror_reflection_shine.ogg")
+const SkillUseSfx: AudioStream = preload("res://assets/audio/sfx/skill_armor_break_plank.ogg")
+
 signal gauge_changed(current: int, maximum: int)
 signal gauge_full
 signal skill_used
@@ -17,6 +21,26 @@ var configured := false
 var tutorial_skill_enabled := false
 var player_hover_tween: Tween
 var player_rest_scale := Vector2.ONE
+var skill_ready_sfx: AudioStreamPlayer
+var skill_use_sfx: AudioStreamPlayer
+
+
+func _ready() -> void:
+	skill_ready_sfx = AudioStreamPlayer.new()
+	skill_ready_sfx.name = "SkillReadySfx"
+	skill_ready_sfx.stream = SkillReadySfx
+	skill_ready_sfx.volume_db = -5.0
+	skill_ready_sfx.pitch_scale = 1.18
+	skill_ready_sfx.bus = &"SFX"
+	add_child(skill_ready_sfx)
+
+	skill_use_sfx = AudioStreamPlayer.new()
+	skill_use_sfx.name = "SkillUseSfx"
+	skill_use_sfx.stream = SkillUseSfx
+	skill_use_sfx.volume_db = -1.0
+	skill_use_sfx.pitch_scale = 1.0
+	skill_use_sfx.bus = &"SFX"
+	add_child(skill_use_sfx)
 
 
 func configure(
@@ -60,8 +84,11 @@ func on_enemy_defeated() -> void:
 func fill_gauge_for_tutorial() -> void:
 	if not configured or skill_data == null:
 		return
+	var was_ready := gauge_current >= skill_data.gauge_max
 	gauge_current = skill_data.gauge_max
 	_update_gauge_ui()
+	if not was_ready:
+		_play_ready_sfx()
 
 
 func set_tutorial_skill_enabled(enabled: bool) -> void:
@@ -88,6 +115,7 @@ func _on_player_merge_registered(base_points: int, _result_level: int) -> void:
 	_update_gauge_ui()
 	if not was_ready and gauge_current >= skill_data.gauge_max:
 		gauge_full.emit()
+		_play_ready_sfx()
 
 
 func _on_skill_pressed() -> void:
@@ -99,6 +127,7 @@ func _on_skill_pressed() -> void:
 	)
 	gauge_current = 0
 	player.play_cast_animation()
+	_play_skill_break_effect()
 	_update_gauge_ui()
 	battle.status_label.text = "%s +%d턴 · 총 %d턴" % [
 		skill_data.display_name,
@@ -107,6 +136,27 @@ func _on_skill_pressed() -> void:
 	]
 	battle.status_label.modulate = Color("#ffe066")
 	skill_used.emit()
+
+
+func _play_skill_break_effect() -> void:
+	if not is_instance_valid(battle) or not is_instance_valid(enemy):
+		return
+	var effect := PlayerSkillBreakEffectClass.new() as PlayerSkillBreakEffect
+	battle.add_child(effect)
+	effect.play(enemy.character_sprite.global_position + Vector2(0.0, -8.0))
+	if enemy.is_alive():
+		enemy.play_hit_animation()
+	_play_use_sfx()
+
+
+func _play_ready_sfx() -> void:
+	if is_instance_valid(skill_ready_sfx):
+		skill_ready_sfx.play()
+
+
+func _play_use_sfx() -> void:
+	if is_instance_valid(skill_use_sfx):
+		skill_use_sfx.play()
 
 
 func _can_use_skill() -> bool:

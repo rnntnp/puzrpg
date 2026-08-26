@@ -117,18 +117,20 @@ func _animate_health_ratio(target_ratio: float) -> void:
 func _set_displayed_health_ratio(ratio: float) -> void:
 	_displayed_health_ratio = clampf(ratio, 0.0, 1.0)
 	_refresh_fill_size()
+	_refresh_damage_preview()
 
 
 func _refresh_damage_preview() -> void:
 	if not is_instance_valid(damage_preview_fill) or not is_instance_valid(full_health_fill):
 		return
-	var visible_damage := mini(predicted_damage, current_health)
-	damage_preview_fill.visible = visible_damage > 0 and current_health > 0
+	var displayed_health := clampf(_displayed_health_ratio, 0.0, 1.0) * float(maximum_health)
+	var visible_damage := minf(float(predicted_damage), displayed_health)
+	damage_preview_fill.visible = visible_damage > 0.0 and displayed_health > 0.0
 	if not damage_preview_fill.visible:
 		return
 	var display_capacity := _get_display_capacity()
-	var current_ratio := clampf(float(current_health) / display_capacity, 0.0, 1.0)
-	var remaining_ratio := clampf(float(current_health - visible_damage) / display_capacity, 0.0, 1.0)
+	var current_ratio := clampf(displayed_health / display_capacity, 0.0, 1.0)
+	var remaining_ratio := clampf((displayed_health - visible_damage) / display_capacity, 0.0, 1.0)
 	damage_preview_fill.position = Vector2(
 		full_health_fill.position.x + _full_fill_size.x * remaining_ratio,
 		full_health_fill.position.y

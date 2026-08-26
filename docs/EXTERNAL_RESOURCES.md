@@ -4,6 +4,15 @@ Keep this list limited to external resources that are currently referenced by th
 
 ## Audio
 
+### Free Ice Sound Effects Pack
+
+- Project files: `assets/audio/sfx/ice_freeze.wav`, `assets/audio/sfx/ice_break.wav`
+- Runtime use: ice application and ice break effects
+- Creator: Hove Audio
+- Source: https://hoveaudio.itch.io/free-ice-sound-effects-pack
+- License: Royalty-free asset pack, as stated on the source page; detailed bundled terms were not provided
+- In-game credit: the upper-right `라이선스` button on the level-select screen opens the Hove Audio license notice
+
 ### Marimba Game Music Playful Tropical Jungle Puzzle
 
 - Project file: `assets/audio/bgm/marimba_game_music_playful_tropical_jungle_puzzle.mp3`

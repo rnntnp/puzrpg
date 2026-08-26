@@ -2,7 +2,7 @@
 
 [ext_resource type="PackedScene" path="res://scenes/balls/visuals/ball_visual_base.tscn" id="1_base"]
 [ext_resource type="Shader" uid="uid://dyiql3rgv8fsw" path="res://shaders/ball_shell_outline.gdshader" id="2_26euj"]
-[ext_resource type="Texture2D" uid="uid://c5ymtn1d1te8q" path="res://assets/balls/generated/ball_10_axolotl_source.png" id="2_axolotl_source"]
+[ext_resource type="Texture2D" path="res://assets/balls/generated/ball_10_axolotl_source_alpha_fixed.png" id="2_axolotl_source"]
 [ext_resource type="Shader" uid="uid://itru0tttro0a" path="res://shaders/ball_sprite_shape_mask.gdshader" id="3_shape_mask_shader"]
 [ext_resource type="Texture2D" uid="uid://bdknrpkrax2xg" path="res://assets/balls/generated/ball_10_axolotl_shape_mask.png" id="4_axolotl_mask"]
 [ext_resource type="Texture2D" uid="uid://d4i3n50sktqmg" path="res://assets/balls/generated/mask_candidates/08_flat_bubble.png" id="5_shape_outline"]
@@ -16,11 +16,17 @@ shader_parameter/outline_color = Color(0.9, 0.107999995, 0.036, 0.95)
 shader_parameter/outline_color_texel_width = 3.888372093023256
 shader_parameter/outline_total_texel_width = 5.832558139534884
 shader_parameter/outline_expand_texels = 6.0
+shader_parameter/frozen_enabled = false
+shader_parameter/frozen_outer_color = Color(1, 1, 1, 1)
+shader_parameter/frozen_outer_texel_width = 6.804651162790698
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_0jdtf"]
 resource_local_to_scene = true
 shader = ExtResource("3_shape_mask_shader")
 shader_parameter/mask_texture = ExtResource("4_axolotl_mask")
+shader_parameter/mask_offset_pixels = Vector2(0, 0)
+shader_parameter/mask_rotation = 0.0
+shader_parameter/mask_sprite_scale = Vector2(1, 1)
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_dcf4i"]
 resource_local_to_scene = true
@@ -55,7 +61,8 @@ material = SubResource("ShaderMaterial_dcf4i")
 position = Vector2(12, 0)
 
 [node name="ShellGloss" parent="." index="4"]
-position = Vector2(12, 0)
+position = Vector2(10.5, 11.500012)
+scale = Vector2(1.007177, 0.9210527)
 
 [node name="HitboxAuthoring" parent="." index="5"]
 position = Vector2(12, 0)

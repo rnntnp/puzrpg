@@ -7,6 +7,7 @@
 [ext_resource type="Texture2D" uid="uid://pkv5pi8oux0d" path="res://assets/balls/generated/mask_candidates/02_four_petal.png" id="5_shape_outline"]
 [ext_resource type="Shader" uid="uid://b3hciqwdmjwqs" path="res://shaders/ball_shell_shadow_inset.gdshader" id="6_jlkj4"]
 [ext_resource type="Texture2D" uid="uid://bwjasioimwasf" path="res://assets/balls/generated/orb_shell_candidates/candidate_06/orb_06_fill.png" id="7_df660"]
+[ext_resource type="Script" path="res://scripts/parametric_ball_hitbox_2d.gd" id="8_parametric_hitbox"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_fs1qp"]
 resource_local_to_scene = true
@@ -15,6 +16,9 @@ shader_parameter/outline_color = Color(0.9, 0.6711833, 0.5919249, 0.95)
 shader_parameter/outline_color_texel_width = 3.888372093023256
 shader_parameter/outline_total_texel_width = 5.832558139534884
 shader_parameter/outline_expand_texels = 6.0
+shader_parameter/frozen_enabled = false
+shader_parameter/frozen_outer_color = Color(1, 1, 1, 1)
+shader_parameter/frozen_outer_texel_width = 6.804651162790698
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_jlkj4"]
 resource_local_to_scene = true
@@ -28,13 +32,6 @@ resource_local_to_scene = true
 shader = ExtResource("6_jlkj4")
 shader_parameter/shell_mask_texture = ExtResource("7_df660")
 shader_parameter/edge_clear_texel_width = 9.0
-
-[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_0o5xi"]
-radius = 45.0
-height = 277.1785
-
-[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_jlkj4"]
-height = 36.0
 
 [node name="BallVisual04" unique_id=513947279 instance=ExtResource("1_base")]
 tint_color = Color(1, 0.74575925, 0.65769434, 1)
@@ -62,28 +59,8 @@ position = Vector2(8, 25)
 scale = Vector2(1, 0.8803828)
 
 [node name="HitboxAuthoring" parent="." index="5"]
-position = Vector2(15, -3)
+position = Vector2(0, 0)
+script = ExtResource("8_parametric_hitbox")
+outline_texture = ExtResource("5_shape_outline")
 
 [node name="HitboxBody" parent="HitboxAuthoring" index="0"]
-position = Vector2(56, -64)
-rotation = -0.80208755
-shape = SubResource("CapsuleShape2D_0o5xi")
-
-[node name="HitboxBody3" type="CollisionShape2D" parent="HitboxAuthoring" index="1" unique_id=702891278]
-position = Vector2(-87, 69)
-rotation = -0.80208755
-shape = SubResource("CapsuleShape2D_0o5xi")
-
-[node name="HitboxBody2" type="CollisionShape2D" parent="HitboxAuthoring" index="2" unique_id=1891924973]
-position = Vector2(-84, -64)
-rotation = 0.8237486
-shape = SubResource("CapsuleShape2D_0o5xi")
-
-[node name="HitboxBody4" type="CollisionShape2D" parent="HitboxAuthoring" index="3" unique_id=710651728]
-position = Vector2(53, 71)
-rotation = 0.8237486
-shape = SubResource("CapsuleShape2D_0o5xi")
-
-[node name="HitboxLeftLobe" parent="HitboxAuthoring" index="4"]
-position = Vector2(-15, 3)
-shape = SubResource("CapsuleShape2D_jlkj4")

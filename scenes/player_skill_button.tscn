@@ -1,10 +1,28 @@
-[gd_scene load_steps=4 format=3]
+[gd_scene load_steps=9 format=3]
 
 [ext_resource type="Script" path="res://scripts/player_skill_button.gd" id="1_script"]
 [ext_resource type="Shader" path="res://shaders/grayscale_icon.gdshader" id="2_shader"]
+[ext_resource type="Script" path="res://scripts/skill_ready_outline_pulse.gd" id="3_ready_outline"]
+[ext_resource type="Shader" path="res://shaders/skill_ready_silhouette.gdshader" id="3_ready_shader"]
+[ext_resource type="Shader" uid="uid://d4knouww648y4" path="res://shaders/character_white_outline.gdshader" id="4_outline_shader"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_grayscale"]
 shader = ExtResource("2_shader")
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_outline"]
+shader = ExtResource("4_outline_shader")
+shader_parameter/outline_color = Color(1, 1, 1, 0.95)
+shader_parameter/outline_size = 4.0
+shader_parameter/outer_fade_color = Color(0, 0, 0, 0)
+shader_parameter/outer_fade_size = 0.0
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_ready_outline"]
+shader = ExtResource("3_ready_shader")
+shader_parameter/glow_color = Color(1, 0.78, 0.08, 1)
+shader_parameter/animation_speed = 0.78
+shader_parameter/maximum_distance = 0.18
+shader_parameter/band_width = 0.034
+shader_parameter/padding_ratio = 0.21
 
 [node name="PlayerSkillButton" type="Control"]
 custom_minimum_size = Vector2(76, 76)
@@ -13,37 +31,49 @@ anchors_preset = 0
 mouse_filter = 2
 script = ExtResource("1_script")
 
+[node name="ReadyGlow" type="ColorRect" parent="."]
+visible = false
+material = SubResource("ShaderMaterial_ready_outline")
+layout_mode = 0
+offset_left = -24.0
+offset_top = -24.0
+offset_right = 100.0
+offset_bottom = 100.0
+mouse_filter = 2
+color = Color(1, 1, 1, 1)
+script = ExtResource("3_ready_outline")
+
+[node name="IconOutline" type="TextureRect" parent="."]
+material = SubResource("ShaderMaterial_outline")
+layout_mode = 0
+offset_left = 2.0
+offset_top = 2.0
+offset_right = 74.0
+offset_bottom = 74.0
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 5
+
 [node name="GrayscaleIcon" type="TextureRect" parent="."]
 material = SubResource("ShaderMaterial_grayscale")
 layout_mode = 0
-offset_left = 8.0
-offset_top = 8.0
-offset_right = 68.0
-offset_bottom = 68.0
+offset_left = 2.0
+offset_top = 2.0
+offset_right = 74.0
+offset_bottom = 74.0
 mouse_filter = 2
 expand_mode = 1
 stretch_mode = 5
 
 [node name="ColorFill" type="TextureProgressBar" parent="."]
 layout_mode = 0
-offset_left = 8.0
-offset_top = 8.0
-offset_right = 68.0
-offset_bottom = 68.0
+offset_left = 2.0
+offset_top = 2.0
+offset_right = 74.0
+offset_bottom = 74.0
 mouse_filter = 2
 fill_mode = 3
 nine_patch_stretch = true
-
-[node name="HitButton" type="Button" parent="."]
-visible = false
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-focus_mode = 0
-flat = true
 
 [node name="TouchArea" type="Control" parent="."]
 layout_mode = 0
@@ -52,3 +82,14 @@ offset_top = 32.0
 offset_right = 146.0
 offset_bottom = 248.0
 mouse_filter = 1
+
+[node name="HitButton" type="Button" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_default_cursor_shape = 2
+focus_mode = 0
+flat = true

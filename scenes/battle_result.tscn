@@ -1,4 +1,4 @@
-[gd_scene format=3 uid="uid://igkqr55521fl"]
+[gd_scene format=3 uid="uid://dwrr5t8sfsc5j"]
 
 [ext_resource type="Script" uid="uid://cnnlojhtarlg0" path="res://scripts/battle_result.gd" id="1_result"]
 [ext_resource type="Theme" path="res://resources/themes/level_select_theme.tres" id="2_theme"]
@@ -140,7 +140,7 @@ texture = ExtResource("4_fallback_background")
 expand_mode = 1
 stretch_mode = 6
 
-[node name="LayeredBackground" type="Control" parent="."]
+[node name="LayeredBackground" type="Control" parent="." unique_id=580841727]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -150,17 +150,17 @@ grow_vertical = 2
 mouse_filter = 2
 script = ExtResource("7_layered_background")
 
-[node name="Top" type="TextureRect" parent="LayeredBackground"]
+[node name="Top" type="TextureRect" parent="LayeredBackground" unique_id=1285923525]
 layout_mode = 0
 mouse_filter = 2
 expand_mode = 1
 
-[node name="Middle" type="TextureRect" parent="LayeredBackground"]
+[node name="Middle" type="TextureRect" parent="LayeredBackground" unique_id=1309372480]
 layout_mode = 0
 mouse_filter = 2
 expand_mode = 1
 
-[node name="Bottom" type="TextureRect" parent="LayeredBackground"]
+[node name="Bottom" type="TextureRect" parent="LayeredBackground" unique_id=3153782]
 layout_mode = 0
 mouse_filter = 2
 expand_mode = 1
@@ -211,7 +211,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_fonts/font = ExtResource("3_font")
-theme_override_font_sizes/font_size = 52
+theme_override_font_sizes/font_size = 64
 text = "스테이지 클리어!"
 horizontal_alignment = 1
 vertical_alignment = 1
@@ -269,50 +269,50 @@ color = Color(0.13, 0.21, 0.3, 0.22)
 
 [node name="MaxComboTitle" type="Label" parent="StatsPanel" unique_id=1117896753]
 layout_mode = 0
-offset_left = 16.0
-offset_top = 19.0
-offset_right = 256.0
-offset_bottom = 49.0
+offset_left = 24.0
+offset_top = 25.0
+offset_right = 264.0
+offset_bottom = 55.0
 theme_override_colors/font_color = Color(0.045, 0.13, 0.29, 1)
 theme_override_fonts/font = ExtResource("3_font")
-theme_override_font_sizes/font_size = 18
+theme_override_font_sizes/font_size = 24
 text = "최대 콤보"
 horizontal_alignment = 1
 
 [node name="MaxComboValue" type="Label" parent="StatsPanel" unique_id=273095375]
 layout_mode = 0
-offset_left = 16.0
-offset_top = 51.0
-offset_right = 256.0
-offset_bottom = 112.0
+offset_left = 24.0
+offset_top = 57.0
+offset_right = 264.0
+offset_bottom = 118.0
 theme_override_colors/font_color = Color(0.07, 0.3, 0.67, 1)
 theme_override_fonts/font = ExtResource("3_font")
-theme_override_font_sizes/font_size = 36
+theme_override_font_sizes/font_size = 52
 text = "×12"
 horizontal_alignment = 1
 vertical_alignment = 1
 
 [node name="DamageTitle" type="Label" parent="StatsPanel" unique_id=351766085]
 layout_mode = 0
-offset_left = 280.0
-offset_top = 19.0
-offset_right = 520.0
-offset_bottom = 49.0
+offset_left = 272.0
+offset_top = 25.0
+offset_right = 512.0
+offset_bottom = 55.0
 theme_override_colors/font_color = Color(0.045, 0.13, 0.29, 1)
 theme_override_fonts/font = ExtResource("3_font")
-theme_override_font_sizes/font_size = 18
+theme_override_font_sizes/font_size = 24
 text = "가한 데미지"
 horizontal_alignment = 1
 
 [node name="DamageValue" type="Label" parent="StatsPanel" unique_id=605764225]
 layout_mode = 0
-offset_left = 280.0
-offset_top = 51.0
-offset_right = 520.0
-offset_bottom = 112.0
+offset_left = 272.0
+offset_top = 57.0
+offset_right = 512.0
+offset_bottom = 118.0
 theme_override_colors/font_color = Color(0.07, 0.3, 0.67, 1)
 theme_override_fonts/font = ExtResource("3_font")
-theme_override_font_sizes/font_size = 36
+theme_override_font_sizes/font_size = 52
 text = "12,430"
 horizontal_alignment = 1
 vertical_alignment = 1
@@ -334,7 +334,7 @@ offset_right = 512.0
 offset_bottom = 46.0
 theme_override_colors/font_color = Color(0.045, 0.13, 0.29, 1)
 theme_override_fonts/font = ExtResource("3_font")
-theme_override_font_sizes/font_size = 21
+theme_override_font_sizes/font_size = 24
 text = "획득 골드"
 horizontal_alignment = 1
 vertical_alignment = 1
@@ -352,10 +352,10 @@ stretch_mode = 5
 
 [node name="OpenChest2" type="TextureRect" parent="RewardPanel" unique_id=260089714]
 layout_mode = 0
-offset_left = 143.03583
-offset_top = 31.0
-offset_right = 228.706
-offset_bottom = 107.0
+offset_left = 160.30823
+offset_top = 46.0
+offset_right = 221.17914
+offset_bottom = 100.0
 mouse_filter = 2
 texture = ExtResource("6_flk2c")
 expand_mode = 1
@@ -369,7 +369,7 @@ offset_right = 535.0
 offset_bottom = 110.0
 theme_override_colors/font_color = Color(0.07, 0.3, 0.67, 1)
 theme_override_fonts/font = ExtResource("3_font")
-theme_override_font_sizes/font_size = 42
+theme_override_font_sizes/font_size = 52
 text = "150"
 horizontal_alignment = 1
 vertical_alignment = 1
@@ -384,7 +384,7 @@ focus_mode = 0
 mouse_default_cursor_shape = 2
 theme_override_colors/font_color = Color(1, 1, 1, 1)
 theme_override_fonts/font = ExtResource("3_font")
-theme_override_font_sizes/font_size = 34
+theme_override_font_sizes/font_size = 52
 theme_override_styles/normal = SubResource("StartPanel")
 theme_override_styles/pressed = SubResource("StartPanel")
 theme_override_styles/hover = SubResource("StartPanel")

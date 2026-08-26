@@ -8,6 +8,7 @@
 - Project files:
   - `assets/audio/sfx/ice_freeze.wav` — original file `Ice_Hit_5.wav`
   - `assets/audio/sfx/ice_break.wav` — original file `Ice_Breaking_2.wav`
+- In-game credit: the upper-right `라이선스` button on the level-select screen opens the Hove Audio license notice.
 
 These sounds are used as part of this game and must not be redistributed as a
 standalone sound-effects pack. Keep a copy of the original download and its

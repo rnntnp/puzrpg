@@ -14,6 +14,6 @@ sprite_size = Vector2(245, 163)
 sprite_horizontal_offset = -20.0
 sprite_height_offset = 4.0
 shadow_scale = Vector2(1.18, 1)
-max_health = 1000
+max_health = 800
 attack_power = 7
 enemy_attack_drop_interval = 4

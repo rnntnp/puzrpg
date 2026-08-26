@@ -19,7 +19,7 @@
 [sub_resource type="Resource" id="SplitCascadeConfig"]
 script = ExtResource("13_config")
 action_intervals = Array[int]([4, 4, 4])
-split_damage = Array[int]([5, 6, 7])
+split_damage = Array[int]([6, 8, 8])
 
 [sub_resource type="Resource" id="Gimmick"]
 script = ExtResource("5_gimmick")

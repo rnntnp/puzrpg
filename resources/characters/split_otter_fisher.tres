@@ -13,6 +13,6 @@ sprite_flip_h = true
 cast_sprite = ExtResource("3_cast")
 sprite_size = Vector2(208, 180)
 shadow_scale = Vector2(1.05, 1)
-max_health = 500
+max_health = 400
 attack_power = 5
 enemy_attack_drop_interval = 4

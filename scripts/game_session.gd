@@ -3,13 +3,15 @@ extends Node
 signal money_changed(amount: int)
 
 const DEFAULT_LEVEL_PATH := "res://resources/levels/00_custom_physics_lab.tres"
+const CUSTOM_PHYSICS_LAB_PATH := "res://resources/levels/00_custom_physics_lab.tres"
 const LevelDataClass = preload("res://scripts/level_data.gd")
 const PROGRESS_SAVE_PATH := "user://progress.cfg"
-const PROGRESS_SCHEMA_VERSION := 2
+const DEVELOPMENT_PROGRESS_SCHEMA_VERSION := 2
+const RELEASE_PROGRESS_SCHEMA_VERSION := 3
 const LEVEL_CATALOG: LevelCatalog = preload("res://resources/catalogs/main_level_catalog.tres")
 const PLAYTEST_UNLOCK_ALL_LEVELS := true
 
-var level_paths: Array[String] = LEVEL_CATALOG.get_all_level_paths()
+var level_paths: Array[String] = []
 
 var current_level_path := DEFAULT_LEVEL_PATH
 var selected_level_index := 0
@@ -26,6 +28,9 @@ var money := 0
 
 
 func _ready() -> void:
+	level_paths = LEVEL_CATALOG.get_all_level_paths()
+	if _is_release_web_build():
+		level_paths.erase(CUSTOM_PHYSICS_LAB_PATH)
 	_load_progress()
 
 
@@ -137,7 +142,12 @@ func _load_progress() -> void:
 		)
 		# Schema 2 inserted the non-numbered physics lab before the old first stage.
 		# Preserve which campaign page and completion boundary an existing save referenced.
-		if saved_schema_version < PROGRESS_SCHEMA_VERSION:
+		if _is_release_web_build() and saved_schema_version == DEVELOPMENT_PROGRESS_SCHEMA_VERSION:
+			if highest_completed_level_index >= 0:
+				highest_completed_level_index = maxi(-1, highest_completed_level_index - 1)
+			selected_level_index = maxi(0, selected_level_index - 1)
+			migrated_schema = true
+		elif not _is_release_web_build() and saved_schema_version < DEVELOPMENT_PROGRESS_SCHEMA_VERSION:
 			if highest_completed_level_index >= 0:
 				highest_completed_level_index = mini(highest_completed_level_index + 1, level_paths.size() - 1)
 			selected_level_index = mini(selected_level_index + 1, level_paths.size() - 1)
@@ -151,11 +161,19 @@ func _load_progress() -> void:
 
 func _save_progress() -> void:
 	var config := ConfigFile.new()
-	config.set_value("progress", "schema_version", PROGRESS_SCHEMA_VERSION)
+	config.set_value("progress", "schema_version", _get_progress_schema_version())
 	config.set_value("progress", "highest_completed", highest_completed_level_index)
 	config.set_value("progress", "selected_level", selected_level_index)
 	config.set_value("progress", "money", money)
 	config.save(PROGRESS_SAVE_PATH)
+
+
+func _is_release_web_build() -> bool:
+	return OS.has_feature("release_web")
+
+
+func _get_progress_schema_version() -> int:
+	return RELEASE_PROGRESS_SCHEMA_VERSION if _is_release_web_build() else DEVELOPMENT_PROGRESS_SCHEMA_VERSION
 
 
 func get_money() -> int:

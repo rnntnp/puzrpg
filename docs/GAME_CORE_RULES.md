@@ -26,7 +26,7 @@ A new mechanic may extend behavior through its own handler. It must not silently
 
 - The main scene is `scenes/loading.tscn`; it opens `scenes/level_select.tscn` after its loading delay.
 - `GameSession` loads the single `LevelCatalog` Resource at `resources/catalogs/main_level_catalog.tres`.
-- The visible level-select order begins with one non-numbered custom-physics laboratory, followed by the current campaign levels. Numbered mechanic test levels remain registered separately.
+- Development builds begin the visible level-select order with one non-numbered custom-physics laboratory. The `release_web` export removes that laboratory and begins at campaign stage 1. Numbered mechanic test levels remain registered separately.
 - Campaign levels unlock sequentially. Every path in `test_level_paths` is always selectable.
 - The level-select start button stores the selected path in `GameSession` and opens `scenes/main.tscn`.
 - The current level-select order is explicitly controlled by `LevelCatalog.visible_level_paths`; it shows only the selected campaign/test subset while the remaining registered paths stay available in the catalog's hidden arrays for later reconnection.

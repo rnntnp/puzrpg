@@ -12,6 +12,7 @@
 [ext_resource type="AudioStream" path="res://assets/audio/sfx/bubble_pop_05.mp3" id="10_merge_sfx"]
 [ext_resource type="AudioStream" path="res://assets/audio/sfx/drop_002.ogg" id="11_landing_sfx"]
 [ext_resource type="AudioStream" path="res://assets/audio/bgm/marimba_game_music_playful_tropical_jungle_puzzle.mp3" id="12_bgm"]
+[ext_resource type="Script" path="res://scripts/custom_physics/suika_board_solver.gd" id="13_custom_solver"]
 
 [sub_resource type="RectangleShape2D" id="wall"]
 size = Vector2(32, 869.5)
@@ -49,6 +50,9 @@ volume_db = -12.0
 [node name="ComboTestScenario" type="Node" parent="." unique_id=1519166100]
 script = ExtResource("4")
 
+[node name="CustomPhysicsSolver" type="Node" parent="."]
+script = ExtResource("13_custom_solver")
+
 [node name="BoardArtwork" type="TextureRect" parent="." unique_id=702315937]
 z_index = -10
 offset_left = 82.0
@@ -78,6 +82,19 @@ offset_bottom = 78.0
 theme_override_colors/font_color = Color(1, 0.45, 0.48, 1)
 theme_override_font_sizes/font_size = 16
 text = "자동 낙하 5.0초"
+horizontal_alignment = 2
+
+[node name="CustomPhysicsBadge" type="Label" parent="."]
+visible = false
+offset_left = 390.0
+offset_top = 78.0
+offset_right = 608.0
+offset_bottom = 106.0
+theme_override_colors/font_color = Color(0.42, 0.94, 1, 1)
+theme_override_colors/font_outline_color = Color(0.04, 0.08, 0.16, 1)
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 16
+text = "커스텀 물리 · 60Hz"
 horizontal_alignment = 2
 
 [node name="NextPanel" parent="." unique_id=1158388454 instance=ExtResource("8_next_panel")]

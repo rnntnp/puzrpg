@@ -49,6 +49,7 @@ var danger_marked := false
 var external_merge_token := 0
 var damage_background_marked := false
 var _hitbox_radius := 0.0
+var custom_physics_enabled := false
 
 func _ready() -> void:
 	body_entered.connect(_on_body_entered)
@@ -147,6 +148,33 @@ func lock_for_merge() -> void:
 	collision_layer = 0
 	collision_mask = 0
 	set_deferred("freeze", true)
+
+
+func set_custom_physics_enabled(enabled: bool) -> void:
+	custom_physics_enabled = enabled
+	if enabled:
+		collision_layer = 0
+		collision_mask = 0
+		continuous_cd = RigidBody2D.CCD_MODE_DISABLED
+		freeze = true
+		return
+	if merge_locked or is_ice_frozen:
+		return
+	collision_layer = 1
+	collision_mask = 1
+	freeze = false
+	sleeping = false
+
+
+func notify_custom_contact() -> void:
+	if _has_contacted:
+		return
+	_has_contacted = true
+	first_contact.emit(self)
+
+
+func request_merge_with(other: MergeBall) -> bool:
+	return _try_request_merge(other)
 
 
 func get_radius() -> float:
@@ -436,7 +464,7 @@ func break_ice(play_effect := true) -> void:
 	ice_durability = 0
 	_set_frozen_visual(false)
 	ice_durability_label.visible = false
-	freeze = false
+	freeze = custom_physics_enabled
 	queue_redraw()
 	if play_effect:
 		_play_ice_sfx(ICE_BREAK_SFX)

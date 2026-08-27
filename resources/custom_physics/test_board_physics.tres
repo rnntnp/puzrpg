@@ -1,0 +1,43 @@
+[gd_resource type="Resource" script_class="CustomBoardPhysicsData" format=3]
+
+[ext_resource type="Script" path="res://scripts/custom_physics/custom_board_physics_data.gd" id="1_data"]
+
+[resource]
+script = ExtResource("1_data")
+simulation_hz = 60
+maximum_substeps = 4
+solver_iterations = 8
+gravity = 980.0
+linear_damping_per_second = 0.08
+angular_damping_per_second = 0.1
+ball_restitution = 0.03
+wall_restitution = 0.03
+floor_restitution = 0.01
+ball_friction = 0.26
+wall_friction = 0.12
+floor_friction = 0.34
+shared_rotational_inertia = 1200.0
+position_correction = 0.82
+penetration_slop = 0.5
+sleep_linear_speed = 2.5
+sleep_angular_speed = 0.08
+sleep_delay = 0.9
+wake_relative_speed = 8.0
+wake_penetration = 1.5
+jam_slip_enabled = true
+jam_minimum_contact_age = 0.9
+jam_pressure_storage_ratio = 0.02
+jam_maximum_stored_energy = 80.0
+jam_minimum_release_energy = 8.0
+jam_kinetic_energy_threshold = 450.0
+jam_energy_to_impulse = 5.0
+jam_maximum_release_impulse = 100.0
+jam_release_energy_fraction = 1.0
+jam_release_cooldown = 1.2
+jam_slip_friction_multiplier = 0.0
+jam_slip_duration = 0.3
+jam_direction_epsilon = 0.12
+jam_contact_load_bias_scale = 1.0
+jam_friction_weakening_delay = 0.8
+jam_friction_weakening_per_second = 0.12
+jam_minimum_friction_multiplier = 0.6

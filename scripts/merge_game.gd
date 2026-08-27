@@ -31,6 +31,8 @@ const BallScene = preload("res://scenes/merge_ball.tscn")
 const MergeBurstEffectScene = preload("res://scenes/merge_burst_effect.tscn")
 const BallCatalogClass = preload("res://scripts/ball_catalog.gd")
 const MergePhysicsDataClass = preload("res://scripts/merge_physics_data.gd")
+const CustomBoardPhysicsDataClass = preload("res://scripts/custom_physics/custom_board_physics_data.gd")
+const SuikaBoardSolverClass = preload("res://scripts/custom_physics/suika_board_solver.gd")
 const DangerLineClass = preload("res://scripts/danger_line.gd")
 const NextPreviewPanelClass = preload("res://scripts/next_preview_panel.gd")
 const GimmickObjectScene = preload("res://scenes/gimmick_object.tscn")
@@ -72,6 +74,8 @@ const TRAPDOOR_WALL_PATHS: Array[NodePath] = [^"LeftWallShape", ^"RightWallShape
 ]
 @onready var gimmick_objects: Node2D = $GimmickObjects
 @onready var gimmick_overlay: GimmickOverlay = $GimmickOverlay
+@onready var custom_physics_solver: SuikaBoardSolverClass = $CustomPhysicsSolver
+@onready var custom_physics_badge: Label = $CustomPhysicsBadge
 @export var physics_data: MergePhysicsDataClass
 @export_category("Danger / Overflow")
 @export_range(0.05, 0.50, 0.005) var danger_line_height_ratio := 0.10
@@ -241,7 +245,7 @@ func spawn_gimmick_ball(
 ) -> MergeBall:
 	var ball := _spawn_ball(at, clampi(level_index, 0, max_level_index)) as MergeBall
 	if is_instance_valid(ball):
-		ball.linear_velocity = velocity
+		_set_ball_velocity(ball, velocity)
 		ball.set_external_merge_token(external_merge_token)
 	return ball
 
@@ -431,7 +435,10 @@ func apply_velocity_impulse(delta_velocity: Vector2) -> void:
 		var ball := child as MergeBall
 		if ball.merge_locked:
 			continue
-		ball.apply_central_impulse(delta_velocity * ball.mass)
+		if custom_physics_solver.is_active():
+			custom_physics_solver.apply_impulse(ball, delta_velocity * ball.mass)
+		else:
+			ball.apply_central_impulse(delta_velocity * ball.mass)
 
 
 func set_base_floor_collision_enabled(enabled: bool) -> void:
@@ -580,9 +587,12 @@ func reset_gimmick_state() -> void:
 			ball.set_split_cast_reserved(false)
 			ball.vertical_floor_bound_enabled = true
 			if not ball.merge_locked:
-				ball.collision_layer = 1
-				ball.collision_mask = 1
-				ball.freeze = false
+				if custom_physics_solver.is_active():
+					ball.set_custom_physics_enabled(true)
+				else:
+					ball.collision_layer = 1
+					ball.collision_mask = 1
+					ball.freeze = false
 
 
 func _create_board_gimmick_tween() -> Tween:
@@ -721,7 +731,8 @@ func configure(
 	push_force: float = 110.0,
 	hit_stop_time_scale: float = 0.25,
 	hit_stop_duration: float = 0.12,
-	chain_delay: float = 0.1
+	chain_delay: float = 0.1,
+	custom_physics: CustomBoardPhysicsDataClass = null
 ) -> void:
 	auto_drop_enabled = time_limit >= 0.0
 	drop_time_limit = maxf(0.0, time_limit)
@@ -732,6 +743,10 @@ func configure(
 	merge_push_force = maxf(0.0, push_force)
 	merge_hit_stop.configure(hit_stop_time_scale, hit_stop_duration)
 	chain_merge_delay = maxf(0.0, chain_delay)
+	custom_physics_solver.configure(custom_physics, get_board_inner_bounds(), physics_speed_multiplier)
+	custom_physics_badge.visible = custom_physics_solver.is_active()
+	if custom_physics_solver.is_active():
+		custom_physics_badge.text = "커스텀 물리 · %dHz" % custom_physics.simulation_hz
 	_reset_ball_queue()
 
 func _process(delta: float) -> void:
@@ -870,7 +885,10 @@ func _spawn_ball(at: Vector2, level: int, contact_sequence_id: int = -1):
 		ball.linear_damp = physics_data.ball_linear_damp
 		ball.angular_damp = physics_data.ball_angular_damp
 		ball.can_sleep = physics_data.ball_can_sleep
-	_enable_ball_ccd_after_spawn(ball)
+	if custom_physics_solver.is_active():
+		custom_physics_solver.register_ball(ball)
+	else:
+		_enable_ball_ccd_after_spawn(ball)
 	var global_left := to_global(Vector2(board_inner_left, 0.0)).x
 	var global_right := to_global(Vector2(board_inner_right, 0.0)).x
 	var global_bottom := to_global(Vector2(0.0, board_inner_bottom)).y
@@ -885,7 +903,7 @@ func _spawn_ball(at: Vector2, level: int, contact_sequence_id: int = -1):
 
 func _enable_ball_ccd_after_spawn(ball: RigidBody2D) -> void:
 	await get_tree().physics_frame
-	if is_instance_valid(ball) and not ball.merge_locked:
+	if is_instance_valid(ball) and not ball.merge_locked and not custom_physics_solver.is_active():
 		ball.continuous_cd = RigidBody2D.CCD_MODE_CAST_SHAPE
 
 
@@ -1061,7 +1079,7 @@ func _spawn_merged_ball(
 ) -> void:
 	var merged_ball = _spawn_ball(at, level)
 	if is_instance_valid(merged_ball):
-		merged_ball.linear_velocity = inherited_linear_velocity
+		_set_ball_velocity(merged_ball, inherited_linear_velocity)
 		merged_ball.set_external_merge_token(external_merge_token)
 	if carries_ingestion_target and is_instance_valid(merged_ball):
 		merged_ball.set_ingestion_marked(true)
@@ -1109,7 +1127,22 @@ func _apply_merge_push(origin: Vector2, merged_ball: MergeBall) -> void:
 			continue
 		var falloff := 1.0 - distance / MERGE_PUSH_RADIUS
 		var impulse := offset.normalized() * merge_push_force * falloff * ball.mass
-		ball.apply_central_impulse(impulse)
+		if custom_physics_solver.is_active():
+			custom_physics_solver.apply_impulse(ball, impulse)
+		else:
+			ball.apply_central_impulse(impulse)
+
+
+func _set_ball_velocity(ball: MergeBall, velocity: Vector2, angular_velocity := 0.0) -> void:
+	if custom_physics_solver.is_active():
+		custom_physics_solver.set_ball_velocity(ball, velocity, angular_velocity)
+	else:
+		ball.linear_velocity = velocity
+		ball.angular_velocity = angular_velocity
+
+
+func is_custom_physics_active() -> bool:
+	return custom_physics_solver.is_active()
 
 
 func _update_danger_state(delta: float) -> void:

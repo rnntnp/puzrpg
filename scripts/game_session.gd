@@ -2,9 +2,10 @@ extends Node
 
 signal money_changed(amount: int)
 
-const DEFAULT_LEVEL_PATH := "res://resources/levels/01_hometown_pond.tres"
+const DEFAULT_LEVEL_PATH := "res://resources/levels/00_custom_physics_lab.tres"
 const LevelDataClass = preload("res://scripts/level_data.gd")
 const PROGRESS_SAVE_PATH := "user://progress.cfg"
+const PROGRESS_SCHEMA_VERSION := 2
 const LEVEL_CATALOG: LevelCatalog = preload("res://resources/catalogs/main_level_catalog.tres")
 const PLAYTEST_UNLOCK_ALL_LEVELS := true
 
@@ -120,7 +121,9 @@ func select_level(index: int) -> bool:
 
 func _load_progress() -> void:
 	var config := ConfigFile.new()
+	var migrated_schema := false
 	if config.load(PROGRESS_SAVE_PATH) == OK:
+		var saved_schema_version := int(config.get_value("progress", "schema_version", 1))
 		money = maxi(0, int(config.get_value("progress", "money", 0)))
 		highest_completed_level_index = clampi(
 			int(config.get_value("progress", "highest_completed", -1)),
@@ -132,13 +135,23 @@ func _load_progress() -> void:
 			0,
 			level_paths.size() - 1
 		)
+		# Schema 2 inserted the non-numbered physics lab before the old first stage.
+		# Preserve which campaign page and completion boundary an existing save referenced.
+		if saved_schema_version < PROGRESS_SCHEMA_VERSION:
+			if highest_completed_level_index >= 0:
+				highest_completed_level_index = mini(highest_completed_level_index + 1, level_paths.size() - 1)
+			selected_level_index = mini(selected_level_index + 1, level_paths.size() - 1)
+			migrated_schema = true
 	if not is_level_unlocked(selected_level_index):
 		selected_level_index = mini(highest_completed_level_index + 1, level_paths.size() - 1)
 	current_level_path = level_paths[selected_level_index]
+	if migrated_schema:
+		_save_progress()
 
 
 func _save_progress() -> void:
 	var config := ConfigFile.new()
+	config.set_value("progress", "schema_version", PROGRESS_SCHEMA_VERSION)
 	config.set_value("progress", "highest_completed", highest_completed_level_index)
 	config.set_value("progress", "selected_level", selected_level_index)
 	config.set_value("progress", "money", money)

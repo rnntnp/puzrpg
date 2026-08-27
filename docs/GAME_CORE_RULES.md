@@ -26,7 +26,7 @@ A new mechanic may extend behavior through its own handler. It must not silently
 
 - The main scene is `scenes/loading.tscn`; it opens `scenes/level_select.tscn` after its loading delay.
 - `GameSession` loads the single `LevelCatalog` Resource at `resources/catalogs/main_level_catalog.tres`.
-- The catalog currently contains 3 campaign levels followed by 50 mechanic test levels.
+- The visible level-select order begins with one non-numbered custom-physics laboratory, followed by the current campaign levels. Numbered mechanic test levels remain registered separately.
 - Campaign levels unlock sequentially. Every path in `test_level_paths` is always selectable.
 - The level-select start button stores the selected path in `GameSession` and opens `scenes/main.tscn`.
 - The current level-select order is explicitly controlled by `LevelCatalog.visible_level_paths`; it shows only the selected campaign/test subset while the remaining registered paths stay available in the catalog's hidden arrays for later reconnection.
@@ -58,7 +58,8 @@ Primary runtime evidence: `scripts/merge_game.gd`, `scripts/merge_ball.gd`, and 
 - Stages use circle collision by default. Displayed stage 3 is the explicit exception: it uses a heart outline and a compound dynamic hitbox made from one convex lower body plus two circular upper lobes.
 - Every normal ball uses runtime base mass `1.0` regardless of stage or radius. A documented gimmick may temporarily change it.
 - `LevelData.ball_physics_speed` is applied as `gravity_scale = physics_speed²`.
-- Ordinary ball contacts, inertia, rotation, waking, and sleeping are left to Godot physics. There is no virtual shared inertia, spawn spin, rest nudge, floor energy restoration, landing mass boost, random board force, or soft-body rebound. The shared physics Resource uses low nonzero friction, weak restitution, and low linear/angular damping so motion decays naturally. A normal merge separately emits the level-configured short radial gameplay impulse.
+- Ordinary campaign ball contacts, inertia, rotation, waking, and sleeping are left to Godot physics. There is no virtual shared inertia, spawn spin, rest nudge, floor energy restoration, landing mass boost, random board force, or soft-body rebound. The shared physics Resource uses low nonzero friction, weak restitution, and low linear/angular damping so motion decays naturally. A normal merge separately emits the level-configured short radial gameplay impulse.
+- The non-numbered `0. 커스텀 물리 실험실` is the explicit exception: it selects an isolated fixed-60Hz circle solver through `LevelData.custom_board_physics`. Long-lived contacts store pressure, gradually weaken their own friction limit, and may release one local tangential slip only when board kinetic energy is low and the existing contact load supplies a direction. It does not use random forces, and an isolated floor ball is not eligible. Its movement tuning lives in `resources/custom_physics/test_board_physics.tres`; all other levels leave this field empty and keep Godot physics.
 - Stage-specific radius and score values live in `resources/balls/ball_01.tres` through `ball_11.tres`.
 
 Primary runtime evidence: `scripts/ball_catalog.gd`, `scripts/ball_data.gd`, `scripts/merge_ball.gd`, and the ball Resources.

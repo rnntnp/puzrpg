@@ -3,6 +3,7 @@ extends Resource
 
 const CharacterDataClass = preload("res://scripts/character_data.gd")
 const TestGimmickDataClass = preload("res://scripts/test_gimmick_data.gd")
+const CustomBoardPhysicsDataClass = preload("res://scripts/custom_physics/custom_board_physics_data.gd")
 
 @export_category("레벨 정보")
 @export var level_name: String = "Level"
@@ -54,6 +55,8 @@ const TestGimmickDataClass = preload("res://scripts/test_gimmick_data.gd")
 @export var test_gimmick: TestGimmickDataClass
 
 @export_category("드롭 앤 머지 설정")
+## 비어 있으면 기존 Godot RigidBody2D 물리를 사용한다.
+@export var custom_board_physics: CustomBoardPhysicsDataClass
 ## 음수로 설정하면 자동 낙하와 시간제한을 사용하지 않는다.
 @export var ball_drop_time_limit: float = 5.0
 @export_range(1, 11, 1) var max_ball_level: int = 11

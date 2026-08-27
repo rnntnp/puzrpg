@@ -1,0 +1,36 @@
+[gd_resource type="Resource" script_class="LevelData" format=3]
+
+[ext_resource type="Script" path="res://scripts/level_data.gd" id="1_level"]
+[ext_resource type="Resource" path="res://resources/characters/blue_fighter.tres" id="2_player"]
+[ext_resource type="Resource" path="res://resources/characters/red_fighter.tres" id="3_enemy"]
+[ext_resource type="Script" path="res://scripts/character_data.gd" id="4_character_type"]
+[ext_resource type="Texture2D" path="res://assets/backgrounds/stage_01_moonlit_pond_handdrawn_v4_clear.png" id="5_background"]
+[ext_resource type="Texture2D" path="res://assets/effects/generated/status_attack.png" id="6_icon"]
+[ext_resource type="Texture2D" path="res://assets/backgrounds/stage_01_moonlit_pond_handdrawn_v4_clear_top.png" id="7_background_top"]
+[ext_resource type="Texture2D" path="res://assets/backgrounds/stage_01_moonlit_pond_handdrawn_v4_clear_middle.png" id="8_background_middle"]
+[ext_resource type="Texture2D" path="res://assets/backgrounds/stage_01_moonlit_pond_handdrawn_v4_clear_bottom.png" id="9_background_bottom"]
+[ext_resource type="Resource" path="res://resources/custom_physics/test_board_physics.tres" id="10_custom_physics"]
+
+[resource]
+script = ExtResource("1_level")
+level_name = "0. 커스텀 물리 실험실"
+image_placeholder = "CUSTOM PHYSICS\nTEST BOARD"
+battle_background = ExtResource("5_background")
+battle_background_top = ExtResource("7_background_top")
+battle_background_middle = ExtResource("8_background_middle")
+battle_background_bottom = ExtResource("9_background_bottom")
+stage_gimmick_icon = ExtResource("6_icon")
+stage_gimmick_name = "고정 60Hz 원형 솔버"
+reward_name = "물리 테스트 완료"
+clear_gold_reward = 0
+player_character = ExtResource("2_player")
+enemies = Array[ExtResource("4_character_type")]([ExtResource("3_enemy")])
+custom_board_physics = ExtResource("10_custom_physics")
+ball_drop_time_limit = -1.0
+max_ball_level = 11
+ball_physics_speed = 1.2
+merge_push_force = 110.0
+merge_hit_stop_time_scale = 0.25
+merge_hit_stop_duration = 0.12
+chain_merge_delay = 0.1
+next_level_path = "res://resources/levels/01_hometown_pond.tres"

@@ -126,7 +126,8 @@ func _load_level() -> void:
 		level_data.merge_push_force,
 		level_data.merge_hit_stop_time_scale,
 		level_data.merge_hit_stop_duration,
-		level_data.chain_merge_delay
+		level_data.chain_merge_delay,
+		level_data.custom_board_physics
 	)
 	if level_data.fixed_drop_level >= 0:
 		merge_game.set_fixed_drop_level(level_data.fixed_drop_level)

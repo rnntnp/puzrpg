@@ -10,11 +10,14 @@ config_version=5
 
 [application]
 
-config/name="puzrpg"
+config/name="우파루파 원정대"
 run/main_scene="res://scenes/loading.tscn"
 config/features=PackedStringArray("4.7", "GL Compatibility")
 run/max_fps=60
 config/icon="res://icon.svg"
+boot_splash/image="res://assets/ui/loading_candidates/loading_transparent_balls_dawn_v10.png"
+boot_splash/fullsize=true
+boot_splash/use_filter=true
 
 [autoload]
 

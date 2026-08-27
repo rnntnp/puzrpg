@@ -8,6 +8,7 @@ const MergeAttackEffectScene = preload("res://scenes/merge_attack_effect.tscn")
 const BallCatalogClass = preload("res://scripts/ball_catalog.gd")
 const WaterHealthBarClass = preload("res://scripts/water_health_bar.gd")
 const StageIntroSequenceClass = preload("res://scripts/stage_intro_sequence.gd")
+const PlaytestTimingRecorderClass = preload("res://scripts/playtest_timing_recorder.gd")
 
 @onready var left_fighter: Fighter = $UI/LeftFighter
 @onready var right_fighter: Fighter = $UI/RightFighter
@@ -57,6 +58,7 @@ var enemy_transition_active := false
 var pending_merge_attacks: Array[Dictionary] = []
 var result_max_combo := 0
 var result_damage_dealt := 0
+var playtest_timing_recorder: PlaytestTimingRecorderClass
 
 
 func get_debug_snapshot() -> Dictionary:
@@ -64,6 +66,8 @@ func get_debug_snapshot() -> Dictionary:
 
 
 func _ready() -> void:
+	playtest_timing_recorder = PlaytestTimingRecorderClass.new()
+	add_child(playtest_timing_recorder)
 	left_fighter.health_changed.connect(_on_left_health_changed)
 	right_fighter.health_changed.connect(_on_right_health_changed)
 	left_fighter.damage_received.connect(_on_player_damage_received)
@@ -95,6 +99,12 @@ func _load_level() -> void:
 	pending_merge_attacks.clear()
 	result_max_combo = 0
 	result_damage_dealt = 0
+	playtest_timing_recorder.start_attempt(
+		GameSession.current_level_path,
+		level_data.level_name,
+		level_data.enemies.size(),
+		GameSession.developer_autoplay_enabled
+	)
 	if (
 		level_data.battle_background_top != null
 		and level_data.battle_background_middle != null
@@ -153,6 +163,7 @@ func _load_enemy(index: int) -> void:
 		right_status_effects, right_applied_status_effects, right_bar
 	)
 	player_skill_controller.set_enemy(right_fighter)
+	playtest_timing_recorder.begin_enemy(index, right_fighter.display_name)
 
 
 func _apply_shadow_visual(shadow: Polygon2D, fighter: Fighter, character) -> void:
@@ -176,6 +187,7 @@ func update_gimmick_ui(primary: String, detail: String) -> void:
 func fail_gimmick_level(reason: String) -> void:
 	if level_finished or not battle_running:
 		return
+	playtest_timing_recorder.finish_attempt("gimmick_failed")
 	battle_running = false
 	enemy_transition_active = false
 	pending_merge_attacks.clear()
@@ -199,6 +211,7 @@ func _start_battle() -> void:
 		intro_sequence.play_story(level_data.opening_sequence, level_data.opening_story_images)
 		return
 	battle_running = true
+	playtest_timing_recorder.set_combat_active(true)
 	if level_data.test_gimmick == null or not test_gimmick_controller.busy:
 		merge_game.set_input_enabled(true)
 	status_label.text = ""
@@ -676,6 +689,10 @@ func _on_merge_projectile_hit(
 
 
 func _on_fighter_defeated(fighter: Fighter) -> void:
+	if fighter == right_fighter:
+		playtest_timing_recorder.record_enemy_defeated()
+	else:
+		playtest_timing_recorder.finish_attempt("player_defeated")
 	battle_running = false
 	merge_game.set_input_enabled(false)
 	status_label.text = "적 처치!" if fighter == right_fighter else "전투 패배"
@@ -718,11 +735,13 @@ func _on_fighter_defeated(fighter: Fighter) -> void:
 	level_finished = true
 	status_label.text = "모든 적 처치!"
 	await get_tree().create_timer(0.4).timeout
+	playtest_timing_recorder.finish_attempt("stage_completed")
 	GameSession.set_battle_result(true, "%s 완료" % level_data.level_name, _get_result_stats(true))
 	GameSession.advance_to_next_level()
 	get_tree().change_scene_to_file("res://scenes/battle_result.tscn")
 
 func _on_merge_game_over() -> void:
+	playtest_timing_recorder.finish_attempt("board_game_over")
 	battle_running = false
 	enemy_transition_active = false
 	pending_merge_attacks.clear()

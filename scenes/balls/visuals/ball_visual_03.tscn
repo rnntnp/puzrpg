@@ -7,7 +7,6 @@
 [ext_resource type="Texture2D" uid="uid://bwjasioimwasf" path="res://assets/balls/generated/orb_shell_candidates/candidate_06/orb_06_fill.png" id="5_wb1id"]
 [ext_resource type="Texture2D" uid="uid://cf6m52o0q3b7d" path="res://assets/balls/generated/orb_outline_heart_mask.png" id="6_heart_mask"]
 [ext_resource type="Shader" uid="uid://itru0tttro0a" path="res://shaders/ball_sprite_shape_mask.gdshader" id="7_shape_mask_shader"]
-[ext_resource type="Script" path="res://scripts/parametric_ball_hitbox_2d.gd" id="8_parametric_hitbox"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_wb1id"]
 resource_local_to_scene = true
@@ -32,6 +31,10 @@ resource_local_to_scene = true
 shader = ExtResource("4_3aon2")
 shader_parameter/shell_mask_texture = ExtResource("5_wb1id")
 shader_parameter/edge_clear_texel_width = 9.0
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape_visual_hitbox"]
+radius = 152.0
+height = 358.0
 
 [node name="BallVisual03" unique_id=1362378674 instance=ExtResource("1_base")]
 tint_color = Color(0.9999998, 0.89372826, 0.56641656, 1)
@@ -62,7 +65,15 @@ scale = Vector2(1, 0.8779905)
 
 [node name="HitboxAuthoring" parent="." index="5"]
 position = Vector2(0, -3)
-script = ExtResource("8_parametric_hitbox")
-outline_texture = ExtResource("6_heart_mask")
 
 [node name="HitboxBody" parent="HitboxAuthoring" index="0"]
+position = Vector2(0, -1)
+rotation = 1.5707963
+shape = SubResource("CapsuleShape_visual_hitbox")
+
+[node name="HitboxLeftLobe" parent="HitboxAuthoring" index="1"]
+position = Vector2(-62, -20)
+
+[node name="HitboxLeftLobe2" type="CollisionShape2D" parent="HitboxAuthoring" index="2" unique_id=725395112]
+position = Vector2(55, -18)
+disabled = true

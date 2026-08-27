@@ -4,17 +4,9 @@
 
 [resource]
 script = ExtResource("1")
-wall_friction = 0.65
-floor_friction = 1.0
-ball_friction = 0.75
-ball_linear_damp = 3.5
-ball_angular_damp = 12.0
-contact_horizontal_damp = 4.0
-contact_angular_damp = 8.0
-contact_max_angular_speed = 2.5
-micro_wake_guard_enabled = true
-micro_wake_grace_time = 0.08
-micro_wake_linear_threshold = 14.0
-micro_wake_angular_threshold = 0.35
-sleep_assist_settle_time = 0.55
-sleep_assist_max_displacement = 20.0
+floor_friction = 0.44
+ball_friction = 0.43
+ball_linear_damp = 0.3
+ball_angular_damp = 0.3
+settled_linear_speed = 3.0
+settled_angular_speed = 0.1

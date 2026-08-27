@@ -10,7 +10,8 @@ const IceBreakParticleBurstClass = preload("res://scripts/ice_break_particle_bur
 const ICE_FREEZE_SFX: AudioStream = preload("res://assets/audio/sfx/ice_freeze.wav")
 const ICE_BREAK_SFX: AudioStream = preload("res://assets/audio/sfx/ice_break.wav")
 const VISUAL_DESIGN_SIZE := 418.0
-const FLOOR_RECOVERY_MARGIN := 4.0
+const OUT_OF_BOUNDS_RECOVERY_MARGIN := 64.0
+const OUT_OF_BOUNDS_RECOVERY_INSET := 4.0
 @onready var visual_container: Node2D = $VisualContainer
 @onready var glow_aura = $GlowAura
 @onready var collision_shape: CollisionShape2D = $CollisionShape2D
@@ -32,6 +33,7 @@ var horizontal_bound_left := 0.0
 var horizontal_bound_right := 720.0
 var floor_bound_bottom := 850.0
 var base_mass := 1.0
+var _heavy_mass_multiplier := 1.0
 var is_enlarged := false
 var is_heavy := false
 var hazard_turns := 0
@@ -47,26 +49,9 @@ var danger_marked := false
 var external_merge_token := 0
 var damage_background_marked := false
 var _hitbox_radius := 0.0
-var sleep_assist_enabled := false
-var sleep_assist_settle_time := 1.5
-var sleep_assist_max_displacement := 1.5
-var contact_horizontal_damp := 0.0
-var contact_angular_damp := 0.0
-var contact_max_angular_speed := 0.0
-var micro_wake_guard_enabled := true
-var micro_wake_grace_time := 0.08
-var micro_wake_linear_threshold := 14.0
-var micro_wake_angular_threshold := 0.35
-var _micro_wake_guard_armed := false
-var _micro_wake_tracking := false
-var _micro_wake_elapsed := 0.0
-var _sleep_assist_sample_position := Vector2.ZERO
-var _sleep_assist_sample_time := 0.0
-var _sleep_assist_sample_active := false
 
 func _ready() -> void:
 	body_entered.connect(_on_body_entered)
-	sleeping_state_changed.connect(_on_sleeping_state_changed)
 
 func setup(level: int, physics_speed: float = 1.0) -> void:
 	merge_level = clampi(level, 0, BallCatalogClass.get_max_level_index())
@@ -79,7 +64,8 @@ func setup(level: int, physics_speed: float = 1.0) -> void:
 		ball_data.glow_color,
 		ball_data.glow_strength
 	)
-	base_mass = maxf(1.0, ball_data.get_radius() / 20.0)
+	# 수박게임식으로 단계와 크기에 관계없이 모든 기본 공의 질량을 동일하게 둔다.
+	base_mass = 1.0
 	mass = base_mass
 	# 자유 낙하 시간은 중력의 제곱근에 반비례하므로 배속의 제곱을 적용한다.
 	gravity_scale = physics_speed * physics_speed
@@ -119,148 +105,42 @@ func set_play_area_bounds(left: float, right: float, bottom: float) -> void:
 	horizontal_bounds_enabled = right > left
 
 
-func configure_sleep_assist(enabled: bool, settle_time: float, max_displacement: float) -> void:
-	sleep_assist_enabled = enabled
-	sleep_assist_settle_time = maxf(0.0, settle_time)
-	sleep_assist_max_displacement = maxf(0.0, max_displacement)
-	_reset_sleep_assist_sample()
-
-
-func configure_contact_stabilization(horizontal_damp: float, angular_damp: float, max_angular_speed: float) -> void:
-	contact_horizontal_damp = maxf(0.0, horizontal_damp)
-	contact_angular_damp = maxf(0.0, angular_damp)
-	contact_max_angular_speed = maxf(0.0, max_angular_speed)
-
-
-func configure_micro_wake_guard(enabled: bool, grace_time: float, linear_threshold: float, angular_threshold: float) -> void:
-	micro_wake_guard_enabled = enabled
-	micro_wake_grace_time = maxf(0.0, grace_time)
-	micro_wake_linear_threshold = maxf(0.0, linear_threshold)
-	micro_wake_angular_threshold = maxf(0.0, angular_threshold)
-	if not enabled:
-		_clear_micro_wake_guard()
-
-
 func _integrate_forces(state: PhysicsDirectBodyState2D) -> void:
 	if merge_locked:
 		return
-	if _suppress_micro_wake(state):
-		return
-	if not horizontal_bounds_enabled:
-		return
+	_recover_if_far_outside(state)
+
+
+func _recover_if_far_outside(state: PhysicsDirectBodyState2D) -> void:
+	# 정상적인 벽·바닥 접촉은 StaticBody2D와 물리 Solver에 전부 맡긴다.
+	# 이 보정은 공 전체가 두꺼운 경계를 완전히 통과한 비상 상황에서만 한 번 작동한다.
 	var radius := get_radius()
 	var transform := state.transform
 	var velocity := state.linear_velocity
-	var minimum_x := horizontal_bound_left + radius
-	var maximum_x := horizontal_bound_right - radius
-	# 큰 충격으로 한 물리 프레임 안에 벽을 통과해도 공 전체를 박스 내부에 유지한다.
-	if transform.origin.x < minimum_x:
-		transform.origin.x = minimum_x
-		velocity.x = maxf(0.0, velocity.x)
-	elif transform.origin.x > maximum_x:
-		transform.origin.x = maximum_x
-		velocity.x = minf(0.0, velocity.x)
-	# 정상적인 벽 접촉은 StaticBody2D에 맡기고, 실제 관통 때만 복구한다.
+	var recovered := false
+	if horizontal_bounds_enabled:
+		var outside_left := horizontal_bound_left - radius - OUT_OF_BOUNDS_RECOVERY_MARGIN
+		var outside_right := horizontal_bound_right + radius + OUT_OF_BOUNDS_RECOVERY_MARGIN
+		if transform.origin.x < outside_left:
+			transform.origin.x = horizontal_bound_left + radius + OUT_OF_BOUNDS_RECOVERY_INSET
+			velocity.x = maxf(0.0, velocity.x)
+			recovered = true
+		elif transform.origin.x > outside_right:
+			transform.origin.x = horizontal_bound_right - radius - OUT_OF_BOUNDS_RECOVERY_INSET
+			velocity.x = minf(0.0, velocity.x)
+			recovered = true
 	if vertical_floor_bound_enabled:
-		var maximum_y := floor_bound_bottom - radius + FLOOR_RECOVERY_MARGIN
-		if transform.origin.y > maximum_y:
-			transform.origin.y = maximum_y
+		var outside_bottom := floor_bound_bottom + radius + OUT_OF_BOUNDS_RECOVERY_MARGIN
+		if transform.origin.y > outside_bottom:
+			transform.origin.y = floor_bound_bottom - radius - OUT_OF_BOUNDS_RECOVERY_INSET
 			velocity.y = minf(0.0, velocity.y)
+			recovered = true
+	if not recovered:
+		return
 	state.transform = transform
 	state.linear_velocity = velocity
-	_apply_contact_stabilization(state)
-	_update_sleep_assist(state)
-
-
-func _apply_contact_stabilization(state: PhysicsDirectBodyState2D) -> void:
-	if state.get_contact_count() <= 0 or is_ice_frozen or freeze:
-		return
-	var stabilized_velocity := state.linear_velocity
-	if contact_horizontal_damp > 0.0:
-		stabilized_velocity.x *= exp(-contact_horizontal_damp * state.step)
-		if absf(stabilized_velocity.x) < 0.25:
-			stabilized_velocity.x = 0.0
-	state.linear_velocity = stabilized_velocity
-	var stabilized_rotation := state.angular_velocity
-	if contact_max_angular_speed > 0.0:
-		stabilized_rotation = clampf(stabilized_rotation, -contact_max_angular_speed, contact_max_angular_speed)
-	if contact_angular_damp > 0.0:
-		stabilized_rotation *= exp(-contact_angular_damp * state.step)
-		if absf(stabilized_rotation) < 0.02:
-			stabilized_rotation = 0.0
-	state.angular_velocity = stabilized_rotation
-
-
-func _update_sleep_assist(state: PhysicsDirectBodyState2D) -> void:
-	if not sleep_assist_enabled or is_ice_frozen or freeze:
-		_reset_sleep_assist_sample()
-		return
-	if state.get_contact_count() <= 0:
-		_reset_sleep_assist_sample()
-		return
-	var current_position := state.transform.origin
-	if not _sleep_assist_sample_active:
-		_sleep_assist_sample_position = current_position
-		_sleep_assist_sample_time = 0.0
-		_sleep_assist_sample_active = true
-		return
-	if current_position.distance_to(_sleep_assist_sample_position) > sleep_assist_max_displacement:
-		_sleep_assist_sample_position = current_position
-		_sleep_assist_sample_time = 0.0
-		return
-	_sleep_assist_sample_time += state.step
-	if _sleep_assist_sample_time < sleep_assist_settle_time:
-		return
-	state.linear_velocity = Vector2.ZERO
 	state.angular_velocity = 0.0
-	_arm_micro_wake_guard()
-	state.sleeping = true
-	_reset_sleep_assist_sample()
-
-
-func _on_sleeping_state_changed() -> void:
-	if not micro_wake_guard_enabled:
-		return
-	if sleeping:
-		_arm_micro_wake_guard()
-	elif _micro_wake_guard_armed:
-		_micro_wake_tracking = true
-		_micro_wake_elapsed = 0.0
-
-
-func _suppress_micro_wake(state: PhysicsDirectBodyState2D) -> bool:
-	if not micro_wake_guard_enabled or not _micro_wake_tracking:
-		return false
-	if state.linear_velocity.length() > micro_wake_linear_threshold or absf(state.angular_velocity) > micro_wake_angular_threshold:
-		_clear_micro_wake_guard()
-		return false
-	_micro_wake_elapsed += state.step
-	if _micro_wake_elapsed < micro_wake_grace_time:
-		return false
-	state.linear_velocity = Vector2.ZERO
-	state.angular_velocity = 0.0
-	state.sleeping = true
-	_micro_wake_tracking = false
-	_micro_wake_elapsed = 0.0
-	return true
-
-
-func _arm_micro_wake_guard() -> void:
-	_micro_wake_guard_armed = true
-	_micro_wake_tracking = false
-	_micro_wake_elapsed = 0.0
-
-
-func _clear_micro_wake_guard() -> void:
-	_micro_wake_guard_armed = false
-	_micro_wake_tracking = false
-	_micro_wake_elapsed = 0.0
-
-
-func _reset_sleep_assist_sample() -> void:
-	_sleep_assist_sample_position = Vector2.ZERO
-	_sleep_assist_sample_time = 0.0
-	_sleep_assist_sample_active = false
+	state.sleeping = false
 
 func lock_for_merge() -> void:
 	merge_locked = true
@@ -278,9 +158,12 @@ func _setup_collision_shape(visual: Node2D) -> void:
 		if child is CollisionShape2D and child != collision_shape and child.has_meta(&"visual_hitbox"):
 			child.queue_free()
 	var authoring_root := visual.get_node_or_null("HitboxAuthoring") as StaticBody2D
-	if authoring_root != null and _copy_authored_hitboxes(authoring_root):
-		return
-	_setup_fallback_collision_shape()
+	var copied_visual_shape := false
+	if ball_data.use_visual_collision_shape and authoring_root != null:
+		copied_visual_shape = _copy_authored_hitboxes(authoring_root)
+	_disable_authoring_hitbox(authoring_root)
+	if not copied_visual_shape:
+		_setup_fallback_collision_shape()
 
 
 func _copy_authored_hitboxes(authoring_root: StaticBody2D) -> bool:
@@ -292,22 +175,85 @@ func _copy_authored_hitboxes(authoring_root: StaticBody2D) -> bool:
 		return false
 	var design_scale := visual_container.scale.x
 	_hitbox_radius = 0.0
-	for index in source_shapes.size():
-		var source := source_shapes[index]
-		var target := collision_shape if index == 0 else CollisionShape2D.new()
-		target.shape = source.shape.duplicate(true)
-		var runtime_transform := authoring_root.transform * source.transform
-		runtime_transform.origin *= design_scale
-		runtime_transform.x *= design_scale
-		runtime_transform.y *= design_scale
-		target.transform = runtime_transform
-		if index > 0:
+	var copied_count := 0
+	for source in source_shapes:
+		var target := collision_shape if copied_count == 0 else CollisionShape2D.new()
+		var authored_transform := authoring_root.transform * source.transform
+		if not _assign_baked_shape(target, source.shape, authored_transform, design_scale):
+			continue
+		if copied_count > 0:
 			target.set_meta(&"visual_hitbox", true)
 			add_child(target)
 		_hitbox_radius = maxf(_hitbox_radius, _get_shape_extent(target))
+		copied_count += 1
+	return copied_count > 0
+
+
+func _assign_baked_shape(
+	target: CollisionShape2D,
+	source_shape: Shape2D,
+	authored_transform: Transform2D,
+	design_scale: float
+) -> bool:
+	target.transform = Transform2D.IDENTITY
+	if source_shape is ConvexPolygonShape2D:
+		var runtime_points := PackedVector2Array()
+		for point in (source_shape as ConvexPolygonShape2D).points:
+			runtime_points.append((authored_transform * point) * design_scale)
+		if runtime_points.size() < 3:
+			return false
+		var convex := ConvexPolygonShape2D.new()
+		convex.points = runtime_points
+		target.shape = convex
+		return true
+	var authored_scale := authored_transform.get_scale()
+	var scale_x := absf(authored_scale.x) * design_scale
+	var scale_y := absf(authored_scale.y) * design_scale
+	if source_shape is CircleShape2D:
+		var source_radius := (source_shape as CircleShape2D).radius
+		if is_equal_approx(scale_x, scale_y):
+			target.position = authored_transform.origin * design_scale
+			target.rotation = authored_transform.get_rotation()
+			var circle := source_shape.duplicate(true) as CircleShape2D
+			circle.radius = source_radius * scale_x
+			target.shape = circle
+		else:
+			# 원형 Shape의 비균등 스케일을 단일 볼록 타원으로 베이크한다.
+			var ellipse_points := PackedVector2Array()
+			for index in 48:
+				var angle := TAU * float(index) / 48.0
+				var local_point := Vector2(cos(angle), sin(angle)) * source_radius
+				ellipse_points.append((authored_transform * local_point) * design_scale)
+			var ellipse := ConvexPolygonShape2D.new()
+			ellipse.points = ellipse_points
+			target.shape = ellipse
+		return true
+	target.position = authored_transform.origin * design_scale
+	target.rotation = authored_transform.get_rotation()
+	if source_shape is CapsuleShape2D:
+		var capsule := source_shape.duplicate(true) as CapsuleShape2D
+		capsule.radius *= scale_x
+		capsule.height *= scale_y
+		target.shape = capsule
+		return true
+	if source_shape is RectangleShape2D:
+		var rectangle := source_shape.duplicate(true) as RectangleShape2D
+		rectangle.size *= Vector2(scale_x, scale_y)
+		target.shape = rectangle
+		return true
+	return false
+
+
+func _disable_authoring_hitbox(authoring_root: StaticBody2D) -> void:
+	if authoring_root == null:
+		return
+	authoring_root.collision_layer = 0
+	authoring_root.collision_mask = 0
 	authoring_root.process_mode = Node.PROCESS_MODE_DISABLED
 	authoring_root.visible = false
-	return true
+	for child in authoring_root.get_children():
+		if child is CollisionShape2D:
+			(child as CollisionShape2D).disabled = true
 
 
 func _get_shape_extent(shape_node: CollisionShape2D) -> float:
@@ -318,6 +264,18 @@ func _get_shape_extent(shape_node: CollisionShape2D) -> float:
 	if shape_node.shape is ConvexPolygonShape2D:
 		for point in (shape_node.shape as ConvexPolygonShape2D).points:
 			extent = maxf(extent, (shape_node.transform * point).length())
+	if shape_node.shape is CapsuleShape2D:
+		var capsule := shape_node.shape as CapsuleShape2D
+		return extent + maxf(capsule.radius, capsule.height * 0.5) * maximum_scale
+	if shape_node.shape is RectangleShape2D:
+		var half_size := (shape_node.shape as RectangleShape2D).size * 0.5
+		for point in [
+			Vector2(-half_size.x, -half_size.y),
+			Vector2(half_size.x, -half_size.y),
+			Vector2(half_size.x, half_size.y),
+			Vector2(-half_size.x, half_size.y),
+		]:
+			extent = maxf(extent, (shape_node.transform * point).length())
 	return extent
 
 
@@ -326,6 +284,7 @@ func _setup_fallback_collision_shape() -> void:
 	var runtime_collision_shape: Shape2D = ball_data.collision_shape.duplicate()
 	if runtime_collision_shape is CircleShape2D:
 		(runtime_collision_shape as CircleShape2D).radius = _hitbox_radius
+	collision_shape.transform = Transform2D.IDENTITY
 	collision_shape.shape = runtime_collision_shape
 
 
@@ -339,8 +298,13 @@ func set_enlarged(enabled: bool, multiplier := 1.5, duration := 0.25) -> void:
 
 func set_heavy(enabled: bool, multiplier := 4.0) -> void:
 	is_heavy = enabled
-	mass = base_mass * (multiplier if enabled else 1.0)
+	_heavy_mass_multiplier = multiplier if enabled else 1.0
+	_refresh_mass()
 	queue_redraw()
+
+
+func _refresh_mass() -> void:
+	mass = base_mass * _heavy_mass_multiplier
 
 
 func set_hazard_turns(value: int) -> void:
@@ -457,11 +421,11 @@ func damage_ice(amount: int) -> void:
 	if ice_durability <= 0:
 		break_ice()
 	else:
-		var original_rotation := rotation
+		var original_rotation := visual_container.rotation
 		var tween := create_tween()
-		tween.tween_property(self, "rotation", original_rotation + 0.08, 0.04)
-		tween.tween_property(self, "rotation", original_rotation - 0.08, 0.08)
-		tween.tween_property(self, "rotation", original_rotation, 0.04)
+		tween.tween_property(visual_container, "rotation", original_rotation + 0.08, 0.04)
+		tween.tween_property(visual_container, "rotation", original_rotation - 0.08, 0.08)
+		tween.tween_property(visual_container, "rotation", original_rotation, 0.04)
 	queue_redraw()
 
 

@@ -12,16 +12,16 @@ config_version=5
 
 config/name="puzrpg"
 run/main_scene="res://scenes/loading.tscn"
-config/features=PackedStringArray("4.7", "Mobile")
+config/features=PackedStringArray("4.7", "GL Compatibility")
 run/max_fps=60
 config/icon="res://icon.svg"
 
 [autoload]
 
 GameSession="*res://scripts/game_session.gd"
-AudioSettings="*res://scripts/audio_settings.gd"
 UIAudioManager="*res://scripts/ui_audio_manager.gd"
 MCPRuntimeServer="*res://addons/godot_mcp_toolkit/runtime/mcp_runtime_server.gd"
+AudioSettings="*res://scripts/audio_settings.gd"
 
 [display]
 
@@ -30,11 +30,11 @@ window/size/viewport_height=1280
 window/size/window_width_override=720
 window/size/window_height_override=1280
 window/stretch/mode="canvas_items"
-window/stretch/aspect="expand"
 
 [editor]
 
-movie_writer/movie_file="C:/Users/jaynap/Desktop/vids/001.avi"
+movie_writer/movie_file="C:/Users/jaynap/Desktop/vids/005.avi"
+export/convert_text_resources_to_binary=false
 
 [editor_plugins]
 
@@ -53,9 +53,15 @@ NODE.JS NOT FOUND — The MCP server bridge requires Node.js 22+. Download it fr
 
 [physics]
 
+common/physics_ticks_per_second=120
 3d/physics_engine="Jolt Physics"
+2d/sleep_threshold_linear=3.0
+2d/sleep_threshold_angular=0.1
+2d/time_before_sleep=0.75
+2d/solver/solver_iterations=24
 
 [rendering]
 
-rendering_device/driver.windows="d3d12"
-renderer/rendering_method="mobile"
+rendering_device/driver.windows="opengl3"
+renderer/rendering_method="gl_compatibility"
+renderer/rendering_method.mobile="gl_compatibility"

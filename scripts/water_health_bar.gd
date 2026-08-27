@@ -30,6 +30,8 @@ var maximum_durability := 1
 var _full_fill_size := Vector2.ZERO
 var _displayed_health_ratio := 1.0
 var _health_tween: Tween
+var _durability_highlight_tween: Tween
+var _durability_highlight_base_style: StyleBoxFlat
 
 
 func _ready() -> void:
@@ -73,13 +75,59 @@ func set_durability(value: int, maximum: int) -> void:
 	durability_active = true
 	_refresh_value_text()
 	_refresh_durability()
+	if current_durability > 0 and not is_instance_valid(_durability_highlight_tween):
+		start_durability_glow()
 
 
 func clear_durability() -> void:
+	stop_durability_glow()
 	durability_active = false
 	current_durability = 0
 	_refresh_value_text()
 	_refresh_durability()
+
+
+func start_durability_glow() -> void:
+	stop_durability_glow()
+	if not is_instance_valid(durability_fill) or not durability_fill.visible:
+		return
+	_durability_highlight_base_style = (
+		durability_fill.get_theme_stylebox("panel").duplicate() as StyleBoxFlat
+	)
+	_durability_highlight_tween = create_tween().set_loops()
+	_durability_highlight_tween.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	_durability_highlight_tween.tween_method(_set_durability_highlight_strength, 0.0, 1.0, 0.42)
+	_durability_highlight_tween.tween_method(_set_durability_highlight_strength, 1.0, 0.0, 0.42)
+
+
+func stop_durability_glow() -> void:
+	if is_instance_valid(_durability_highlight_tween):
+		_durability_highlight_tween.kill()
+	_durability_highlight_tween = null
+	if is_instance_valid(durability_fill) and _durability_highlight_base_style != null:
+		durability_fill.add_theme_stylebox_override(
+			"panel",
+			_durability_highlight_base_style.duplicate()
+		)
+	_durability_highlight_base_style = null
+
+
+func _set_durability_highlight_strength(strength: float) -> void:
+	if not is_instance_valid(durability_fill) or _durability_highlight_base_style == null:
+		return
+	var style := _durability_highlight_base_style.duplicate() as StyleBoxFlat
+	style.bg_color = _durability_highlight_base_style.bg_color.lerp(
+		Color("#ff66f2"),
+		strength
+	)
+	style.border_color = _durability_highlight_base_style.border_color.lerp(
+		Color.WHITE,
+		strength
+	)
+	style.shadow_color = Color(0.88, 0.28, 1.0, 0.72 * strength)
+	style.shadow_size = roundi(10.0 * strength)
+	style.shadow_offset = Vector2.ZERO
+	durability_fill.add_theme_stylebox_override("panel", style)
 
 
 func _refresh_value_text() -> void:

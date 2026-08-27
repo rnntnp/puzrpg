@@ -24,6 +24,16 @@ Keep this list limited to external resources that are currently referenced by th
 - Attribution required: no
 - Content ID: registered; gameplay videos may receive a non-blocking copyright notice
 
+### Magic Puzzle In-Game 1
+
+- Project file: `assets/audio/bgm/magic_puzzle_in_game_1_bpm110.mp3`
+- Runtime use: looping background music throughout the Mirror Drop level
+- Creator: MintoDog
+- Source: https://opengameart.org/content/magic-puzzle-in-game-1
+- License: Creative Commons CC0 1.0
+- License text: https://creativecommons.org/publicdomain/zero/1.0/
+- Attribution required: no
+
 ### Bubble Pop 05
 
 - Project file: `assets/audio/sfx/bubble_pop_05.mp3`

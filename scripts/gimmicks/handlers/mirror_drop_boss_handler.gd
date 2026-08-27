@@ -2,6 +2,7 @@ class_name MirrorDropBossHandler
 extends TestGimmickHandler
 
 const BallCatalogClass = preload("res://scripts/ball_catalog.gd")
+const StageIntroSequenceClass = preload("res://scripts/stage_intro_sequence.gd")
 const MergeAttackEffectScene = preload("res://scenes/merge_attack_effect.tscn")
 const MirrorFaceSheenClass = preload("res://scripts/gimmicks/visuals/mirror_face_sheen.gd")
 const ReflectionActiveSprite = preload("res://assets/characters/generated/mirror_mimic_boss_reflection_active_v5_generated.png")
@@ -27,6 +28,9 @@ var result_text := ""
 var mirror_action_active := false
 var mirror_last_merge_msec := 0
 var mirror_external_merge_token := 0
+var mirror_tutorial_shown := false
+var mirror_tutorial_overlay: StageIntroSequence
+var mirror_tutorial_ball: MergeBall
 
 
 func _on_configured() -> void:
@@ -173,6 +177,11 @@ func _execute_mirror_drop(level: int, player_drop_x: float) -> void:
 	mirror_action_active = true
 	_refresh_overlay()
 	log_event("MIRROR DROP", "stage=%d player_x=%.1f boss_x=%.1f" % [level + 1, player_drop_x, spawn_x])
+	if not mirror_tutorial_shown:
+		mirror_tutorial_shown = true
+		await _show_mirror_ball_tutorial(spawned)
+		if not _battle_is_active() or not is_instance_valid(spawned):
+			return
 	await _wait_for_mirror_resolution(spawned)
 	merge_game.end_external_merge_window()
 	mirror_external_merge_token = 0
@@ -180,8 +189,39 @@ func _execute_mirror_drop(level: int, player_drop_x: float) -> void:
 		result_text = "BOSS COMBO ×%d · %d DAMAGE" % [mirror_combo, mirror_damage_total]
 	else:
 		result_text = ""
-	mirror_action_active = false
+	# Keep the preview hidden until _finish_boss_action() clears the recorded
+	# player drop. Showing it here would rebuild the just-resolved mirror ball
+	# for a frame before the preview switches to the next queued player ball.
 	_update_feedback()
+
+
+func _show_mirror_ball_tutorial(ball: MergeBall) -> void:
+	if not is_instance_valid(ball) or not is_instance_valid(battle):
+		return
+	mirror_tutorial_ball = ball
+	ball.linear_velocity = Vector2.ZERO
+	ball.angular_velocity = 0.0
+	ball.freeze = true
+	var tutorial := StageIntroSequenceClass.new() as StageIntroSequence
+	mirror_tutorial_overlay = tutorial
+	battle.add_child(tutorial)
+	var spotlight_center := ball.get_global_transform_with_canvas().origin
+	var spotlight_radius := maxf(72.0, ball.get_radius() + 24.0)
+	tutorial.play_custom_spotlight_tutorial(
+		"조심하세요!\n거울의 검은 공이 합쳐지면\n주인공이 피해를 입어요!",
+		spotlight_center,
+		spotlight_radius,
+		false,
+		255.0
+	)
+	await tutorial.sequence_finished
+	if mirror_tutorial_overlay == tutorial:
+		mirror_tutorial_overlay = null
+	if is_instance_valid(ball):
+		ball.freeze = false
+		ball.sleeping = false
+	if mirror_tutorial_ball == ball:
+		mirror_tutorial_ball = null
 
 
 func _wait_for_mirror_resolution(ball: MergeBall) -> void:
@@ -366,6 +406,13 @@ func _battle_is_active() -> bool:
 
 
 func _on_cleanup() -> void:
+	if is_instance_valid(mirror_tutorial_overlay):
+		mirror_tutorial_overlay.queue_free()
+	mirror_tutorial_overlay = null
+	if is_instance_valid(mirror_tutorial_ball):
+		mirror_tutorial_ball.freeze = false
+		mirror_tutorial_ball.sleeping = false
+	mirror_tutorial_ball = null
 	if is_instance_valid(battle):
 		battle.right_applied_status_effects.remove_effect(ReflectionActiveEffect.effect_id)
 	if is_instance_valid(enemy):
@@ -394,3 +441,4 @@ func _on_cleanup() -> void:
 	result_text = ""
 	mirror_action_active = false
 	mirror_external_merge_token = 0
+	mirror_tutorial_shown = false

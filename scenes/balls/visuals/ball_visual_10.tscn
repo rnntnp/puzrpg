@@ -2,14 +2,13 @@
 
 [ext_resource type="PackedScene" path="res://scenes/balls/visuals/ball_visual_base.tscn" id="1_base"]
 [ext_resource type="Shader" uid="uid://dyiql3rgv8fsw" path="res://shaders/ball_shell_outline.gdshader" id="2_26euj"]
-[ext_resource type="Texture2D" path="res://assets/balls/generated/ball_10_axolotl_source_alpha_fixed.png" id="2_axolotl_source"]
+[ext_resource type="Texture2D" uid="uid://bvsqic4f30l3" path="res://assets/balls/generated/ball_10_axolotl_source_alpha_fixed.png" id="2_axolotl_source"]
 [ext_resource type="Shader" uid="uid://itru0tttro0a" path="res://shaders/ball_sprite_shape_mask.gdshader" id="3_shape_mask_shader"]
 [ext_resource type="Texture2D" uid="uid://bdknrpkrax2xg" path="res://assets/balls/generated/ball_10_axolotl_shape_mask.png" id="4_axolotl_mask"]
-[ext_resource type="Texture2D" uid="uid://d4i3n50sktqmg" path="res://assets/balls/generated/mask_candidates/08_flat_bubble.png" id="5_shape_outline"]
 [ext_resource type="Shader" uid="uid://b3hciqwdmjwqs" path="res://shaders/ball_shell_shadow_inset.gdshader" id="6_bmu1i"]
 [ext_resource type="Texture2D" uid="uid://bwjasioimwasf" path="res://assets/balls/generated/orb_shell_candidates/candidate_06/orb_06_fill.png" id="7_0jdtf"]
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_bmu1i"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_26euj"]
 resource_local_to_scene = true
 shader = ExtResource("2_26euj")
 shader_parameter/outline_color = Color(0.9, 0.107999995, 0.036, 0.95)
@@ -20,7 +19,7 @@ shader_parameter/frozen_enabled = false
 shader_parameter/frozen_outer_color = Color(1, 1, 1, 1)
 shader_parameter/frozen_outer_texel_width = 6.804651162790698
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_0jdtf"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_bmu1i"]
 resource_local_to_scene = true
 shader = ExtResource("3_shape_mask_shader")
 shader_parameter/mask_texture = ExtResource("4_axolotl_mask")
@@ -28,14 +27,15 @@ shader_parameter/mask_offset_pixels = Vector2(0, 0)
 shader_parameter/mask_rotation = 0.0
 shader_parameter/mask_sprite_scale = Vector2(1, 1)
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_dcf4i"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_0jdtf"]
 resource_local_to_scene = true
 shader = ExtResource("6_bmu1i")
 shader_parameter/shell_mask_texture = ExtResource("7_0jdtf")
 shader_parameter/edge_clear_texel_width = 9.0
 
-[sub_resource type="ConvexPolygonShape2D" id="ConvexPolygonShape_hitbox_local"]
-points = PackedVector2Array(181, 8, 167, 66, 128, 115, 69, 147, 0, 159, -69, 147, -128, 115, -167, 66, -181, 8, -167, -50, -128, -99, -69, -131, 0, -143, 69, -131, 128, -99, 167, -50)
+[sub_resource type="CapsuleShape2D" id="CapsuleShape_visual_hitbox"]
+radius = 197.0
+height = 396.0
 
 [node name="BallVisual10" unique_id=1143243160 instance=ExtResource("1_base")]
 tint_color = Color(1, 0.12, 0.04, 1)
@@ -44,12 +44,11 @@ tint_color = Color(1, 0.12, 0.04, 1)
 modulate = Color(1, 0.12, 0.04, 1)
 
 [node name="ShellOutline" parent="." index="1"]
-material = SubResource("ShaderMaterial_bmu1i")
+material = SubResource("ShaderMaterial_26euj")
 position = Vector2(12, 0)
-texture = ExtResource("5_shape_outline")
 
 [node name="Axolotl" parent="." index="2"]
-material = SubResource("ShaderMaterial_0jdtf")
+material = SubResource("ShaderMaterial_bmu1i")
 position = Vector2(2.5000763, -2.4999237)
 scale = Vector2(0.44983068, 0.44983068)
 texture = ExtResource("2_axolotl_source")
@@ -57,7 +56,7 @@ texture = ExtResource("2_axolotl_source")
 [node name="ShellShadow" parent="." index="3"]
 visible = false
 modulate = Color(0.38, 0.045599997, 0.015199999, 1)
-material = SubResource("ShaderMaterial_dcf4i")
+material = SubResource("ShaderMaterial_0jdtf")
 position = Vector2(12, 0)
 
 [node name="ShellGloss" parent="." index="4"]
@@ -68,4 +67,6 @@ scale = Vector2(1.007177, 0.9210527)
 position = Vector2(12, 0)
 
 [node name="HitboxBody" parent="HitboxAuthoring" index="0"]
-shape = SubResource("ConvexPolygonShape_hitbox_local")
+position = Vector2(-13, 0)
+rotation = 1.5707963
+shape = SubResource("CapsuleShape_visual_hitbox")

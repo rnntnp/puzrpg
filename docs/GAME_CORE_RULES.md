@@ -56,8 +56,9 @@ Primary runtime evidence: `scripts/merge_game.gd`, `scripts/merge_ball.gd`, and 
 - A normal random drop is uniformly selected from indices `0..min(4, max_level_index)`: displayed stages 1 through 5 when the level maximum allows them.
 - `BallData` owns the ball's stage metadata, sprite, circle collision shape, glow, and `merge_score`.
 - Stages use circle collision by default. Displayed stage 3 is the explicit exception: it uses a heart outline and a compound dynamic hitbox made from one convex lower body plus two circular upper lobes.
-- Runtime base mass is derived from radius: `max(1.0, radius / 20.0)`. It is not stored independently in `BallData`.
+- Every normal ball uses runtime base mass `1.0` regardless of stage or radius. A documented gimmick may temporarily change it.
 - `LevelData.ball_physics_speed` is applied as `gravity_scale = physics_speed²`.
+- Ordinary ball contacts, inertia, rotation, waking, and sleeping are left to Godot physics. There is no virtual shared inertia, spawn spin, rest nudge, floor energy restoration, landing mass boost, random board force, or soft-body rebound. The shared physics Resource uses low nonzero friction, weak restitution, and low linear/angular damping so motion decays naturally. A normal merge separately emits the level-configured short radial gameplay impulse.
 - Stage-specific radius and score values live in `resources/balls/ball_01.tres` through `ball_11.tres`.
 
 Primary runtime evidence: `scripts/ball_catalog.gd`, `scripts/ball_data.gd`, `scripts/merge_ball.gd`, and the ball Resources.
@@ -68,7 +69,7 @@ Primary runtime evidence: `scripts/ball_catalog.gd`, `scripts/ball_data.gd`, `sc
 - A locked ball cannot merge. A stage sealed by a mechanic cannot merge while sealed.
 - A ball already at the level's maximum stage does not merge. It does not disappear.
 - Both source balls are locked and removed. The result is created one stage higher at the midpoint of their positions.
-- The current implementation does not transfer the source balls' average velocity to the result. It creates a new result ball, then applies the configured radial merge push to nearby balls.
+- The result inherits the equal-weight average linear velocity of the two source balls. It does not apply a fixed replacement speed, forced angular velocity, or board-wide physics effect. The merge also applies the level-configured short radial push to nearby balls.
 - The result is a normal ball. It emits the normal merge registration and completion signals and may participate in later chain merges.
 - A gimmick-created demotion, removal, duplication, mirror spawn, or terrain move is not automatically a normal merge. A mechanic must explicitly state any exception.
 - A handler may bracket an enemy-owned physical drop with the opt-in external merge window and tag that drop with the window's unique ownership token. Only merges containing a ball with the active token use the isolated combo and external damage signal; unrelated or previously queued player merges keep player score, combo, and merge projectiles. By default, result balls inherit the active token so only that enemy drop's direct chain remains externally owned. The Mirror Drop Boss additionally marks its spawned ball with a persistent black damage background: that marked ball's next merge remains enemy-owned even after the window closes, consumes the mark, damages the player, and creates an unmarked normal result without inheriting the token.
@@ -199,7 +200,7 @@ The following are intentionally not harmonized by guesswork:
 | Maximum-stage merge | Maximum stage cannot merge and remains | Common PDF describes maximum pair disappearing | Runtime wins until redesign |
 | Merge damage | Result `merge_score` × chain multiplier; one projectile per merge | Common PDF describes result-stage base damage and a combo extra hit | Runtime wins until redesign |
 | Turn settlement | Landing + 500 ms merge quiet, maximum 4 s; full stillness is optional per handler | Planning flow implies full-board settlement before enemy action | Runtime wins; state-reading handlers must wait explicitly |
-| Result velocity | New result has no inherited average source velocity | Older design notes describe inherited/averaged motion | Runtime wins until redesign |
+| Result velocity | Result inherits the pair's equal-weight average linear velocity and no angular velocity; the separate configured merge shockwave pushes nearby balls | Older design notes describe inherited/averaged motion without a precise angular rule | Runtime wins; result inheritance and gameplay shockwave are separate |
 | Player skill gauge | Player-owned normal merges grant result `merge_score`; the configured skill persists through enemy transitions and adds 2 turns to the shared ingestion Weakness | Older notes commonly describe result-stage damage and a combo extra hit | Runtime implementation wins; gauge follows runtime merge damage units |
 | Generic attack queue | No dedicated queue; delayed projectiles are independent | Common PDF describes an attack queue | Unresolved / not implemented |
 | Ice boss | Three ice enemies are registered; the boss freezes two balls with durability 3 and has no frozen-ball cap | Ice PDF includes a boss phase | Runtime wins; any differing PDF boss behavior is design intent only |

@@ -4,10 +4,6 @@ extends Node2D
 const LevelDataClass = preload("res://scripts/level_data.gd")
 const GameplayDebugSnapshotClass = preload("res://scripts/gameplay_debug_snapshot.gd")
 const EnemyAttackEffect: StatusEffectData = preload("res://resources/effects/enemy_attack_countdown.tres")
-const IngestionEffect: StatusEffectData = preload("res://resources/effects/ingestion_countdown.tres")
-const IngestionHealEffect: StatusEffectData = preload("res://resources/effects/ingestion_heal_countdown.tres")
-const IngestionDurabilityEffect: StatusEffectData = preload("res://resources/effects/ingestion_durability.tres")
-const WeaknessEffect: StatusEffectData = preload("res://resources/effects/ingestion_vulnerable.tres")
 const MergeAttackEffectScene = preload("res://scenes/merge_attack_effect.tscn")
 const BallCatalogClass = preload("res://scripts/ball_catalog.gd")
 const WaterHealthBarClass = preload("res://scripts/water_health_bar.gd")
@@ -56,8 +52,7 @@ var tutorial_prompt_version := 0
 var tutorial_drop_prompt_text := ""
 var tutorial_drop_prompt: Label
 var tutorial_prompt_tween: Tween
-var ingestion_tutorial_active := false
-var ingestion_tutorial_return_ball: MergeBall
+var ingestion_swallow_tutorial_shown := false
 var enemy_transition_active := false
 var pending_merge_attacks: Array[Dictionary] = []
 var result_max_combo := 0
@@ -93,6 +88,7 @@ func _load_level() -> void:
 		push_error("레벨 전투 구성이 올바르지 않습니다.")
 		return
 	title_label.text = level_data.level_name
+	status_label.visible = level_data.show_battle_status_label
 	current_enemy_index = 0
 	level_finished = false
 	enemy_transition_active = false
@@ -116,6 +112,7 @@ func _load_level() -> void:
 		background_artwork.visible = true
 	if level_data.battle_background != null:
 		background_artwork.texture = level_data.battle_background
+	merge_game.set_background_music(level_data.battle_music)
 	left_fighter.set_character_data(level_data.player_character)
 	_apply_shadow_visual(left_fighter_shadow, left_fighter, level_data.player_character)
 	player_skill_controller.configure(
@@ -168,8 +165,9 @@ func _apply_shadow_visual(shadow: Polygon2D, fighter: Fighter, character) -> voi
 
 
 func update_gimmick_ui(primary: String, detail: String) -> void:
-	gimmick_action_label.visible = not primary.is_empty()
-	gimmick_detail_label.visible = not detail.is_empty()
+	var show_labels := level_data == null or level_data.show_gimmick_status_labels
+	gimmick_action_label.visible = show_labels and not primary.is_empty()
+	gimmick_detail_label.visible = show_labels and not detail.is_empty()
 	gimmick_action_label.text = primary
 	gimmick_detail_label.text = detail
 
@@ -216,7 +214,6 @@ func _start_tutorial_sequence() -> void:
 		return
 	if level_data.ingestion_tutorial_enabled:
 		tutorial_sequence_played = true
-		_start_ingestion_tutorial_sequence()
 		return
 	if level_data.tutorial_sequence.is_empty():
 		return
@@ -232,95 +229,32 @@ func _start_tutorial_sequence() -> void:
 	tutorial_sequence.play_control_tutorial(merge_game.get_drop_guide_global_x())
 
 
-func _start_ingestion_tutorial_sequence() -> void:
-	ingestion_tutorial_active = true
+func show_first_ingestion_swallow_tutorial() -> void:
+	if (
+		ingestion_swallow_tutorial_shown
+		or level_data == null
+		or not level_data.ingestion_tutorial_enabled
+		or not battle_running
+		or level_finished
+	):
+		return
+	ingestion_swallow_tutorial_shown = true
 	merge_game.set_input_enabled(false)
-	await get_tree().create_timer(0.35).timeout
-	if not is_inside_tree() or not battle_running or level_finished:
-		_clear_ingestion_tutorial_preview()
+	await get_tree().create_timer(1.0, true, false, true).timeout
+	if not is_inside_tree() or not battle_running or level_finished or not right_fighter.is_alive():
 		return
-	_show_ingestion_response_tutorial()
-
-
-func _show_ingestion_response_tutorial() -> void:
-	if not is_inside_tree() or not battle_running or level_finished:
-		_clear_ingestion_tutorial_preview()
-		return
-	var demo_level := 2
-	right_fighter.set_visual_override(right_fighter.character_data.ingestion_swallowed_sprite)
-	right_fighter.show_ingestion_glow(BallCatalogClass.get_ball(demo_level).glow_color)
-	right_status_effects.remove_effect(EnemyAttackEffect.effect_id)
-	right_status_effects.remove_effect(IngestionEffect.effect_id)
-	right_status_effects.set_effect(IngestionHealEffect, 4)
-	right_applied_status_effects.set_effect(IngestionDurabilityEffect, 0)
-	right_bar.set_durability(40, 40)
-	var response_tutorial := StageIntroSequenceClass.new()
-	add_child(response_tutorial)
-	response_tutorial.sequence_finished.connect(
-		_show_ingestion_success_tutorial,
-		CONNECT_ONE_SHOT
+	right_bar.start_durability_glow()
+	var tutorial := StageIntroSequenceClass.new()
+	add_child(tutorial)
+	tutorial.play_custom_box_spotlight_tutorial(
+		"구슬을 삼켰어요!\n보호막을 뚫으면 뱉을거에요!",
+		Vector2(536.0, 145.0),
+		Vector2(140.0, 29.0),
+		false,
+		235.0,
+		true
 	)
-	response_tutorial.play_custom_spotlight_tutorial(
-		"적이 방울을 완전히 삼키기 전에\n공격해 내구도를 모두 깎으세요.",
-		Vector2(535.0, 230.0),
-		200.0,
-		true,
-		-1.0,
-		Vector2(644.0, 145.0)
-	)
-
-
-func _show_ingestion_success_tutorial() -> void:
-	if not is_inside_tree() or not battle_running or level_finished:
-		_clear_ingestion_tutorial_preview()
-		return
-	right_fighter.clear_visual_override()
-	right_fighter.hide_ingestion_glow()
-	right_bar.clear_durability()
-	right_status_effects.remove_effect(IngestionHealEffect.effect_id)
-	right_applied_status_effects.remove_effect(IngestionDurabilityEffect.effect_id)
-	right_status_effects.set_effect(EnemyAttackEffect, right_fighter.enemy_attack_drop_interval)
-	right_applied_status_effects.set_effect(WeaknessEffect, 2)
-	ingestion_tutorial_return_ball = merge_game.return_ingested_ball_to_board(
-		2,
-		right_fighter.get_ingestion_mouth_global_position()
-	)
-	var success_tutorial := StageIntroSequenceClass.new()
-	add_child(success_tutorial)
-	success_tutorial.sequence_finished.connect(
-		_finish_ingestion_tutorial,
-		CONNECT_ONE_SHOT
-	)
-	success_tutorial.play_custom_box_spotlight_tutorial(
-		"포식을 저지하면\n삼켜진 우파루파 방울이 돌아오고\n몬스터가 약화됩니다.",
-		Vector2(360.0, 650.0),
-		Vector2(310.0, 560.0),
-		true,
-		650.0,
-		false
-	)
-
-
-func _finish_ingestion_tutorial() -> void:
-	_clear_ingestion_tutorial_preview()
-	if battle_running and not level_finished:
-		merge_game.set_input_enabled(true)
-
-
-func _clear_ingestion_tutorial_preview() -> void:
-	if is_instance_valid(ingestion_tutorial_return_ball):
-		ingestion_tutorial_return_ball.queue_free()
-	ingestion_tutorial_return_ball = null
-	right_fighter.clear_visual_override()
-	right_fighter.hide_ingestion_glow()
-	right_status_effects.remove_effect(IngestionEffect.effect_id)
-	right_status_effects.remove_effect(IngestionHealEffect.effect_id)
-	right_applied_status_effects.remove_effect(IngestionDurabilityEffect.effect_id)
-	right_applied_status_effects.remove_effect(WeaknessEffect.effect_id)
-	right_bar.clear_durability()
-	right_bar.set_health(right_fighter.current_health, right_fighter.max_health)
-	monster_action_controller._update_ui()
-	ingestion_tutorial_active = false
+	await tutorial.sequence_finished
 
 
 func _on_initial_tutorial_sequence_finished() -> void:

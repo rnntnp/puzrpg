@@ -33,9 +33,9 @@ shader = ExtResource("6_usfxy")
 shader_parameter/shell_mask_texture = ExtResource("7_qx4ch")
 shader_parameter/edge_clear_texel_width = 9.0
 
-[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_rnwhy"]
-radius = 182.0
-height = 384.0
+[sub_resource type="CapsuleShape2D" id="CapsuleShape_visual_hitbox"]
+radius = 197.0
+height = 394.0
 
 [node name="BallVisual11" unique_id=1993655266 instance=ExtResource("1_base")]
 tint_color = Color(1, 0.68, 0.08, 1)
@@ -65,5 +65,6 @@ position = Vector2(13, 0)
 position = Vector2(13, 0)
 
 [node name="HitboxBody" parent="HitboxAuthoring" index="0"]
-position = Vector2(-13, 5)
-shape = SubResource("CapsuleShape2D_rnwhy")
+position = Vector2(-11, 0)
+rotation = 1.5707963
+shape = SubResource("CapsuleShape_visual_hitbox")

@@ -15,6 +15,9 @@ shader_parameter/outline_color = Color(0.6329347, 0.8999999, 0.5909816, 0.95)
 shader_parameter/outline_color_texel_width = 3.888372093023256
 shader_parameter/outline_total_texel_width = 5.832558139534884
 shader_parameter/outline_expand_texels = 6.0
+shader_parameter/frozen_enabled = false
+shader_parameter/frozen_outer_color = Color(1, 1, 1, 1)
+shader_parameter/frozen_outer_texel_width = 6.804651162790698
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_yfw66"]
 resource_local_to_scene = true
@@ -30,6 +33,9 @@ shader_parameter/outline_color = Color(0.3797608, 0.5399999, 0.35458896, 0.95)
 shader_parameter/outline_color_texel_width = 4.0
 shader_parameter/outline_total_texel_width = 6.0
 shader_parameter/outline_expand_texels = 6.0
+shader_parameter/frozen_enabled = false
+shader_parameter/frozen_outer_color = Color(1, 1, 1, 1)
+shader_parameter/frozen_outer_texel_width = 12.0
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_xf3ux"]
 resource_local_to_scene = true
@@ -37,8 +43,9 @@ shader = ExtResource("5_yfw66")
 shader_parameter/shell_mask_texture = ExtResource("6_xf3ux")
 shader_parameter/edge_clear_texel_width = 9.0
 
-[sub_resource type="CircleShape2D" id="CircleShape_hitbox_local"]
-radius = 203.02217
+[sub_resource type="CapsuleShape2D" id="CapsuleShape_visual_hitbox"]
+radius = 182.457
+height = 376.2
 
 [node name="BallVisual02" unique_id=1728199311 instance=ExtResource("1_base")]
 tint_color = Color(0.7032608, 0.99999994, 0.65664625, 1)
@@ -83,5 +90,6 @@ position = Vector2(17, 0)
 position = Vector2(17, 0)
 
 [node name="HitboxBody" parent="HitboxAuthoring" index="0"]
-position = Vector2(-12, 0)
-shape = SubResource("CircleShape_hitbox_local")
+position = Vector2(-14, 0)
+rotation = 1.5707963
+shape = SubResource("CapsuleShape_visual_hitbox")

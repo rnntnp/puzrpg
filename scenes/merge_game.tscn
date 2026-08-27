@@ -14,10 +14,10 @@
 [ext_resource type="AudioStream" path="res://assets/audio/bgm/marimba_game_music_playful_tropical_jungle_puzzle.mp3" id="12_bgm"]
 
 [sub_resource type="RectangleShape2D" id="wall"]
-size = Vector2(6, 869.5)
+size = Vector2(32, 869.5)
 
 [sub_resource type="RectangleShape2D" id="floor"]
-size = Vector2(596, 4)
+size = Vector2(596, 32)
 
 [sub_resource type="RectangleShape2D" id="trap_floor"]
 size = Vector2(176, 8)
@@ -131,21 +131,21 @@ script = ExtResource("2")
 position = Vector2(90, 425)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="LeftWall" unique_id=1771649085]
-position = Vector2(0, 6.5)
+position = Vector2(-13, 6.5)
 shape = SubResource("wall")
 
 [node name="RightWall" type="StaticBody2D" parent="." unique_id=199110667]
 position = Vector2(630, 425)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="RightWall" unique_id=2099721541]
-position = Vector2(59, 6)
+position = Vector2(72, 6)
 shape = SubResource("wall")
 
 [node name="Floor" type="StaticBody2D" parent="." unique_id=1965182260]
 position = Vector2(360, 848)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Floor" unique_id=61497292]
-position = Vector2(30, 16)
+position = Vector2(30, 30)
 shape = SubResource("floor")
 
 [node name="TrapdoorFloor" type="Node2D" parent="." unique_id=788757098]

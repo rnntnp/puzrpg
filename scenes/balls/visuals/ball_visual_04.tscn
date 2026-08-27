@@ -7,7 +7,6 @@
 [ext_resource type="Texture2D" uid="uid://pkv5pi8oux0d" path="res://assets/balls/generated/mask_candidates/02_four_petal.png" id="5_shape_outline"]
 [ext_resource type="Shader" uid="uid://b3hciqwdmjwqs" path="res://shaders/ball_shell_shadow_inset.gdshader" id="6_jlkj4"]
 [ext_resource type="Texture2D" uid="uid://bwjasioimwasf" path="res://assets/balls/generated/orb_shell_candidates/candidate_06/orb_06_fill.png" id="7_df660"]
-[ext_resource type="Script" path="res://scripts/parametric_ball_hitbox_2d.gd" id="8_parametric_hitbox"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_fs1qp"]
 resource_local_to_scene = true
@@ -33,6 +32,10 @@ shader = ExtResource("6_jlkj4")
 shader_parameter/shell_mask_texture = ExtResource("7_df660")
 shader_parameter/edge_clear_texel_width = 9.0
 
+[sub_resource type="CapsuleShape2D" id="CapsuleShape_visual_hitbox"]
+radius = 170.7641
+height = 352.09092
+
 [node name="BallVisual04" unique_id=513947279 instance=ExtResource("1_base")]
 tint_color = Color(1, 0.74575925, 0.65769434, 1)
 
@@ -50,6 +53,7 @@ scale = Vector2(0.81818175, 0.81818175)
 texture = ExtResource("2_axolotl_source")
 
 [node name="ShellShadow" parent="." index="3"]
+visible = false
 modulate = Color(0.38, 0.28338853, 0.24992384, 1)
 material = SubResource("ShaderMaterial_df660")
 position = Vector2(18, 0)
@@ -58,9 +62,6 @@ position = Vector2(18, 0)
 position = Vector2(8, 25)
 scale = Vector2(1, 0.8803828)
 
-[node name="HitboxAuthoring" parent="." index="5"]
-position = Vector2(0, 0)
-script = ExtResource("8_parametric_hitbox")
-outline_texture = ExtResource("5_shape_outline")
-
 [node name="HitboxBody" parent="HitboxAuthoring" index="0"]
+rotation = 1.5707963
+shape = SubResource("CapsuleShape_visual_hitbox")

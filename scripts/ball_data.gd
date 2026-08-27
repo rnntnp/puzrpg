@@ -22,6 +22,8 @@ enum BallShape {
 @export_category("물리")
 @export var collision_shape: Shape2D
 @export_range(0.5, 1.2, 0.01) var hitbox_scale: float = 0.9
+## false면 비주얼 씬의 외곽선 대신 collision_shape의 단순 도형을 사용한다.
+@export var use_visual_collision_shape := true
 
 @export_category("머지")
 @export_range(0, 99999, 1) var merge_score: int = 10

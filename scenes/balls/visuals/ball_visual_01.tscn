@@ -45,8 +45,9 @@ shader = ExtResource("4_tmdmu")
 shader_parameter/shell_mask_texture = ExtResource("5_kr6e7")
 shader_parameter/edge_clear_texel_width = 9.0
 
-[sub_resource type="ConvexPolygonShape2D" id="ConvexPolygonShape_puffy_diamond"]
-points = PackedVector2Array(159.6, 5, 155.357, 23.937, 142.935, 50.17, 123.236, 78.073, 97.725, 104.75, 68.38, 127.942, 37.687, 145.85, 8.83, 157.143, -12, 161, -32.83, 157.143, -61.687, 145.85, -92.38, 127.942, -121.725, 104.75, -147.236, 78.073, -166.935, 50.17, -179.357, 23.937, -183.6, 5, -179.357, -13.937, -166.935, -40.17, -147.236, -68.073, -121.725, -94.75, -92.38, -117.942, -61.687, -135.85, -32.83, -147.143, -12, -151, 8.83, -147.143, 37.687, -135.85, 68.38, -117.942, 97.725, -94.75, 123.236, -68.073, 142.935, -40.17, 155.357, -13.937)
+[sub_resource type="CapsuleShape2D" id="CapsuleShape_visual_hitbox"]
+radius = 154.0
+height = 348.0
 
 [node name="BallVisual01" unique_id=557625348 instance=ExtResource("1_base")]
 tint_color = Color(0.57713574, 0.8445652, 0.99999994, 1)
@@ -80,7 +81,9 @@ scale = Vector2(1, 0.8875598)
 position = Vector2(16, 0)
 
 [node name="HitboxBody" parent="HitboxAuthoring" index="0"]
-shape = SubResource("ConvexPolygonShape_puffy_diamond")
+position = Vector2(-11, 8)
+rotation = 1.5707963
+shape = SubResource("CapsuleShape_visual_hitbox")
 
 [node name="HitboxLeftLobe" parent="HitboxAuthoring" index="1"]
 position = Vector2(-194.99998, -76)

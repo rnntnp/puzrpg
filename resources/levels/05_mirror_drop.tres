@@ -13,6 +13,7 @@
 [ext_resource type="Texture2D" uid="uid://csxml3k8xs64n" path="res://assets/backgrounds/generated/mirror_vanity_charcoal_flat_v1_top.png" id="11_background_top"]
 [ext_resource type="Texture2D" uid="uid://d3xucj48ucipy" path="res://assets/backgrounds/generated/mirror_vanity_charcoal_flat_v1_middle.png" id="12_background_middle"]
 [ext_resource type="Texture2D" uid="uid://bhb2drq0k00q4" path="res://assets/backgrounds/generated/mirror_vanity_charcoal_flat_v1_bottom.png" id="13_background_bottom"]
+[ext_resource type="AudioStream" uid="uid://cce2puxtxqr00" path="res://assets/audio/bgm/magic_puzzle_in_game_1_bpm110.mp3" id="14_battle_music"]
 
 [sub_resource type="Resource" id="MirrorDropBossConfig"]
 script = ExtResource("10_config")
@@ -35,7 +36,10 @@ battle_background = ExtResource("6")
 battle_background_top = ExtResource("11_background_top")
 battle_background_middle = ExtResource("12_background_middle")
 battle_background_bottom = ExtResource("13_background_bottom")
+battle_music = ExtResource("14_battle_music")
 level_select_preview = ExtResource("7")
+show_battle_status_label = false
+show_gimmick_status_labels = false
 stage_gimmick_icon = ExtResource("8")
 stage_gimmick_name = "반사"
 reward_name = "거울 보물상자"
@@ -43,4 +47,3 @@ player_character = ExtResource("2")
 enemies = Array[ExtResource("4")]([ExtResource("3")])
 test_gimmick = SubResource("Gimmick")
 ball_drop_time_limit = -1.0
-ball_physics_speed = 2.0

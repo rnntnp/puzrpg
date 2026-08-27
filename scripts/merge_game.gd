@@ -96,7 +96,7 @@ var drop_time_remaining := 5.0
 var auto_drop_enabled := true
 var max_level_index: int = BallCatalogClass.get_max_level_index()
 var physics_speed_multiplier := 1.0
-var merge_push_force := 90.0
+var merge_push_force := 110.0
 var chain_merge_delay := 0.1
 var drop_sequence_active := false
 var drop_sequence_id := 0
@@ -143,7 +143,6 @@ func _ready() -> void:
 	autoplay_bot.set_enabled(OS.is_debug_build() and GameSession.developer_autoplay_enabled)
 	_reset_ball_queue()
 
-
 func _sync_board_geometry_from_collisions() -> void:
 	var left_rect := _collision_rect_in_local_space(left_wall_shape)
 	var right_rect := _collision_rect_in_local_space(right_wall_shape)
@@ -168,6 +167,17 @@ func _sync_board_geometry_from_collisions() -> void:
 	aim_x = (board_inner_left + board_inner_right) * 0.5
 	danger_line.configure(board_inner_left, board_inner_right, danger_line_y)
 	_update_preview_position()
+
+
+func set_background_music(stream: AudioStream) -> void:
+	if stream == null or not is_instance_valid(background_music):
+		return
+	if background_music.stream == stream and background_music.playing:
+		return
+	background_music.stop()
+	background_music.stream = stream
+	background_music.stream.set("loop", true)
+	background_music.play()
 
 
 func _collision_rect_in_local_space(collision: CollisionShape2D) -> Rect2:
@@ -197,14 +207,18 @@ func _apply_physics_data() -> void:
 	var wall_material := PhysicsMaterial.new()
 	wall_material.friction = physics_data.wall_friction
 	wall_material.bounce = physics_data.wall_bounce
-	wall_material.rough = true
+	wall_material.absorbent = false
+	wall_material.rough = false
 	left_wall.physics_material_override = wall_material
 	right_wall.physics_material_override = wall_material
 	var floor_material := PhysicsMaterial.new()
 	floor_material.friction = physics_data.floor_friction
 	floor_material.bounce = physics_data.floor_bounce
-	floor_material.rough = true
+	floor_material.absorbent = false
+	floor_material.rough = false
 	floor_body.physics_material_override = floor_material
+	for segment in trapdoor_segments:
+		segment.physics_material_override = floor_material
 
 func can_accept_autoplay_drop() -> bool:
 	return can_drop and not input_locked and not is_game_over
@@ -704,7 +718,7 @@ func configure(
 	time_limit: float,
 	max_ball_level: int,
 	physics_speed: float = 1.0,
-	push_force: float = 90.0,
+	push_force: float = 110.0,
 	hit_stop_time_scale: float = 0.25,
 	hit_stop_duration: float = 0.12,
 	chain_delay: float = 0.1
@@ -847,26 +861,15 @@ func _spawn_ball(at: Vector2, level: int, contact_sequence_id: int = -1):
 	if physics_data != null:
 		var ball_material := PhysicsMaterial.new()
 		ball_material.friction = physics_data.ball_friction
-		ball_material.rough = true
+		ball_material.bounce = physics_data.ball_bounce
+		ball_material.absorbent = false
+		ball_material.rough = false
 		ball.physics_material_override = ball_material
+		ball.linear_damp_mode = RigidBody2D.DAMP_MODE_REPLACE
+		ball.angular_damp_mode = RigidBody2D.DAMP_MODE_REPLACE
 		ball.linear_damp = physics_data.ball_linear_damp
 		ball.angular_damp = physics_data.ball_angular_damp
-		ball.configure_sleep_assist(
-			physics_data.sleep_assist_enabled,
-			physics_data.sleep_assist_settle_time,
-			physics_data.sleep_assist_max_displacement
-		)
-		ball.configure_contact_stabilization(
-			physics_data.contact_horizontal_damp,
-			physics_data.contact_angular_damp,
-			physics_data.contact_max_angular_speed
-		)
-		ball.configure_micro_wake_guard(
-			physics_data.micro_wake_guard_enabled,
-			physics_data.micro_wake_grace_time,
-			physics_data.micro_wake_linear_threshold,
-			physics_data.micro_wake_angular_threshold
-		)
+		ball.can_sleep = physics_data.ball_can_sleep
 	_enable_ball_ccd_after_spawn(ball)
 	var global_left := to_global(Vector2(board_inner_left, 0.0)).x
 	var global_right := to_global(Vector2(board_inner_right, 0.0)).x
@@ -897,7 +900,6 @@ func _on_dropped_ball_first_contact(_ball: MergeBall, sequence_id: int, original
 	if auto_drop_enabled:
 		drop_time_remaining = drop_time_limit
 	_update_drop_preview_visibility()
-
 func _advance_ball_queue() -> void:
 	current_level = next_level
 	next_level = queued_levels.pop_front() if not queued_levels.is_empty() else _random_drop_level()
@@ -942,6 +944,7 @@ func _on_merge_requested(first, second) -> void:
 		return
 	var at: Vector2 = (first.position + second.position) * 0.5
 	var level: int = first.merge_level + 1
+	var inherited_linear_velocity: Vector2 = (first.linear_velocity + second.linear_velocity) * 0.5
 	var carries_ingestion_target: bool = first.ingestion_marked or second.ingestion_marked
 	var ice_target_count := int(first.ice_targeted) + int(second.ice_targeted)
 	var involved_cursed: bool = first.is_merge_cursed or second.is_merge_cursed
@@ -1028,7 +1031,8 @@ func _on_merge_requested(first, second) -> void:
 		source_ids,
 		attack_combo_count,
 		result_external_merge_token,
-		is_external_merge
+		is_external_merge,
+		inherited_linear_velocity
 	)
 
 
@@ -1052,10 +1056,12 @@ func _spawn_merged_ball(
 	source_ids: Array[int] = [],
 	merge_combo_count: int = 1,
 	external_merge_token: int = 0,
-	is_external_merge := false
+	is_external_merge := false,
+	inherited_linear_velocity := Vector2.ZERO
 ) -> void:
 	var merged_ball = _spawn_ball(at, level)
 	if is_instance_valid(merged_ball):
+		merged_ball.linear_velocity = inherited_linear_velocity
 		merged_ball.set_external_merge_token(external_merge_token)
 	if carries_ingestion_target and is_instance_valid(merged_ball):
 		merged_ball.set_ingestion_marked(true)
@@ -1068,9 +1074,10 @@ func _spawn_merged_ball(
 			external_merge_sfx_pitch_scale if is_external_merge else 1.0
 		)
 		merge_completed.emit(merged_ball)
-	if not is_instance_valid(merged_ball) or merge_push_force <= 0.0:
+	if not is_instance_valid(merged_ball):
 		return
-	_apply_merge_push(at, merged_ball)
+	if merge_push_force > 0.0:
+		_apply_merge_push(at, merged_ball)
 
 
 func _play_merge_sfx(merge_combo_count: int, pitch_multiplier := 1.0) -> void:
@@ -1103,6 +1110,7 @@ func _apply_merge_push(origin: Vector2, merged_ball: MergeBall) -> void:
 		var falloff := 1.0 - distance / MERGE_PUSH_RADIUS
 		var impulse := offset.normalized() * merge_push_force * falloff * ball.mass
 		ball.apply_central_impulse(impulse)
+
 
 func _update_danger_state(delta: float) -> void:
 	if danger_suppression_remaining > 0.0:
@@ -1178,10 +1186,18 @@ func _refresh_danger_visuals(overflow_balls: Array[MergeBall]) -> void:
 	danger_line.visible = danger_state != DangerLineClass.State.SAFE and danger_suppression_remaining <= 0.0
 
 func _has_moving_balls() -> bool:
+	var linear_threshold := 8.0
+	var angular_threshold := 0.2
+	if physics_data != null:
+		linear_threshold = physics_data.settled_linear_speed
+		angular_threshold = physics_data.settled_angular_speed
 	for child in balls.get_children():
 		if child.merge_locked:
 			continue
-		if not child.sleeping and (child.linear_velocity.length() > 8.0 or absf(child.angular_velocity) > 0.2):
+		if not child.sleeping and (
+			child.linear_velocity.length() > linear_threshold
+			or absf(child.angular_velocity) > angular_threshold
+		):
 			return true
 	return false
 

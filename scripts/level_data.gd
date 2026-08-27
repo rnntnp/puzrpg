@@ -12,10 +12,15 @@ const TestGimmickDataClass = preload("res://scripts/test_gimmick_data.gd")
 @export var battle_background_top: Texture2D
 @export var battle_background_middle: Texture2D
 @export var battle_background_bottom: Texture2D
+@export var battle_music: AudioStream
 ## 720px 기준 상단 고정 레이어의 표시 높이다.
 @export_range(100.0, 900.0, 1.0) var battle_background_top_height: float = 508.0
 @export_group("")
 @export var level_select_preview: Texture2D
+
+@export_category("전투 UI")
+@export var show_battle_status_label := true
+@export var show_gimmick_status_labels := true
 
 @export_category("레벨 선택 정보")
 @export_range(1, 11, 1) var recommended_ball_level: int = 5
@@ -39,7 +44,7 @@ const TestGimmickDataClass = preload("res://scripts/test_gimmick_data.gd")
 @export_multiline var tutorial_turn_message: String = ""
 ## 적 공격을 본 뒤, 방울 진화표와 함께 표시하는 안내다.
 @export var tutorial_evolution_messages: PackedStringArray = []
-## 포식 스테이지에 진입할 때 포식 대상 지정 안내를 표시한다.
+## 첫 실제 포식이 완료된 뒤 보호막 대응 안내를 한 번 표시한다.
 @export var ingestion_tutorial_enabled := false
 ## 0은 표시 단계 1이다. 음수면 기존 랜덤 드롭 풀을 사용한다.
 @export_range(-1, 10, 1) var fixed_drop_level: int = -1
@@ -52,10 +57,10 @@ const TestGimmickDataClass = preload("res://scripts/test_gimmick_data.gd")
 ## 음수로 설정하면 자동 낙하와 시간제한을 사용하지 않는다.
 @export var ball_drop_time_limit: float = 5.0
 @export_range(1, 11, 1) var max_ball_level: int = 11
-## 1.0은 기본 속도이며, 2.4는 낙하 시간이 대략 2.4배 빨라진다.
-@export_range(0.5, 3.0, 0.1) var ball_physics_speed: float = 2.4
-## 공이 합쳐질 때 주변 공을 밀어내는 속도 변화량이다. 0이면 밀어내지 않는다.
-@export_range(0.0, 500.0, 5.0) var merge_push_force: float = 90.0
+## 1.0은 물리 기준 속도이며, 현재 전체 레벨 기본 낙하 배속은 1.2다.
+@export_range(0.5, 3.0, 0.1) var ball_physics_speed: float = 1.2
+## 합성 지점에서 주변 공으로 퍼지는 짧은 충격파의 세기다. 0이면 비활성화한다.
+@export_range(0.0, 500.0, 5.0) var merge_push_force: float = 110.0
 ## 합성 순간의 전체 게임 배속. 1.0이면 슬로모션을 사용하지 않는다.
 @export_range(0.05, 1.0, 0.05) var merge_hit_stop_time_scale: float = 0.25
 ## 슬로모션이 유지되는 실제 시간(초).

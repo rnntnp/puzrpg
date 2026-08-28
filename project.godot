@@ -54,12 +54,7 @@ NODE.JS NOT FOUND — The MCP server bridge requires Node.js 22+. Download it fr
 
 [physics]
 
-common/physics_ticks_per_second=120
 3d/physics_engine="Jolt Physics"
-2d/sleep_threshold_linear=3.0
-2d/sleep_threshold_angular=0.1
-2d/time_before_sleep=0.75
-2d/solver/solver_iterations=24
 
 [rendering]
 

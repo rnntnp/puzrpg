@@ -65,12 +65,17 @@ func setup(level: int, physics_speed: float = 1.0) -> void:
 		ball_data.glow_color,
 		ball_data.glow_strength
 	)
-	# 수박게임식으로 단계와 크기에 관계없이 모든 기본 공의 질량을 동일하게 둔다.
+	# 물리 Resource가 단계별 질량을 적용하기 전의 안전한 기본값이다.
 	base_mass = 1.0
 	mass = base_mass
 	# 자유 낙하 시간은 중력의 제곱근에 반비례하므로 배속의 제곱을 적용한다.
 	gravity_scale = physics_speed * physics_speed
 	queue_redraw()
+
+
+func set_base_mass(value: float) -> void:
+	base_mass = maxf(0.01, value)
+	_refresh_mass()
 
 
 func _setup_visual(diameter: float) -> Node2D:

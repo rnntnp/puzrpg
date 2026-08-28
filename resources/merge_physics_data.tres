@@ -4,9 +4,15 @@
 
 [resource]
 script = ExtResource("1")
+wall_bounce = 0.0
 floor_friction = 0.44
-ball_friction = 0.43
+floor_bounce = 0.0
+ball_friction = 0.21
+ball_bounce = 0.0
 ball_linear_damp = 0.3
-ball_angular_damp = 0.3
+ball_angular_damp = 12.58
+use_stage_scaled_mass = true
+base_ball_mass = 1.0
+mass_per_stage = 0.1
 settled_linear_speed = 3.0
 settled_angular_speed = 0.1

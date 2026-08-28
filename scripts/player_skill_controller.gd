@@ -108,7 +108,12 @@ func cleanup() -> void:
 
 
 func _on_player_merge_registered(base_points: int, _result_level: int) -> void:
-	if not configured or base_points <= 0 or not battle.battle_running or not player.is_alive():
+	if (
+		not configured
+		or base_points <= 0
+		or (not battle.battle_running and not battle.enemy_transition_active)
+		or not player.is_alive()
+	):
 		return
 	var was_ready := gauge_current >= skill_data.gauge_max
 	gauge_current = mini(skill_data.gauge_max, gauge_current + base_points)

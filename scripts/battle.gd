@@ -56,6 +56,7 @@ var tutorial_prompt_tween: Tween
 var ingestion_swallow_tutorial_shown := false
 var enemy_transition_active := false
 var pending_merge_attacks: Array[Dictionary] = []
+var transition_drop_sequence_ids: Dictionary = {}
 var result_max_combo := 0
 var result_damage_dealt := 0
 var playtest_timing_recorder: PlaytestTimingRecorderClass
@@ -97,6 +98,7 @@ func _load_level() -> void:
 	level_finished = false
 	enemy_transition_active = false
 	pending_merge_attacks.clear()
+	transition_drop_sequence_ids.clear()
 	result_max_combo = 0
 	result_damage_dealt = 0
 	playtest_timing_recorder.start_attempt(
@@ -191,6 +193,7 @@ func fail_gimmick_level(reason: String) -> void:
 	battle_running = false
 	enemy_transition_active = false
 	pending_merge_attacks.clear()
+	transition_drop_sequence_ids.clear()
 	merge_game.set_input_enabled(false)
 	status_label.text = reason
 	status_label.modulate = Color("#ff6b6b")
@@ -340,7 +343,10 @@ func play_enemy_durability_hit_feedback(damage: int) -> void:
 	_play_damage_sfx(enemy_hit_sfx, damage, right_fighter.max_health, -4.0)
 
 
-func _on_ball_dropped() -> void:
+func _on_ball_dropped(completed_drop_sequence_id: int) -> void:
+	if transition_drop_sequence_ids.has(completed_drop_sequence_id):
+		transition_drop_sequence_ids.erase(completed_drop_sequence_id)
+		return
 	if not battle_running or not right_fighter.is_alive() or not left_fighter.is_alive():
 		return
 	monster_action_controller.on_ball_dropped()
@@ -422,7 +428,10 @@ func _on_enemy_intent_tutorial_finished() -> void:
 
 
 func _on_tutorial_ball_dropped() -> void:
-	monster_action_controller.on_player_ball_started()
+	if enemy_transition_active:
+		transition_drop_sequence_ids[merge_game.drop_sequence_id] = true
+	if battle_running and right_fighter.is_alive() and left_fighter.is_alive():
+		monster_action_controller.on_player_ball_started()
 	if tutorial_combo_demo_active:
 		_hide_drop_prompt()
 		merge_game.set_input_enabled(false)
@@ -689,24 +698,42 @@ func _on_merge_projectile_hit(
 
 
 func _on_fighter_defeated(fighter: Fighter) -> void:
+	var defeated_enemy_has_successor := (
+		fighter == right_fighter
+		and current_enemy_index + 1 < level_data.enemies.size()
+	)
 	if fighter == right_fighter:
 		playtest_timing_recorder.record_enemy_defeated()
 	else:
 		playtest_timing_recorder.finish_attempt("player_defeated")
 	battle_running = false
-	merge_game.set_input_enabled(false)
 	status_label.text = "적 처치!" if fighter == right_fighter else "전투 패배"
 	if fighter == right_fighter:
-		enemy_transition_active = current_enemy_index + 1 < level_data.enemies.size()
+		enemy_transition_active = defeated_enemy_has_successor
 		if not enemy_transition_active:
 			pending_merge_attacks.clear()
 		monster_action_controller.on_enemy_defeat_started()
-	await fighter.play_defeat_animation()
-	if fighter == left_fighter:
+		if enemy_transition_active:
+			if merge_game.drop_sequence_active:
+				transition_drop_sequence_ids[merge_game.drop_sequence_id] = true
+			if level_data.test_gimmick == null or not test_gimmick_controller.busy:
+				merge_game.set_input_enabled(true)
+		else:
+			merge_game.set_input_enabled(false)
+	else:
 		enemy_transition_active = false
 		pending_merge_attacks.clear()
+		transition_drop_sequence_ids.clear()
+		merge_game.set_input_enabled(false)
+	await fighter.play_defeat_animation()
+	if fighter == left_fighter:
 		GameSession.set_battle_result(false, "%s 도전 실패" % level_data.level_name, _get_result_stats(false))
 		get_tree().change_scene_to_file("res://scenes/battle_result.tscn")
+		return
+	if (
+		not left_fighter.is_alive()
+		or (defeated_enemy_has_successor and not enemy_transition_active)
+	):
 		return
 	player_skill_controller.on_enemy_defeated()
 	monster_action_controller.on_enemy_defeated()
@@ -722,6 +749,8 @@ func _on_fighter_defeated(fighter: Fighter) -> void:
 	if current_enemy_index < level_data.enemies.size():
 		status_label.text = "다음 적 등장!"
 		await get_tree().create_timer(0.7).timeout
+		if not is_inside_tree() or not left_fighter.is_alive() or not enemy_transition_active:
+			return
 		_load_enemy(current_enemy_index)
 		if level_data.test_gimmick == null or not test_gimmick_controller.busy:
 			merge_game.set_input_enabled(true)
@@ -732,6 +761,7 @@ func _on_fighter_defeated(fighter: Fighter) -> void:
 
 	enemy_transition_active = false
 	pending_merge_attacks.clear()
+	transition_drop_sequence_ids.clear()
 	level_finished = true
 	status_label.text = "모든 적 처치!"
 	await get_tree().create_timer(0.4).timeout
@@ -745,6 +775,7 @@ func _on_merge_game_over() -> void:
 	battle_running = false
 	enemy_transition_active = false
 	pending_merge_attacks.clear()
+	transition_drop_sequence_ids.clear()
 	GameSession.set_battle_result(false, "%s · 머지 보드 게임오버" % level_data.level_name, _get_result_stats(false))
 	get_tree().change_scene_to_file("res://scenes/battle_result.tscn")
 
@@ -758,7 +789,7 @@ func _get_result_stats(won: bool) -> Dictionary:
 
 
 func _on_overflow_triggered(damage: int) -> void:
-	if not battle_running or not left_fighter.is_alive():
+	if (not battle_running and not enemy_transition_active) or not left_fighter.is_alive():
 		return
 	status_label.text = "오버플로우! HP -%d" % damage
 	status_label.modulate = Color("#ff6677")

@@ -11,7 +11,7 @@ signal merge_attack_requested(
 	drop_sequence_id: int
 )
 signal ball_dropped
-signal turn_completed
+signal turn_completed(drop_sequence_id: int)
 signal overflow_triggered(damage: int)
 signal ingestion_target_replaced(ball: MergeBall)
 signal ice_telegraph_merge_resolved(result_ball: MergeBall, source_ids: Array[int], marked_source_count: int)
@@ -847,7 +847,7 @@ func _finish_drop_sequence(sequence_id: int) -> void:
 		# 적 턴은 합성/연쇄 합성이 끝난 시점에 넘긴다. 공 전체 정지는 투하 UI 복구에만 사용한다.
 		if not turn_was_emitted and (turn_is_ready or exceeded_max_wait):
 			turn_was_emitted = true
-			turn_completed.emit()
+			turn_completed.emit(sequence_id)
 		if (turn_is_ready and not _has_moving_balls()) or exceeded_max_wait:
 			break
 		await get_tree().physics_frame
@@ -860,7 +860,7 @@ func _finish_drop_sequence(sequence_id: int) -> void:
 		drop_time_remaining = drop_time_limit
 	_update_drop_preview_visibility()
 	if not turn_was_emitted:
-		turn_completed.emit()
+		turn_completed.emit(sequence_id)
 
 func _spawn_ball(at: Vector2, level: int, contact_sequence_id: int = -1):
 	if not is_inside_tree() or not is_instance_valid(balls) or balls.is_queued_for_deletion():
@@ -874,6 +874,8 @@ func _spawn_ball(at: Vector2, level: int, contact_sequence_id: int = -1):
 	ball.setup(level, physics_speed_multiplier)
 	ball.set_sealed_visual(sealed_stage_index >= 0 and ball.merge_level == sealed_stage_index)
 	if physics_data != null:
+		if not custom_physics_solver.is_active():
+			ball.set_base_mass(physics_data.get_ball_mass(ball.merge_level))
 		var ball_material := PhysicsMaterial.new()
 		ball_material.friction = physics_data.ball_friction
 		ball_material.bounce = physics_data.ball_bounce

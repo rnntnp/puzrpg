@@ -38,6 +38,7 @@ const CLOSED_REWARD_CHEST: Texture2D = preload("res://assets/ui/level_select_cas
 const OPEN_REWARD_CHEST: Texture2D = preload("res://assets/ui/results/open_reward_chest_pond.png")
 
 var viewed_level_index := 0
+var merge_loadout_panel: Control
 var pointer_start := Vector2.ZERO
 var pointer_tracking := false
 var page_tween: Tween
@@ -80,11 +81,23 @@ func _ready() -> void:
 	_update_money_display(GameSession.get_money())
 	_show_level(viewed_level_index)
 	_play_swipe_hint()
+	var loadout_button := Button.new()
+	loadout_button.text = "공 능력 편성"
+	loadout_button.position = Vector2(290, 15)
+	loadout_button.size = Vector2(235, 55)
+	loadout_button.add_theme_font_size_override("font_size", 22)
+	loadout_button.pressed.connect(_open_merge_loadout)
+	add_child(loadout_button)
 	if GameSession.developer_autoplay_enabled:
 		_auto_start_level()
 
 
 func _input(event: InputEvent) -> void:
+	if is_instance_valid(merge_loadout_panel):
+		if event.is_action_pressed("ui_cancel"):
+			_close_merge_loadout()
+			get_viewport().set_input_as_handled()
+		return
 	if license_overlay.visible:
 		if event.is_action_pressed("ui_cancel"):
 			_hide_license_overlay()
@@ -324,6 +337,50 @@ func _on_start_button_pressed() -> void:
 	if not GameSession.select_level(viewed_level_index):
 		return
 	start_button.disabled = true
+	get_tree().change_scene_to_file(battle_scene_path)
+
+
+func _open_merge_loadout() -> void:
+	if is_instance_valid(merge_loadout_panel):
+		return
+	GameSession.developer_autoplay_enabled = false
+	pointer_tracking = false
+	merge_loadout_panel = preload("res://scripts/ui/merge_loadout_panel.gd").new()
+	merge_loadout_panel.closed.connect(_close_merge_loadout)
+	merge_loadout_panel.play_requested.connect(_play_merge_loadout)
+	merge_loadout_panel.top_down_play_requested.connect(_play_top_down_merge_loadout)
+	merge_loadout_panel.flat_throw_play_requested.connect(_play_flat_throw_merge_loadout)
+	add_child(merge_loadout_panel)
+
+
+func _close_merge_loadout() -> void:
+	if is_instance_valid(merge_loadout_panel):
+		merge_loadout_panel.queue_free()
+	merge_loadout_panel = null
+	pointer_tracking = false
+
+
+func _play_merge_loadout() -> void:
+	var index: int = GameSession.level_paths.find("res://resources/levels/test_merge_loadout.tres")
+	if not GameSession.select_level(index):
+		return
+	GameSession.developer_autoplay_enabled = false
+	get_tree().change_scene_to_file(battle_scene_path)
+
+
+func _play_top_down_merge_loadout() -> void:
+	var index: int = GameSession.level_paths.find("res://resources/levels/test_top_down_aim_loadout.tres")
+	if not GameSession.select_level(index):
+		return
+	GameSession.developer_autoplay_enabled = false
+	get_tree().change_scene_to_file(battle_scene_path)
+
+
+func _play_flat_throw_merge_loadout() -> void:
+	var index: int = GameSession.level_paths.find("res://resources/levels/test_flat_throw_loadout.tres")
+	if not GameSession.select_level(index):
+		return
+	GameSession.developer_autoplay_enabled = false
 	get_tree().change_scene_to_file(battle_scene_path)
 
 

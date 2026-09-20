@@ -1,6 +1,14 @@
 class_name MergeGame
 extends Node2D
 
+# Optional, level-owned hooks; ordinary drop levels keep their existing behavior.
+var player_merge_damage_modifier := Callable()
+var player_merge_velocity_modifier := Callable()
+var wait_for_turn_before_next_input := false
+var turn_max_wait_msec_override := -1
+var settled_linear_speed_override := -1.0
+var settled_angular_speed_override := -1.0
+
 signal game_over
 signal merge_attack_requested(
 	damage: int,
@@ -817,8 +825,14 @@ func _update_preview_position() -> void:
 		preview_ball.position = Vector2(aim_x, drop_position_y)
 
 func _drop_ball(x: float) -> void:
+	launch_player_ball(Vector2(x, drop_position_y), Vector2.ZERO)
+
+
+func launch_player_ball(at: Vector2, velocity: Vector2) -> MergeBall:
 	if input_locked or is_game_over:
-		return
+		return null
+	if not can_drop:
+		return null
 	can_drop = false
 	_update_drop_preview_visibility()
 	is_aiming = false
@@ -830,10 +844,13 @@ func _drop_ball(x: float) -> void:
 	combo_points = 0
 	last_merge_msec = Time.get_ticks_msec()
 	next_merge_resolution_msec = last_merge_msec
-	_spawn_ball(Vector2(x, drop_position_y), current_level, current_sequence_id)
+	var launched_ball = _spawn_ball(at, current_level, current_sequence_id)
+	if is_instance_valid(launched_ball):
+		launched_ball.linear_velocity = velocity
 	ball_dropped.emit()
 	_advance_ball_queue()
 	_finish_drop_sequence(current_sequence_id)
+	return launched_ball as MergeBall
 
 func _finish_drop_sequence(sequence_id: int) -> void:
 	var sequence_started_msec := Time.get_ticks_msec()
@@ -842,7 +859,8 @@ func _finish_drop_sequence(sequence_id: int) -> void:
 	while is_inside_tree():
 		var now := Time.get_ticks_msec()
 		var merge_is_quiet := now - last_merge_msec >= COMBO_SETTLE_MSEC
-		var exceeded_max_wait := now - sequence_started_msec >= COMBO_MAX_WAIT_MSEC
+		var max_wait_msec := COMBO_MAX_WAIT_MSEC if turn_max_wait_msec_override < 0 else turn_max_wait_msec_override
+		var exceeded_max_wait := now - sequence_started_msec >= max_wait_msec
 		var turn_is_ready: bool = dropped_ball_has_landed and merge_is_quiet
 		# 적 턴은 합성/연쇄 합성이 끝난 시점에 넘긴다. 공 전체 정지는 투하 UI 복구에만 사용한다.
 		if not turn_was_emitted and (turn_is_ready or exceeded_max_wait):
@@ -856,6 +874,8 @@ func _finish_drop_sequence(sequence_id: int) -> void:
 	if sequence_id != drop_sequence_id:
 		return
 	drop_sequence_active = false
+	if wait_for_turn_before_next_input and not input_locked and not is_game_over:
+		can_drop = true
 	if auto_drop_enabled:
 		drop_time_remaining = drop_time_limit
 	_update_drop_preview_visibility()
@@ -915,7 +935,7 @@ func _on_dropped_ball_first_contact(_ball: MergeBall, sequence_id: int, original
 	dropped_ball_has_landed = true
 	landing_sfx.play()
 	player_ball_landed.emit(_ball.merge_level, original_drop_x)
-	if not input_locked:
+	if not input_locked and not wait_for_turn_before_next_input:
 		can_drop = true
 	if auto_drop_enabled:
 		drop_time_remaining = drop_time_limit
@@ -986,6 +1006,8 @@ func _on_merge_requested(first, second) -> void:
 	# window closes. Its next merge is enemy-owned once, but the merged result
 	# is deliberately normal so the hazard cannot propagate through a chain.
 	var is_external_merge := result_external_merge_token > 0 or involved_damage_background
+	if not is_external_merge and player_merge_velocity_modifier.is_valid():
+		inherited_linear_velocity = player_merge_velocity_modifier.call(inherited_linear_velocity)
 	if involved_damage_background:
 		result_external_merge_token = 0
 	first.lock_for_merge()
@@ -1025,6 +1047,8 @@ func _on_merge_requested(first, second) -> void:
 	merge_registered.emit(level, at, attack_combo_count, source_ids, involved_cursed)
 	_spawn_merge_burst(at, merged_ball_data, attack_combo_count, is_external_merge)
 	var merge_damage := _calculate_merge_damage(earned_points, attack_combo_count)
+	if not is_external_merge and player_merge_damage_modifier.is_valid():
+		merge_damage = maxi(0, int(player_merge_damage_modifier.call(merge_damage, level)))
 	if not is_external_merge and attack_combo_count >= 2:
 		_show_combo_effect(attack_combo_count, merge_damage)
 	if is_external_merge:
@@ -1226,6 +1250,10 @@ func _has_moving_balls() -> bool:
 	if physics_data != null:
 		linear_threshold = physics_data.settled_linear_speed
 		angular_threshold = physics_data.settled_angular_speed
+	if settled_linear_speed_override >= 0.0:
+		linear_threshold = settled_linear_speed_override
+	if settled_angular_speed_override >= 0.0:
+		angular_threshold = settled_angular_speed_override
 	for child in balls.get_children():
 		if child.merge_locked:
 			continue
@@ -1247,7 +1275,7 @@ func set_input_enabled(enabled: bool) -> void:
 	input_locked = not enabled
 	is_aiming = false
 	next_panel.visible = not is_game_over
-	if enabled and (dropped_ball_has_landed or not drop_sequence_active) and not is_game_over:
+	if enabled and (dropped_ball_has_landed or not drop_sequence_active) and not is_game_over and not (wait_for_turn_before_next_input and drop_sequence_active):
 		can_drop = true
 		drop_time_remaining = drop_time_limit
 	_update_drop_preview_visibility()

@@ -2,7 +2,7 @@
 
 Last static audit: 2026-08-25
 Highest registered number: **50**  
-Next available number: **51** (not created or reserved)
+Next available number: **54** (53 is registered)
 
 This registry prevents a new name from hiding an already-tested player decision. The one-line rule is based on the current handler code, not on inferred fun or balance.
 
@@ -90,6 +90,9 @@ Runtime types:
 | 48 | 합성 예비군 / Pair Reserve | At each settled checkpoint, unmerged same-stage balls form reserve-pair stages; later modes require multiple distinct stages or different pair stages on the left and right. | Modular · 3 enemies · [spec](mechanics/048_pair_reserve.md) · [level](../resources/levels/test_pair_reserve.tres) · [handler](../scripts/gimmicks/handlers/pair_reserve_handler.gd) | `NEEDS_PLAYTEST` | 16, 31, 33, 44, 46 |
 | 49 | 단계 왕관 / Stage Crown | At settled checkpoints, the highest displayed stage in each third must form a unique crown, a tied two-zone crown, or an ascending/descending three-zone staircase. | Modular · 3 enemies · [spec](mechanics/049_stage_crown.md) · [level](../resources/levels/test_stage_crown.tres) · [handler](../scripts/gimmicks/handlers/stage_crown_handler.gd) | `NEEDS_PLAYTEST` | 31, 35, 36, 44, 48 |
 | 50 | 단계 인구조사 / Stage Census | Current board populations for displayed stages or stage bands must match exact LEFT-minus-RIGHT count deltas at each settled checkpoint. | Modular · 3 enemies · [spec](mechanics/050_stage_census.md) · [level](../resources/levels/test_stage_census.tres) · [handler](../scripts/gimmicks/handlers/stage_census_handler.gd) | `NEEDS_PLAYTEST` | 33, 36, 44, 46, 47, 49 |
+| 51 | 능력 편성 / 하단 방향 발사 | 52번의 기존 수박게임 물리를 뒤집어 아래에서 방향만 정해 고정 힘으로 발사하며, 공이 위쪽 중력으로 천장 아래에 쌓인다. | Modular · 3 existing enemies · [spec](mechanics/051_merge_loadout_aimed_table.md) · [level](../resources/levels/test_merge_loadout.tres) · [handler](../scripts/gimmicks/handlers/merge_loadout_handler.gd) | `NEEDS_PLAYTEST` | 52, normal merge damage, normal enemy attack |
+| 52 | 능력 편성 / 상단 방향 발사 | 동일한 능력 편성을 사용하며 위 중앙에서 파워 조절 없이 방향만 정해 고정된 힘으로 발사한다. | Modular · 3 existing enemies · [spec](mechanics/052_top_down_aim_loadout.md) · [level](../resources/levels/test_top_down_aim_loadout.tres) · [handler](../scripts/gimmicks/handlers/top_down_merge_loadout_handler.gd) | `NEEDS_PLAYTEST` | 51, normal drop control, normal merge damage |
+| 53 | 능력 편성 / 평면 던지기 | Cat & Farm Pals를 참고해 무중력 평면에서 방향·파워로 던지고, 일정한 바닥 마찰과 낮은 충돌 전달로 빠르게 정지한다. | Modular · 3 existing enemies · [spec](mechanics/053_flat_throw_loadout.md) · [level](../resources/levels/test_flat_throw_loadout.tres) · [handler](../scripts/gimmicks/handlers/flat_throw_merge_loadout_handler.gd) | `NEEDS_PLAYTEST` | 51, 52, normal merge damage |
 
 ## Non-numbered systems that block duplicates
 

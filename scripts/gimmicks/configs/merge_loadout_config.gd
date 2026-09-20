@@ -1,0 +1,34 @@
+extends Resource
+
+@export var strong_base := 0.30
+@export var strong_per_stage := 0.05
+@export var guard_base := 2
+@export var guard_per_stage := 2
+@export var guard_cap := 20
+@export var focus_base := 0.10
+@export var focus_per_stage := 0.05
+@export var focus_cap := 2
+@export var weaken_base := 0.20
+@export var weaken_per_stage := 0.03
+@export var weaken_cap := 0.50
+@export var minimum_launch_speed := 300.0
+@export var maximum_launch_speed := 950.0
+@export var maximum_drag_distance := 300.0
+@export var wall_bounce := 0.28
+@export var shot_linear_damp := 0.10
+@export var settled_linear_damp := 3.2
+@export var arrival_velocity_ratio := 0.10
+@export var side_wall_velocity_ratio := 0.45
+@export var merge_velocity_ratio := 0.05
+@export var launch_chamber_height := 180.0
+@export var bottom_up_launch_speed := 180.0
+@export var bottom_up_horizontal_force_multiplier := 3.5
+@export var bottom_up_ball_bounce := 0.18
+@export var bottom_up_ball_friction := 0.14
+@export var bottom_up_linear_damp := 0.45
+@export var bottom_up_angular_damp := 0.60
+@export var top_down_launch_speed := 520.0
+@export var top_down_horizontal_force_multiplier := 1.55
+@export var top_down_max_angle_degrees := 68.0
+@export var top_down_wall_bounce := 0.48
+@export var top_down_wall_friction := 0.08

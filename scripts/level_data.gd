@@ -51,6 +51,7 @@ const CustomBoardPhysicsDataClass = preload("res://scripts/custom_physics/custom
 @export_range(-1, 10, 1) var fixed_drop_level: int = -1
 
 @export_category("기믹 테스트")
+## 테스트 스테이지에서는 플레이어와 적 모두 체력이 줄지 않는다.
 @export var is_gimmick_test_level := false
 @export var test_gimmick: TestGimmickDataClass
 

@@ -22,6 +22,10 @@ extends Control
 @onready var damage_preview_fill: Panel = $DamagePreviewFill
 
 var current_health := 100
+var health_text_override := "":
+	set(value):
+		health_text_override = value
+		_refresh_value_text()
 var maximum_health := 100
 var predicted_damage := 0
 var durability_active := false
@@ -132,7 +136,7 @@ func _set_durability_highlight_strength(strength: float) -> void:
 
 func _refresh_value_text() -> void:
 	if is_instance_valid(value_label):
-		value_label.text = "%d / %d" % [current_health, maximum_health]
+		value_label.text = health_text_override if not health_text_override.is_empty() else "%d / %d" % [current_health, maximum_health]
 
 
 func _refresh_fill_size() -> void:

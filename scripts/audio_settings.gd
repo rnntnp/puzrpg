@@ -68,14 +68,26 @@ func _route_audio_player(node: Node) -> void:
 
 func _load_settings() -> void:
 	var config := ConfigFile.new()
-	if config.load(SETTINGS_PATH) != OK:
+	var error := config.load(SETTINGS_PATH)
+	if error != OK:
+		if error != ERR_FILE_NOT_FOUND:
+			push_warning("소리 설정을 불러오지 못했습니다: %s" % error_string(error))
 		return
-	bgm_volume = clampf(float(config.get_value("audio", "bgm", bgm_volume)), 0.0, 1.0)
-	sfx_volume = clampf(float(config.get_value("audio", "sfx", sfx_volume)), 0.0, 1.0)
+	bgm_volume = _read_volume(config, "bgm", bgm_volume)
+	sfx_volume = _read_volume(config, "sfx", sfx_volume)
+
+
+func _read_volume(config: ConfigFile, key: String, fallback: float) -> float:
+	var value: Variant = config.get_value("audio", key, fallback)
+	if not (value is float or value is int) or not is_finite(float(value)):
+		return fallback
+	return clampf(float(value), 0.0, 1.0)
 
 
 func _save_settings() -> void:
 	var config := ConfigFile.new()
 	config.set_value("audio", "bgm", bgm_volume)
 	config.set_value("audio", "sfx", sfx_volume)
-	config.save(SETTINGS_PATH)
+	var error := config.save(SETTINGS_PATH)
+	if error != OK:
+		push_warning("소리 설정을 저장하지 못했습니다: %s" % error_string(error))

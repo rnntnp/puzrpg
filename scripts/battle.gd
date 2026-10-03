@@ -126,6 +126,8 @@ func _load_level() -> void:
 		background_artwork.texture = level_data.battle_background
 	merge_game.set_background_music(level_data.battle_music)
 	left_fighter.set_character_data(level_data.player_character)
+	left_fighter.infinite_health = level_data.is_gimmick_test_level
+	left_bar.health_text_override = "∞" if level_data.is_gimmick_test_level else ""
 	_apply_shadow_visual(left_fighter_shadow, left_fighter, level_data.player_character)
 	player_skill_controller.configure(
 		self, left_fighter, merge_game, monster_action_controller, player_skill_button
@@ -155,6 +157,8 @@ func _load_enemy(index: int) -> void:
 		enemy_data.attack_power = level_data.test_gimmick.normal_attack_damage
 		enemy_data.enemy_attack_drop_interval = level_data.test_gimmick.action_interval
 	right_fighter.set_character_data(enemy_data)
+	right_fighter.infinite_health = level_data.is_gimmick_test_level
+	right_bar.health_text_override = "∞" if level_data.is_gimmick_test_level else ""
 	_apply_shadow_visual(right_fighter_shadow, right_fighter, enemy_data)
 	right_bar.fill_color = enemy_data.health_bar_color
 	right_bar.queue_redraw()

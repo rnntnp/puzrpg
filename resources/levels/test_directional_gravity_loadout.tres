@@ -1,0 +1,56 @@
+[gd_resource type="Resource" script_class="LevelData" load_steps=18 format=3]
+
+[ext_resource type="Script" path="res://scripts/level_data.gd" id="1"]
+[ext_resource type="Resource" path="res://resources/characters/blue_fighter.tres" id="2"]
+[ext_resource type="Resource" path="res://resources/characters/prototype_gimmick_enemy_1.tres" id="3"]
+[ext_resource type="Resource" path="res://resources/characters/prototype_gimmick_enemy_2.tres" id="4"]
+[ext_resource type="Resource" path="res://resources/characters/prototype_gimmick_boss.tres" id="5"]
+[ext_resource type="Script" path="res://scripts/character_data.gd" id="6"]
+[ext_resource type="Script" path="res://scripts/test_gimmick_data.gd" id="7"]
+[ext_resource type="Texture2D" path="res://assets/backgrounds/stage_01_moonlit_pond_handdrawn_v4_clear.png" id="8"]
+[ext_resource type="Texture2D" path="res://assets/level_previews/level_01_preview.png" id="9"]
+[ext_resource type="Texture2D" path="res://assets/effects/generated/status_attack.png" id="10"]
+[ext_resource type="Script" path="res://scripts/gimmicks/handlers/directional_gravity_handler.gd" id="11"]
+[ext_resource type="Script" path="res://scripts/gimmicks/configs/directional_gravity_config.gd" id="12"]
+[ext_resource type="Texture2D" path="res://assets/backgrounds/stage_01_moonlit_pond_handdrawn_v4_clear_top.png" id="13_top"]
+[ext_resource type="Texture2D" path="res://assets/backgrounds/stage_01_moonlit_pond_handdrawn_v4_clear_middle.png" id="14_middle"]
+[ext_resource type="Texture2D" path="res://assets/backgrounds/stage_01_moonlit_pond_handdrawn_v4_clear_bottom.png" id="15_bottom"]
+
+[sub_resource type="Resource" id="Config"]
+script = ExtResource("12")
+
+[sub_resource type="Resource" id="Gimmick"]
+script = ExtResource("7")
+display_name = "능력 편성 · 방향 중력 발사"
+monster_health = 320
+normal_attack_damage = 5
+action_interval = 3
+normal_attack_interval = 3
+enemy_healths = Array[int]([220, 250, 320])
+preserve_board_between_enemies = true
+handler_script = ExtResource("11")
+tuning = SubResource("Config")
+
+[resource]
+script = ExtResource("1")
+level_name = "55. 흐르는 연못"
+image_placeholder = ""
+battle_background = ExtResource("8")
+battle_background_top = ExtResource("13_top")
+battle_background_middle = ExtResource("14_middle")
+battle_background_bottom = ExtResource("15_bottom")
+level_select_preview = ExtResource("9")
+show_battle_status_label = false
+show_gimmick_status_labels = false
+recommended_ball_level = 5
+stage_gimmick_icon = ExtResource("10")
+stage_gimmick_name = "방향 중력"
+reward_name = "연못 보물상자"
+player_character = ExtResource("2")
+enemies = Array[ExtResource("6")]([ExtResource("3"), ExtResource("4"), ExtResource("5")])
+is_gimmick_test_level = true
+test_gimmick = SubResource("Gimmick")
+ball_drop_time_limit = -1.0
+merge_push_force = 110.0
+merge_hit_stop_time_scale = 0.18
+merge_hit_stop_duration = 0.2

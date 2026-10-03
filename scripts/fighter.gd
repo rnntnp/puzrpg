@@ -13,6 +13,7 @@ signal defeated(fighter: Fighter)
 @onready var ingestion_belly_glow: IngestionBellyGlow = $IngestionBellyGlow
 
 var current_health: int
+var infinite_health := false
 var base_scale: Vector2
 var _visual_tween: Tween
 var _cast_tween: Tween
@@ -156,8 +157,9 @@ func take_damage(amount: int) -> void:
 	if not is_alive():
 		return
 	var previous_health := current_health
-	current_health = max(0, current_health - max(0, amount))
-	var applied_damage := previous_health - current_health
+	if not infinite_health:
+		current_health = max(0, current_health - max(0, amount))
+	var applied_damage: int = maxi(0, amount) if infinite_health else previous_health - current_health
 	health_changed.emit(current_health, max_health)
 	if applied_damage > 0:
 		damage_received.emit(applied_damage)

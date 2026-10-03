@@ -1,8 +1,8 @@
 # MECHANIC REGISTRY
 
 Last static audit: 2026-08-25
-Highest registered number: **50**  
-Next available number: **54** (53 is registered)
+Highest registered number: **55**
+Next available number: **56** (55 is registered)
 
 This registry prevents a new name from hiding an already-tested player decision. The one-line rule is based on the current handler code, not on inferred fun or balance.
 
@@ -93,6 +93,8 @@ Runtime types:
 | 51 | 능력 편성 / 하단 방향 발사 | 52번의 기존 수박게임 물리를 뒤집어 아래에서 방향만 정해 고정 힘으로 발사하며, 공이 위쪽 중력으로 천장 아래에 쌓인다. | Modular · 3 existing enemies · [spec](mechanics/051_merge_loadout_aimed_table.md) · [level](../resources/levels/test_merge_loadout.tres) · [handler](../scripts/gimmicks/handlers/merge_loadout_handler.gd) | `NEEDS_PLAYTEST` | 52, normal merge damage, normal enemy attack |
 | 52 | 능력 편성 / 상단 방향 발사 | 동일한 능력 편성을 사용하며 위 중앙에서 파워 조절 없이 방향만 정해 고정된 힘으로 발사한다. | Modular · 3 existing enemies · [spec](mechanics/052_top_down_aim_loadout.md) · [level](../resources/levels/test_top_down_aim_loadout.tres) · [handler](../scripts/gimmicks/handlers/top_down_merge_loadout_handler.gd) | `NEEDS_PLAYTEST` | 51, normal drop control, normal merge damage |
 | 53 | 능력 편성 / 평면 던지기 | Cat & Farm Pals를 참고해 무중력 평면에서 방향·파워로 던지고, 일정한 바닥 마찰과 낮은 충돌 전달로 빠르게 정지한다. | Modular · 3 existing enemies · [spec](mechanics/053_flat_throw_loadout.md) · [level](../resources/levels/test_flat_throw_loadout.tres) · [handler](../scripts/gimmicks/handlers/flat_throw_merge_loadout_handler.gd) | `NEEDS_PLAYTEST` | 51, 52, normal merge damage |
+| 54 | 능력 편성 / 역중력 드롭 | 가로 위치만 선택해 아래에서 초기 속도 없이 공을 놓는다. 기본 물리의 중력을 뒤집어 천장에 쌓고 아래 위험선으로 넘침을 판정한다. | Modular · 3 existing enemies · [spec](mechanics/054_contact_stop_loadout.md) · [level](../resources/levels/test_contact_stop_loadout.tres) · [handler](../scripts/gimmicks/handlers/contact_stop_merge_loadout_handler.gd) | `NEEDS_PLAYTEST` | 51, 52, 53, normal drop control |
+| 55 | 능력 편성 / 방향 중력 발사 | 발사한 공은 옆 벽에서 속도와 중력 방향을 함께 반사하며 직선 이동한다. 공·천장·바닥 접촉 후 위쪽 중력으로 전환하며 가이드에 반사 경로를 표시한다. 테스트 표시로 양쪽 체력이 무한이다. | Modular · 3 existing enemies · [spec](mechanics/055_directional_gravity_loadout.md) · [level](../resources/levels/test_directional_gravity_loadout.tres) · [handler](../scripts/gimmicks/handlers/directional_gravity_handler.gd) | `NEEDS_PLAYTEST` | 51, 53, 54 |
 
 ## Non-numbered systems that block duplicates
 

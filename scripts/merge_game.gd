@@ -132,6 +132,8 @@ var board_inner_top := 0.0
 var board_inner_bottom := 846.0
 var drop_position_y := 140.0
 var danger_line_y := 230.0
+# Positive means the overflow side is above the line; negative means below.
+var danger_height_direction := 1.0
 var danger_suppression_remaining := 0.0
 var sealed_stage_index := -1
 var blocked_drop_zone := Rect2()
@@ -1205,7 +1207,7 @@ func _get_overflow_balls() -> Array[MergeBall]:
 		var ball := child as MergeBall
 		if ball.merge_locked or not ball.has_landed():
 			continue
-		if ball.position.y < danger_line_y:
+		if (ball.position.y - danger_line_y) * danger_height_direction < 0.0:
 			result.append(ball)
 	return result
 
@@ -1217,7 +1219,7 @@ func _has_warning_ball() -> bool:
 		var ball := child as MergeBall
 		if ball.merge_locked or not ball.has_landed():
 			continue
-		if ball.position.y <= danger_line_y + warning_distance:
+		if (ball.position.y - danger_line_y) * danger_height_direction <= warning_distance:
 			return true
 	return false
 

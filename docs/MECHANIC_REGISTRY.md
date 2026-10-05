@@ -1,8 +1,8 @@
 # MECHANIC REGISTRY
 
 Last static audit: 2026-08-25
-Highest registered number: **55**
-Next available number: **56** (55 is registered)
+Highest registered number: **56**
+Next available number: **57** (56 is registered)
 
 This registry prevents a new name from hiding an already-tested player decision. The one-line rule is based on the current handler code, not on inferred fun or balance.
 
@@ -95,6 +95,7 @@ Runtime types:
 | 53 | 능력 편성 / 평면 던지기 | Cat & Farm Pals를 참고해 무중력 평면에서 방향·파워로 던지고, 일정한 바닥 마찰과 낮은 충돌 전달로 빠르게 정지한다. | Modular · 3 existing enemies · [spec](mechanics/053_flat_throw_loadout.md) · [level](../resources/levels/test_flat_throw_loadout.tres) · [handler](../scripts/gimmicks/handlers/flat_throw_merge_loadout_handler.gd) | `NEEDS_PLAYTEST` | 51, 52, normal merge damage |
 | 54 | 능력 편성 / 역중력 드롭 | 가로 위치만 선택해 아래에서 초기 속도 없이 공을 놓는다. 기본 물리의 중력을 뒤집어 천장에 쌓고 아래 위험선으로 넘침을 판정한다. | Modular · 3 existing enemies · [spec](mechanics/054_contact_stop_loadout.md) · [level](../resources/levels/test_contact_stop_loadout.tres) · [handler](../scripts/gimmicks/handlers/contact_stop_merge_loadout_handler.gd) | `NEEDS_PLAYTEST` | 51, 52, 53, normal drop control |
 | 55 | 능력 편성 / 방향 중력 발사 | 발사한 공은 옆 벽에서 속도와 중력 방향을 함께 반사하며 직선 이동한다. 공·천장·바닥 접촉 후 위쪽 중력으로 전환하며 가이드에 반사 경로를 표시한다. 테스트 표시로 양쪽 체력이 무한이다. | Modular · 3 existing enemies · [spec](mechanics/055_directional_gravity_loadout.md) · [level](../resources/levels/test_directional_gravity_loadout.tres) · [handler](../scripts/gimmicks/handlers/directional_gravity_handler.gd) | `NEEDS_PLAYTEST` | 51, 53, 54 |
+| 56 | 수박 던전 / 웨이브 카드 선택 | 5웨이브의 보드를 유지하고 중간 처치마다 무작위 3장 중 1장의 카드를 골라 이번 도전의 합성 공격·회복·방어를 강화한다. 유한 HP로 승패가 있다. | Modular · 5 enemies · [spec](mechanics/056_suika_dungeon.md) · [level](../resources/levels/test_suika_dungeon.tres) · [handler](../scripts/gimmicks/handlers/dungeon_draft_handler.gd) | `NEEDS_PLAYTEST` | 24, 51–55, normal merge projectiles |
 
 ## Non-numbered systems that block duplicates
 
@@ -108,6 +109,7 @@ Runtime types:
 
 ## Validation history and gaps
 
+- 2026-10-05: mechanic 56 received scoped Godot script compilation and its own level Resource/catalog-reference checks only. No battle was instantiated; gameplay and balance remain untested.
 - Mechanic 1 previously produced reported parse and cleanup errors during user testing. The current source contains the type annotations and NodePath handling added in response, but no completed replay confirmation is recorded here. It remains `NEEDS_PLAYTEST`.
 - `automated_smoke_level_paths` currently lists only mechanics 1–20. This is registration metadata, not evidence that those smoke tests ran or passed.
 - Mechanics 21–30 are legacy one-enemy levels and are absent from that smoke list.

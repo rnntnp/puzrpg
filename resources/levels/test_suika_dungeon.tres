@@ -1,0 +1,57 @@
+[gd_resource type="Resource" script_class="LevelData" load_steps=17 format=3]
+
+[ext_resource type="Script" path="res://scripts/level_data.gd" id="1"]
+[ext_resource type="Resource" path="res://resources/characters/blue_fighter.tres" id="2"]
+[ext_resource type="Resource" path="res://resources/characters/red_fighter.tres" id="3"]
+[ext_resource type="Resource" path="res://resources/characters/red_elite.tres" id="4"]
+[ext_resource type="Resource" path="res://resources/characters/ingestion_boss.tres" id="5"]
+[ext_resource type="Script" path="res://scripts/character_data.gd" id="6"]
+[ext_resource type="Script" path="res://scripts/test_gimmick_data.gd" id="7"]
+[ext_resource type="Texture2D" path="res://assets/backgrounds/stage_03_crystal_dungeon_flat_purple.png" id="8"]
+[ext_resource type="Texture2D" path="res://assets/effects/generated/status_attack.png" id="9"]
+[ext_resource type="Script" path="res://scripts/gimmicks/handlers/dungeon_draft_handler.gd" id="10"]
+[ext_resource type="Script" path="res://scripts/gimmicks/configs/dungeon_draft_config.gd" id="11"]
+[ext_resource type="Texture2D" path="res://assets/backgrounds/stage_03_crystal_dungeon_flat_purple_top.png" id="12"]
+[ext_resource type="Texture2D" path="res://assets/backgrounds/stage_03_crystal_dungeon_flat_purple_middle.png" id="13"]
+[ext_resource type="Texture2D" path="res://assets/backgrounds/stage_03_crystal_dungeon_flat_purple_bottom.png" id="14"]
+
+[sub_resource type="Resource" id="Config"]
+script = ExtResource("11")
+
+[sub_resource type="Resource" id="Gimmick"]
+script = ExtResource("7")
+display_name = "수박 던전 · 웨이브 카드 선택"
+monster_health = 1100
+normal_attack_damage = 4
+action_interval = 4
+normal_attack_interval = 4
+enemy_healths = Array[int]([180, 300, 480, 650, 1100])
+preserve_board_between_enemies = true
+handler_script = ExtResource("10")
+tuning = SubResource("Config")
+
+[resource]
+script = ExtResource("1")
+level_name = "56. 수박 던전"
+image_placeholder = "DROP · MERGE · DRAFT"
+battle_background = ExtResource("8")
+battle_background_top = ExtResource("12")
+battle_background_middle = ExtResource("13")
+battle_background_bottom = ExtResource("14")
+battle_background_top_height = 558.0
+level_select_preview = ExtResource("8")
+show_battle_status_label = true
+show_gimmick_status_labels = true
+recommended_ball_level = 7
+stage_gimmick_icon = ExtResource("9")
+stage_gimmick_name = "5웨이브 · 카드 성장"
+reward_name = "던전 보물상자"
+clear_gold_reward = 250
+player_character = ExtResource("2")
+enemies = Array[ExtResource("6")]([ExtResource("3"), ExtResource("3"), ExtResource("4"), ExtResource("4"), ExtResource("5")])
+is_gimmick_test_level = false
+test_gimmick = SubResource("Gimmick")
+ball_drop_time_limit = -1.0
+merge_push_force = 110.0
+merge_hit_stop_time_scale = 0.25
+merge_hit_stop_duration = 0.12

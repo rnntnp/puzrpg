@@ -10,9 +10,18 @@ var guide_points := PackedVector2Array()
 var saved_left_material: PhysicsMaterial
 var saved_right_material: PhysicsMaterial
 var walls_restored := false
+var saved_guide_gradient: Gradient
+var guide_length := 0.0
+var guide_fade_start := -1.0
+var guide_end_alpha := 1.0
+var aim_pointer := -2 # -2: none, -1: mouse, otherwise touch index.
+var mouse_release_pending := false
+var input_trace: Array[Dictionary] = []
+var trace_last_mouse_mask := -1
 
 
 func configure(target: MergeGame, config: Resource) -> void:
+	saved_guide_gradient = target.guide_line.gradient
 	saved_left_material = target.left_wall.physics_material_override
 	saved_right_material = target.right_wall.physics_material_override
 	var material := PhysicsMaterial.new()
@@ -21,6 +30,58 @@ func configure(target: MergeGame, config: Resource) -> void:
 	target.left_wall.physics_material_override = material
 	target.right_wall.physics_material_override = material
 	super.configure(target, config)
+	if OS.is_debug_build():
+		game.ball_dropped.connect(_trace_ball_launch)
+		_trace_input("configured")
+	else:
+		set_process_input(false)
+
+
+func _input(event: InputEvent) -> void:
+	if event is InputEventMouseButton or event is InputEventScreenTouch:
+		_trace_input("raw_input", {"event": event.as_text(), "device": event.device})
+	elif event is InputEventMouseMotion:
+		var mask := int(event.button_mask)
+		if mask != trace_last_mouse_mask:
+			trace_last_mouse_mask = mask
+			_trace_input("mouse_motion_mask", {"mask": mask})
+
+
+func _trace_input(kind: String, details: Dictionary = {}) -> void:
+	if not OS.is_debug_build() or not is_instance_valid(game):
+		return
+	var entry := {
+		"kind": kind, "time_msec": Time.get_ticks_msec(),
+		"mouse_held": Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT),
+		"focused": DisplayServer.window_is_focused(),
+		"dragging": dragging, "pointer": aim_pointer,
+		"release_pending": mouse_release_pending,
+		"can_drop": game.can_drop, "input_locked": game.input_locked,
+		"ordinary_input_enabled": game.is_processing_unhandled_input(),
+		"auto_drop_enabled": game.auto_drop_enabled,
+		"autoplay_enabled": game.autoplay_bot.enabled if is_instance_valid(game.autoplay_bot) else false,
+	}
+	entry.merge(details)
+	input_trace.append(entry)
+	if input_trace.size() > 80:
+		input_trace.pop_front()
+
+
+func _trace_ball_launch() -> void:
+	_trace_input("ball_launched", {"stack": get_stack(), "sequence": game.drop_sequence_id})
+	var path := "user://stage55_input_trace.jsonl"
+	# Keep a bounded, silent diagnostic file; never add text to the game UI.
+	var mode := FileAccess.READ_WRITE if FileAccess.file_exists(path) else FileAccess.WRITE
+	var file := FileAccess.open(path, mode)
+	if file == null:
+		return
+	if file.get_length() > 2097152:
+		file.close()
+		file = FileAccess.open(path, FileAccess.WRITE)
+		if file == null:
+			return
+	file.seek_end()
+	file.store_line(JSON.stringify({"launched_at": Time.get_datetime_string_from_system(), "trace": input_trace}))
 
 
 func _spawn_position() -> Vector2:
@@ -76,6 +137,9 @@ func _update_landing_prediction() -> void:
 	game.preview_ball.position = at
 	guide_points = PackedVector2Array([at])
 	guide_has_contact = false
+	guide_length = 0.0
+	guide_fade_start = -1.0
+	guide_end_alpha = 1.0
 	var speed: float = lerpf(tuning.minimum_throw_speed, tuning.maximum_throw_speed, throw_power)
 	var velocity := direction * speed
 	var gravity: float = float(ProjectSettings.get_setting("physics/2d/default_gravity", 980.0)) * game.physics_speed_multiplier * game.physics_speed_multiplier
@@ -109,8 +173,14 @@ func _update_landing_prediction() -> void:
 				wall_fraction = clampf((right_limit - at.x) / motion.x, 0.0, 1.0)
 				reaches_wall = true
 			var segment := motion * wall_fraction
+			if guide_fade_start >= 0.0:
+				var fade_remaining := maxf(0.0, tuning.guide_fade_distance - (guide_length - guide_fade_start))
+				if segment.length() > fade_remaining:
+					segment = segment.normalized() * fade_remaining
+					reaches_wall = false
 			var fraction := _cast_board_segment(at, segment)
 			at += segment * fraction
+			guide_length += segment.length() * fraction
 			guide_points.append(at)
 			if fraction < 1.0:
 				guide_has_contact = true
@@ -120,14 +190,32 @@ func _update_landing_prediction() -> void:
 			velocity.x = -velocity.x
 			acceleration.x = -acceleration.x
 			reflections += 1
+			if reflections == 2:
+				guide_fade_start = guide_length
 			remaining *= 1.0 - wall_fraction
 			at.x = clampf(at.x, left_limit + 0.01, right_limit - 0.01)
 			if reflections >= tuning.guide_max_reflections or remaining <= 0.00001:
 				break
-		if guide_has_contact or reflections >= tuning.guide_max_reflections:
+		if guide_has_contact or reflections >= tuning.guide_max_reflections or (guide_fade_start >= 0.0 and guide_length - guide_fade_start >= tuning.guide_fade_distance - 0.001):
 			break
 	landing_position = at
 	guide_preview_id = game.preview_ball.get_instance_id()
+	_update_guide_fade()
+
+
+func _update_guide_fade() -> void:
+	if guide_fade_start < 0.0 or guide_length <= 0.001:
+		game.guide_line.gradient = saved_guide_gradient
+		return
+	var color := game.guide_line.default_color
+	guide_end_alpha = 1.0 - clampf((guide_length - guide_fade_start) / maxf(1.0, tuning.guide_fade_distance), 0.0, 1.0)
+	var end_color := color
+	end_color.a *= guide_end_alpha
+	var gradient := Gradient.new()
+	var fade_offset := clampf(guide_fade_start / guide_length, 0.0, 0.9999)
+	gradient.offsets = PackedFloat32Array([0.0, fade_offset, 1.0])
+	gradient.colors = PackedColorArray([color, color, end_color])
+	game.guide_line.gradient = gradient
 
 
 func _cast_board_segment(start: Vector2, motion: Vector2) -> float:
@@ -157,29 +245,53 @@ func _cast_board_segment(start: Vector2, motion: Vector2) -> float:
 	return fraction
 
 func _unhandled_input(event: InputEvent) -> void:
+	# Touch has its own ownership; ignore mouse events synthesized from touch.
+	if event.device == -1:
+		return
 	if not is_instance_valid(game) or game.input_locked or not game.can_drop or game.is_game_over:
+		dragging = false
+		aim_pointer = -2
+		mouse_release_pending = false
 		return
 	var screen := Vector2.ZERO
 	var pressed := false
 	var released := false
+	var pointer := -2
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
+		pointer = -1
 		screen = event.position
 		pressed = event.pressed
 		released = not event.pressed
 	elif event is InputEventScreenTouch:
+		pointer = event.index
+		if event.canceled:
+			if aim_pointer == pointer:
+				dragging = false
+				aim_pointer = -2
+			return
 		screen = event.position
 		pressed = event.pressed
 		released = not event.pressed
-	elif event is InputEventMouseMotion or event is InputEventScreenDrag:
-		if not dragging:
+	elif event is InputEventMouseMotion:
+		pointer = -1
+		if not dragging or aim_pointer != pointer:
+			return
+		screen = event.position
+	elif event is InputEventScreenDrag:
+		pointer = event.index
+		if not dragging or aim_pointer != pointer:
 			return
 		screen = event.position
 	else:
 		return
 	var point := game.get_global_transform_with_canvas().affine_inverse() * screen
 	if pressed:
+		mouse_release_pending = false
+		if dragging:
+			return
 		dragging = game.get_board_inner_bounds().has_point(point)
-	if not dragging:
+		aim_pointer = pointer if dragging else -2
+	if not dragging or aim_pointer != pointer:
 		return
 	var aim_vector := point - _spawn_position()
 	aim_vector.y = minf(aim_vector.y, -20.0)
@@ -187,8 +299,47 @@ func _unhandled_input(event: InputEvent) -> void:
 	throw_power = clampf(aim_vector.length() / tuning.maximum_drag_distance, 0.0, 1.0)
 	get_viewport().set_input_as_handled()
 	if released:
+		if pointer == -1:
+			if not mouse_release_pending:
+				mouse_release_pending = true
+				_confirm_mouse_release.call_deferred()
+			return
 		dragging = false
+		aim_pointer = -2
 		_fire_ball()
+
+
+func _confirm_mouse_release() -> void:
+	# Wait until the event batch has finished before trusting the button state.
+	await get_tree().process_frame
+	_trace_input("release_confirmation")
+	if not mouse_release_pending:
+		return
+	mouse_release_pending = false
+	if _is_mouse_held():
+		return
+	if not DisplayServer.window_is_focused():
+		dragging = false
+		aim_pointer = -2
+		return
+	if not dragging or aim_pointer != -1:
+		return
+	dragging = false
+	aim_pointer = -2
+	if is_instance_valid(game) and not game.input_locked and game.can_drop and not game.is_game_over:
+		_fire_ball()
+
+
+func _is_mouse_held() -> bool:
+	return Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT)
+
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_APPLICATION_FOCUS_OUT:
+		_trace_input("focus_out")
+		mouse_release_pending = false
+		dragging = false
+		aim_pointer = -2
 
 
 func _fire_ball() -> void:
@@ -242,15 +393,22 @@ func _draw() -> void:
 	if not game.can_drop or game.input_locked or game.is_game_over:
 		return
 	if guide_has_contact and guide_preview_id == game.preview_ball.get_instance_id():
-		draw_arc(landing_position, game.preview_ball.get_radius(), 0.0, TAU, 64, tuning.landing_marker_color, 2.0, true)
+		var marker_color: Color = tuning.landing_marker_color
+		marker_color.a *= guide_end_alpha
+		draw_arc(landing_position, game.preview_ball.get_radius(), 0.0, TAU, 64, marker_color, 2.0, true)
 	var bar := Rect2(_spawn_position() + Vector2(-48.0, 22.0), Vector2(96.0, 5.0))
 	draw_rect(bar, Color(1.0, 1.0, 1.0, 0.15))
 	draw_rect(Rect2(bar.position, Vector2(bar.size.x * throw_power, bar.size.y)), Color(1.0, 1.0, 1.0, 0.55))
 
 
 func restore_input() -> void:
+	mouse_release_pending = false
+	dragging = false
+	aim_pointer = -2
 	_release_flights()
 	_restore_wall_materials()
+	if is_instance_valid(game) and is_instance_valid(game.guide_line):
+		game.guide_line.gradient = saved_guide_gradient
 	super.restore_input()
 
 

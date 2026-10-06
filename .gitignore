@@ -19,3 +19,8 @@ mono_crash.*.json
 # Local scratch files and generated release artifacts
 /tmp/
 /build/
+
+# Local Python dependencies for asset restoration tools
+/output/axolotl_restored_parts/_tools/
+__pycache__/
+*.pyc

@@ -1,0 +1,74 @@
+{
+  "Gill_L_Lower": {
+    "alpha_zero_pixels": 1549420,
+    "opaque_pixels": 22584,
+    "components": 1,
+    "enclosed_hole_pixels": 0
+  },
+  "Gill_L_Middle": {
+    "alpha_zero_pixels": 1557368,
+    "opaque_pixels": 14796,
+    "components": 1,
+    "enclosed_hole_pixels": 0
+  },
+  "Gill_L_Upper": {
+    "alpha_zero_pixels": 1554422,
+    "opaque_pixels": 17543,
+    "components": 1,
+    "enclosed_hole_pixels": 0
+  },
+  "Gill_R_Lower": {
+    "alpha_zero_pixels": 1559058,
+    "opaque_pixels": 13146,
+    "components": 1,
+    "enclosed_hole_pixels": 0
+  },
+  "Gill_R_Middle": {
+    "alpha_zero_pixels": 1559444,
+    "opaque_pixels": 12619,
+    "components": 1,
+    "enclosed_hole_pixels": 0
+  },
+  "Gill_R_Upper": {
+    "alpha_zero_pixels": 1556027,
+    "opaque_pixels": 15875,
+    "components": 1,
+    "enclosed_hole_pixels": 0
+  },
+  "Tail_Base": {
+    "alpha_zero_pixels": 1524046,
+    "opaque_pixels": 48002,
+    "components": 1,
+    "enclosed_hole_pixels": 0
+  },
+  "Tail_Tip": {
+    "alpha_zero_pixels": 1557440,
+    "opaque_pixels": 14375,
+    "components": 1,
+    "enclosed_hole_pixels": 0
+  },
+  "Tail_Middle": {
+    "alpha_zero_pixels": 1558537,
+    "opaque_pixels": 13477,
+    "components": 1,
+    "enclosed_hole_pixels": 0
+  },
+  "Tail_Root": {
+    "alpha_zero_pixels": 1557377,
+    "opaque_pixels": 14584,
+    "components": 1,
+    "enclosed_hole_pixels": 0
+  },
+  "Body_Front": {
+    "alpha_zero_pixels": 1262146,
+    "opaque_pixels": 297547,
+    "components": 2,
+    "enclosed_hole_pixels": 0
+  },
+  "psd_vs_png": {
+    "max_alpha_error": 1,
+    "max_visible_rgb_error": 2,
+    "mean_visible_rgb_error": 0.0030097345165838317
+  },
+  "source_comparison": "Hidden geometry was reconstructed; source pixel identity is not claimed."
+}

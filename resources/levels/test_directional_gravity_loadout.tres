@@ -2,9 +2,9 @@
 
 [ext_resource type="Script" path="res://scripts/level_data.gd" id="1"]
 [ext_resource type="Resource" path="res://resources/characters/blue_fighter.tres" id="2"]
-[ext_resource type="Resource" path="res://resources/characters/prototype_gimmick_enemy_1.tres" id="3"]
-[ext_resource type="Resource" path="res://resources/characters/prototype_gimmick_enemy_2.tres" id="4"]
-[ext_resource type="Resource" path="res://resources/characters/prototype_gimmick_boss.tres" id="5"]
+[ext_resource type="Resource" path="res://resources/characters/tutorial_enemy.tres" id="3"]
+[ext_resource type="Resource" path="res://resources/characters/tutorial_enemy.tres" id="4"]
+[ext_resource type="Resource" path="res://resources/characters/tutorial_enemy.tres" id="5"]
 [ext_resource type="Script" path="res://scripts/character_data.gd" id="6"]
 [ext_resource type="Script" path="res://scripts/test_gimmick_data.gd" id="7"]
 [ext_resource type="Texture2D" path="res://assets/backgrounds/stage_01_moonlit_pond_handdrawn_v4_clear.png" id="8"]

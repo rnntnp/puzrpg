@@ -1,0 +1,59 @@
+{
+  "layers": [
+    {
+      "name": "Base Color",
+      "pixel_roundtrip_exact": true,
+      "alpha_range": [
+        0,
+        255
+      ],
+      "channel_ids": [
+        -1,
+        0,
+        1,
+        2
+      ],
+      "has_mask": false
+    },
+    {
+      "name": "Shading",
+      "pixel_roundtrip_exact": true,
+      "alpha_range": [
+        0,
+        255
+      ],
+      "channel_ids": [
+        -1,
+        0,
+        1,
+        2
+      ],
+      "has_mask": false
+    },
+    {
+      "name": "Line Art",
+      "pixel_roundtrip_exact": true,
+      "alpha_range": [
+        0,
+        255
+      ],
+      "channel_ids": [
+        -1,
+        0,
+        1,
+        2
+      ],
+      "has_mask": false
+    }
+  ],
+  "comparison": {
+    "character_pixels": 442355,
+    "max_channel_difference": 1,
+    "mean_channel_difference": 0.0001913998183962353,
+    "pixels_with_difference_over_1": 0
+  },
+  "size": [
+    1086,
+    1448
+  ]
+}

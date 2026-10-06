@@ -1,0 +1,9 @@
+[gd_resource type="Resource" format=3 uid="uid://cykpree3nqfb4"]
+
+[ext_resource type="Script" uid="uid://mdqrndkyxqti" path="res://scripts/gimmicks/configs/pond_surface_rendering_settings.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+environment_light_directions = PackedVector3Array(0, -1, 0.25, 1, 0.2, 0.3, -1, 0.35, 0.2)
+environment_light_colors = PackedColorArray(0.55, 0.8, 1, 0.16, 1, 0.82, 0.58, 0.1, 0.7, 0.6, 1, 0.12)
+reflection_opacity_limit = 0.25

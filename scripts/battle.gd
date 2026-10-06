@@ -10,6 +10,7 @@ const WaterHealthBarClass = preload("res://scripts/water_health_bar.gd")
 const StageIntroSequenceClass = preload("res://scripts/stage_intro_sequence.gd")
 const PlaytestTimingRecorderClass = preload("res://scripts/playtest_timing_recorder.gd")
 
+
 @onready var left_fighter: Fighter = $UI/LeftFighter
 @onready var right_fighter: Fighter = $UI/RightFighter
 @onready var left_fighter_shadow: Polygon2D = $UI/LeftFighterShadow
@@ -343,7 +344,7 @@ func play_ingestion_spit_sfx() -> void:
 func play_enemy_durability_hit_feedback(damage: int) -> void:
 	if damage <= 0 or not right_fighter.is_alive():
 		return
-	right_fighter.play_hit_animation()
+	right_fighter.play_hit_animation(damage)
 	_play_damage_sfx(enemy_hit_sfx, damage, right_fighter.max_health, -4.0)
 
 

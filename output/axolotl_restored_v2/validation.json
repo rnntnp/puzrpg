@@ -1,0 +1,50 @@
+{
+  "Gill_L_Lower": {
+    "transparent_pixels": 1548543,
+    "internal_holes": 0
+  },
+  "Gill_L_Middle": {
+    "transparent_pixels": 1555149,
+    "internal_holes": 0
+  },
+  "Gill_L_Upper": {
+    "transparent_pixels": 1553667,
+    "internal_holes": 0
+  },
+  "Gill_R_Lower": {
+    "transparent_pixels": 1558438,
+    "internal_holes": 0
+  },
+  "Gill_R_Middle": {
+    "transparent_pixels": 1558814,
+    "internal_holes": 0
+  },
+  "Gill_R_Upper": {
+    "transparent_pixels": 1555294,
+    "internal_holes": 0
+  },
+  "Tail_Base": {
+    "transparent_pixels": 1522791,
+    "internal_holes": 0
+  },
+  "Tail_Tip": {
+    "transparent_pixels": 1556745,
+    "internal_holes": 0
+  },
+  "Tail_Middle": {
+    "transparent_pixels": 1557857,
+    "internal_holes": 0
+  },
+  "Tail_Root": {
+    "transparent_pixels": 1556697,
+    "internal_holes": 0
+  },
+  "Body_Front": {
+    "transparent_pixels": 1262146,
+    "internal_holes": 17
+  },
+  "export_comparison": {
+    "max_alpha": 1,
+    "max_rgb": 2
+  }
+}

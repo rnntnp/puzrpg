@@ -1,0 +1,46 @@
+{
+  "layers": [
+    {
+      "name": "Base Color",
+      "blend": "normal",
+      "opacity": 1,
+      "width": 1086,
+      "height": 1448,
+      "alpha0": 1130173,
+      "opaque": 442355,
+      "nonzeroHidden": 0,
+      "exactMatch": true
+    },
+    {
+      "name": "Shading",
+      "blend": "normal",
+      "opacity": 1,
+      "width": 1086,
+      "height": 1448,
+      "alpha0": 1130178,
+      "opaque": 9989,
+      "nonzeroHidden": 0,
+      "exactMatch": true
+    },
+    {
+      "name": "Line Art",
+      "blend": "normal",
+      "opacity": 1,
+      "width": 1086,
+      "height": 1448,
+      "alpha0": 1504710,
+      "opaque": 4,
+      "nonzeroHidden": 0,
+      "exactMatch": true
+    }
+  ],
+  "comparison": {
+    "maxDifference": 1,
+    "meanDifference": 0.3429598399475534,
+    "count": 442355
+  },
+  "mergedPreview": {
+    "transparentPixels": 1130173,
+    "maxDifference": 0
+  }
+}

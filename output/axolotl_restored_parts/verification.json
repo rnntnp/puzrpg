@@ -1,0 +1,18 @@
+{
+  "max_alpha_difference": 255,
+  "changed_alpha_pixels": 14396,
+  "max_visible_rgb_difference": 255,
+  "changed_rgb_pixels": 9077,
+  "restored_pixels": {
+    "Gill_L_Upper": 18106,
+    "Gill_L_Middle": 15160,
+    "Gill_L_Lower": 23108,
+    "Gill_R_Upper": 16501,
+    "Gill_R_Middle": 13084,
+    "Gill_R_Lower": 13470,
+    "Tail_Root": 15151,
+    "Tail_Middle": 13991,
+    "Tail_Tip": 15088,
+    "Tail_Base": 48482
+  }
+}

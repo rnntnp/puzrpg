@@ -5,9 +5,9 @@
 [resource]
 script = ExtResource("1")
 wall_bounce = 0.0
-floor_friction = 0.44
+floor_friction = 0.88
 floor_bounce = 0.0
-ball_friction = 0.21
+ball_friction = 0.42
 ball_bounce = 0.0
 ball_linear_damp = 0.3
 ball_angular_damp = 12.58

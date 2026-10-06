@@ -3,6 +3,7 @@ extends Polygon2D
 
 const CharacterDataClass = preload("res://scripts/character_data.gd")
 const IceEyeGlowClass = preload("res://scripts/effects/ice_eye_glow.gd")
+const HitFeedback = preload("res://scripts/hit_feedback.gd")
 
 signal health_changed(current_health: int, max_health: int)
 signal damage_received(amount: int)
@@ -19,6 +20,12 @@ var _visual_tween: Tween
 var _cast_tween: Tween
 var _visual_override: Texture2D
 var _ice_eye_glow: IceEyeGlow
+var hit_started_msec := 0
+var hit_direction := 1.0
+var _hit_origin := Vector2.ZERO
+var _hit_active := false
+var _attack_origin := Vector2.ZERO
+var _attack_active := false
 
 var max_health: int:
 	get: return character_data.max_health
@@ -162,11 +169,10 @@ func take_damage(amount: int) -> void:
 	var applied_damage: int = maxi(0, amount) if infinite_health else previous_health - current_health
 	health_changed.emit(current_health, max_health)
 	if applied_damage > 0:
+		play_hit_animation(applied_damage)
 		damage_received.emit(applied_damage)
 	if current_health == 0:
 		defeated.emit(self)
-	else:
-		play_hit_animation()
 
 
 func heal(amount: int) -> void:
@@ -182,6 +188,8 @@ func is_alive() -> bool:
 
 func play_attack_animation(target: Fighter) -> void:
 	_stop_visual_tween()
+	_attack_origin = position
+	_attack_active = true
 	var start_x := position.x
 	var direction: float = signf(target.global_position.x - global_position.x)
 	_visual_tween = create_tween()
@@ -206,21 +214,33 @@ func play_attack_animation(target: Fighter) -> void:
 		_visual_tween.tween_property(self, "position:x", start_x + 45.0 * direction, 0.08)
 		_visual_tween.tween_property(self, "position:x", start_x, 0.12)
 	_visual_tween.tween_callback(func():
+		position = _attack_origin
+		_attack_active = false
 		_apply_current_texture()
 	)
 
 
-func play_hit_animation() -> void:
+func play_hit_animation(damage := 40) -> void:
 	_stop_visual_tween(not _is_cast_animation_active())
-	var start_position := position
-	var away_from_center := -1.0 if global_position.x < 360.0 else 1.0
+	_hit_origin = position
+	hit_direction = -1.0 if global_position.x < 360.0 else 1.0
+	hit_started_msec = Time.get_ticks_msec()
+	_hit_active = true
+	var distance := clampf(float(maxi(0, damage)) * 0.35, 1.0, 70.0)
+	var hit_duration: float = HitFeedback.duration(damage)
 	_visual_tween = create_tween()
-	_visual_tween.set_parallel(true)
-	_visual_tween.tween_property(self, "position", start_position + Vector2(18.0 * away_from_center, -3.0), 0.055).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
-	_visual_tween.tween_property(self, "modulate", Color("#ffd0dc"), 0.055)
-	_visual_tween.set_parallel(false)
-	_visual_tween.tween_property(self, "position", start_position, 0.16).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-	_visual_tween.parallel().tween_property(self, "modulate", Color.WHITE, 0.13)
+	_visual_tween.set_ignore_time_scale(true)
+	_visual_tween.tween_method(func(_progress: float) -> void:
+		var progress := clampf(float(Time.get_ticks_msec() - hit_started_msec) / (hit_duration * 1000.0), 0.0, 1.0)
+		var weight: float = HitFeedback.displacement(progress)
+		position = _hit_origin + Vector2(distance * hit_direction * weight, 0.0)
+		modulate = Color.WHITE.lerp(Color("#ffd0dc"), weight)
+	, 0.0, 1.0, hit_duration)
+	_visual_tween.tween_callback(func() -> void:
+		position = _hit_origin
+		modulate = Color.WHITE
+		_hit_active = false
+	)
 
 
 func play_cast_animation() -> void:
@@ -256,6 +276,12 @@ func play_ingestion_squash() -> void:
 func _stop_visual_tween(restore_texture := true) -> void:
 	if _visual_tween != null and _visual_tween.is_valid():
 		_visual_tween.kill()
+	if _attack_active:
+		position = _attack_origin
+		_attack_active = false
+	if _hit_active:
+		position = _hit_origin
+		_hit_active = false
 	modulate = Color.WHITE
 	if restore_texture and character_data != null and character_sprite != null:
 		_apply_current_texture()

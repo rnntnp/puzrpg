@@ -1047,10 +1047,10 @@ func _on_merge_requested(first, second) -> void:
 	if not is_external_merge:
 		player_merge_registered.emit(earned_points, level)
 	merge_registered.emit(level, at, attack_combo_count, source_ids, involved_cursed)
-	_spawn_merge_burst(at, merged_ball_data, attack_combo_count, is_external_merge)
 	var merge_damage := _calculate_merge_damage(earned_points, attack_combo_count)
 	if not is_external_merge and player_merge_damage_modifier.is_valid():
 		merge_damage = maxi(0, int(player_merge_damage_modifier.call(merge_damage, level)))
+	_spawn_merge_burst(at, merged_ball_data, attack_combo_count, is_external_merge, merge_damage)
 	if not is_external_merge and attack_combo_count >= 2:
 		_show_combo_effect(attack_combo_count, merge_damage)
 	if is_external_merge:
@@ -1082,7 +1082,7 @@ func _on_merge_requested(first, second) -> void:
 	)
 
 
-func _spawn_merge_burst(at: Vector2, data: Resource, merge_combo_count: int, is_external_merge := false) -> void:
+func _spawn_merge_burst(at: Vector2, data: Resource, merge_combo_count: int, is_external_merge := false, damage := 0) -> void:
 	var burst = MergeBurstEffectScene.instantiate()
 	add_child(burst)
 	var burst_color: Color = data.glow_color
@@ -1091,7 +1091,7 @@ func _spawn_merge_burst(at: Vector2, data: Resource, merge_combo_count: int, is_
 		if external_merge_effect_color.a > 0.0:
 			burst_color = external_merge_effect_color
 		burst_scale = external_merge_effect_scale
-	burst.play(at, burst_color, data.get_radius(), merge_combo_count, data.level, burst_scale)
+	burst.play(at, burst_color, data.get_radius(), merge_combo_count, data.level, burst_scale, damage)
 
 
 func _spawn_merged_ball(
@@ -1143,6 +1143,11 @@ func _play_merge_sfx(merge_combo_count: int, pitch_multiplier := 1.0) -> void:
 
 
 func _apply_merge_push(origin: Vector2, merged_ball: MergeBall) -> void:
+	# The smallest normal merge result (stage 2) keeps the configured force.
+	var reference_radius: float = maxf(1.0, BallCatalogClass.get_ball(1).get_radius())
+	var result_radius: float = merged_ball.ball_data.get_radius()
+	var size_multiplier := maxf(1.0, result_radius / reference_radius)
+	var push_strength := merge_push_force * size_multiplier
 	for child in balls.get_children():
 		if not child is MergeBall or child == merged_ball:
 			continue
@@ -1154,7 +1159,7 @@ func _apply_merge_push(origin: Vector2, merged_ball: MergeBall) -> void:
 		if distance <= 0.01 or distance >= MERGE_PUSH_RADIUS:
 			continue
 		var falloff := 1.0 - distance / MERGE_PUSH_RADIUS
-		var impulse := offset.normalized() * merge_push_force * falloff * ball.mass
+		var impulse := offset.normalized() * push_strength * falloff * ball.mass
 		if custom_physics_solver.is_active():
 			custom_physics_solver.apply_impulse(ball, impulse)
 		else:

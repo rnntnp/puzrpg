@@ -1,8 +1,8 @@
 # MECHANIC REGISTRY
 
 Last static audit: 2026-08-25
-Highest registered number: **56**
-Next available number: **57** (56 is registered)
+Highest registered number: **57**
+Next available number: **58** (57 is registered)
 
 This registry prevents a new name from hiding an already-tested player decision. The one-line rule is based on the current handler code, not on inferred fun or balance.
 
@@ -96,6 +96,10 @@ Runtime types:
 | 54 | 능력 편성 / 역중력 드롭 | 가로 위치만 선택해 아래에서 초기 속도 없이 공을 놓는다. 기본 물리의 중력을 뒤집어 천장에 쌓고 아래 위험선으로 넘침을 판정한다. | Modular · 3 existing enemies · [spec](mechanics/054_contact_stop_loadout.md) · [level](../resources/levels/test_contact_stop_loadout.tres) · [handler](../scripts/gimmicks/handlers/contact_stop_merge_loadout_handler.gd) | `NEEDS_PLAYTEST` | 51, 52, 53, normal drop control |
 | 55 | 능력 편성 / 방향 중력 발사 | 발사한 공은 옆 벽에서 속도와 중력 방향을 함께 반사하며 직선 이동한다. 공·천장·바닥 접촉 후 위쪽 중력으로 전환하며 가이드에 반사 경로를 표시한다. 테스트 표시로 양쪽 체력이 무한이다. | Modular · 3 existing enemies · [spec](mechanics/055_directional_gravity_loadout.md) · [level](../resources/levels/test_directional_gravity_loadout.tres) · [handler](../scripts/gimmicks/handlers/directional_gravity_handler.gd) | `NEEDS_PLAYTEST` | 51, 53, 54 |
 | 56 | 수박 던전 / 웨이브 카드 선택 | 5웨이브의 보드를 유지하고 중간 처치마다 무작위 3장 중 1장의 카드를 골라 이번 도전의 합성 공격·회복·방어를 강화한다. 유한 HP로 승패가 있다. | Modular · 5 enemies · [spec](mechanics/056_suika_dungeon.md) · [level](../resources/levels/test_suika_dungeon.tres) · [handler](../scripts/gimmicks/handlers/dungeon_draft_handler.gd) | `NEEDS_PLAYTEST` | 24, 51–55, normal merge projectiles |
+| 57 | 빛이 비치는 연못 / 주변색 반사광 | 55번 보드의 규칙을 유지하고 공 표면에 가까운 공 3개의 색과 연못의 푸른 환경색을 반영한다. 사용자 요청의 시각 실험이며 새 전투 규칙은 없다. | Modular · 3 existing enemies · [spec](mechanics/057_pond_reflection.md) · [level](../resources/levels/test_pond_reflection.tres) · [handler](../scripts/gimmicks/handlers/pond_reflection_handler.gd) | `NEEDS_PLAYTEST` | 55 (의도적 시각 변형) |
+| 58 | 맑은 물방울 연못 / 투명 표면 | 57번과 같은 규칙·기존 테두리를 유지하며 맑은 중심, 넓은 타원 광택, 약한 테두리 명암을 비교한다. 굴절은 없다. | Modular · 3 existing enemies · [spec](mechanics/058_pond_water_surface.md) · [level](../resources/levels/test_pond_water_surface.tres) · [handler](../scripts/gimmicks/handlers/pond_water_surface_handler.gd) | `NEEDS_PLAYTEST` | 55, 57 (의도적 시각 변형) |
+| 59 | 색이 비치는 연못 / 표면 색 반사 | 57번을 재사용하며 주변 색의 발광 같은 번짐을 제한된 색 반사 영역과 알파 합성으로 바꾼다. 기존 테두리와 두 광택 유지. | Modular · 3 existing enemies · [spec](mechanics/059_pond_surface_reflection.md) · [level](../resources/levels/test_pond_surface_reflection.tres) · [handler](../scripts/gimmicks/handlers/pond_surface_reflection_handler.gd) | `NEEDS_PLAYTEST` | 57, 58 (의도적 시각 변형) |
+| 60 | 말랑한 연못 | 59번 기반. 6개 제어점 XPBD로 거리/면적 복원과 접촉을 함께 계산한다. 원본의 촘촘한 충돌 외곽과 GPU 표면에 같은 보간 변형 적용. 저에너지 시스템 수면 및 외부 충격 시 재활성. | Modular · 3 existing enemies · [spec](mechanics/060_soft_pond.md) · [level](../resources/levels/test_soft_pond.tres) · [handler](../scripts/gimmicks/handlers/soft_pond_handler.gd) | `NEEDS_PLAYTEST` | 59 (기반), 5 (크기 조정과 달리 탄성 접촉) |
 
 ## Non-numbered systems that block duplicates
 
@@ -109,6 +113,8 @@ Runtime types:
 
 ## Validation history and gaps
 
+- 2026-10-05: stage 57 received scoped script/Resource loading and visible/test catalog-reference checks. It reuses stage 55 as a visual comparison; rendered appearance and performance remain `NEEDS_PLAYTEST`.
+- 2026-10-05: stage 57 now uses 11 prebuilt sprite-silhouette meshes with surface normals. Scoped checks confirmed contour containment, unit normals, shared generation cache and script loading; rendered appearance and performance remain untested.
 - 2026-10-05: mechanic 56 received scoped Godot script compilation and its own level Resource/catalog-reference checks only. No battle was instantiated; gameplay and balance remain untested.
 - Mechanic 1 previously produced reported parse and cleanup errors during user testing. The current source contains the type annotations and NodePath handling added in response, but no completed replay confirmation is recorded here. It remains `NEEDS_PLAYTEST`.
 - `automated_smoke_level_paths` currently lists only mechanics 1–20. This is registration metadata, not evidence that those smoke tests ran or passed.

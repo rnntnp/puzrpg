@@ -1,0 +1,24 @@
+{
+  "groups": [
+    "SOURCE_BACKUP_hidden",
+    "Gill_L_Lower",
+    "Gill_L_Middle",
+    "Gill_L_Upper",
+    "Gill_R_Lower",
+    "Gill_R_Middle",
+    "Gill_R_Upper",
+    "Body",
+    "Tail_Tip",
+    "Tail_Middle",
+    "Tail_Root"
+  ],
+  "size": [
+    1086,
+    1448
+  ],
+  "alpha_max_error": 0,
+  "visible_rgb_max_error": 0,
+  "changed_alpha_pixels": 0,
+  "png_alpha_max_error": 0,
+  "png_visible_rgb_max_error": 0
+}

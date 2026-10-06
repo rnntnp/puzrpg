@@ -1,0 +1,110 @@
+{
+  "source": "C:\\Users\\jaynap\\Dropbox\\axolotl_verified_v3.psd",
+  "canvas": [
+    1086,
+    1448
+  ],
+  "coordinates": "pixels, top-left origin; L/R are screen left/right",
+  "parts": [
+    {
+      "name": "Gill_L_Lower",
+      "file": "parts_png/Gill_L_Lower.png",
+      "pivot": [
+        264,
+        430
+      ],
+      "draw_order": 0
+    },
+    {
+      "name": "Gill_L_Middle",
+      "file": "parts_png/Gill_L_Middle.png",
+      "pivot": [
+        296,
+        355
+      ],
+      "draw_order": 1
+    },
+    {
+      "name": "Gill_L_Upper",
+      "file": "parts_png/Gill_L_Upper.png",
+      "pivot": [
+        353,
+        283
+      ],
+      "draw_order": 2
+    },
+    {
+      "name": "Gill_R_Lower",
+      "file": "parts_png/Gill_R_Lower.png",
+      "pivot": [
+        741,
+        426
+      ],
+      "draw_order": 3
+    },
+    {
+      "name": "Gill_R_Middle",
+      "file": "parts_png/Gill_R_Middle.png",
+      "pivot": [
+        726,
+        363
+      ],
+      "draw_order": 4
+    },
+    {
+      "name": "Gill_R_Upper",
+      "file": "parts_png/Gill_R_Upper.png",
+      "pivot": [
+        677,
+        288
+      ],
+      "draw_order": 5
+    },
+    {
+      "name": "Tail_Base",
+      "file": "parts_png/Tail_Base.png",
+      "pivot": [
+        404,
+        864
+      ],
+      "draw_order": 6
+    },
+    {
+      "name": "Tail_Tip",
+      "file": "parts_png/Tail_Tip.png",
+      "pivot": [
+        154,
+        953
+      ],
+      "draw_order": 7
+    },
+    {
+      "name": "Tail_Middle",
+      "file": "parts_png/Tail_Middle.png",
+      "pivot": [
+        258,
+        904
+      ],
+      "draw_order": 8
+    },
+    {
+      "name": "Tail_Root",
+      "file": "parts_png/Tail_Root.png",
+      "pivot": [
+        358,
+        852
+      ],
+      "draw_order": 9
+    },
+    {
+      "name": "Body_Front",
+      "file": "parts_png/Body_Front.png",
+      "pivot": [
+        543,
+        700
+      ],
+      "draw_order": 10
+    }
+  ],
+  "note": "v2: continuous separate outlines, cut-mark cleanup, expanded-motion and exposed-part inspections. Pivots provisional."
+}

@@ -63,7 +63,7 @@ const CustomBoardPhysicsDataClass = preload("res://scripts/custom_physics/custom
 @export_range(1, 11, 1) var max_ball_level: int = 11
 ## 1.0은 물리 기준 속도이며, 현재 전체 레벨 기본 낙하 배속은 1.2다.
 @export_range(0.5, 3.0, 0.1) var ball_physics_speed: float = 1.2
-## 합성 지점에서 주변 공으로 퍼지는 짧은 충격파의 세기다. 0이면 비활성화한다.
+## 2단계 합성 결과 기준 충격파 세기다. 큰 결과는 반지름 비율만큼 증가한다. 0이면 비활성화한다.
 @export_range(0.0, 500.0, 5.0) var merge_push_force: float = 110.0
 ## 합성 순간의 전체 게임 배속. 1.0이면 슬로모션을 사용하지 않는다.
 @export_range(0.05, 1.0, 0.05) var merge_hit_stop_time_scale: float = 0.25

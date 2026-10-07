@@ -1,6 +1,8 @@
 extends "res://scripts/gimmicks/visuals/contact_stop_launcher.gd"
 
 var direction := Vector2.UP
+var flight_velocity_integrator := Callable()
+var prediction_step_seconds := 0.0
 var throw_power := 0.45
 var flying_balls: Dictionary = {}
 var landing_position := Vector2.ZERO
@@ -146,6 +148,10 @@ func _update_landing_prediction() -> void:
 	var acceleration := direction * gravity
 	var damp: float = game.physics_data.ball_linear_damp if game.physics_data != null else 0.0
 	var step: float = maxf(0.001, tuning.guide_step_seconds)
+	var prediction_steps: int = maxi(1,tuning.guide_max_steps)
+	if prediction_step_seconds>0.0:
+		prediction_steps=int(ceil(prediction_steps*step/prediction_step_seconds))
+		step=prediction_step_seconds
 	var left_limit := game.board_inner_left
 	var right_limit := game.board_inner_right
 	# Actual compound hitbox horizontal extents; flight rotation is locked.
@@ -158,8 +164,11 @@ func _update_landing_prediction() -> void:
 			left_limit = maxf(left_limit, game.board_inner_left - offset.x)
 			right_limit = minf(right_limit, game.board_inner_right - offset.x)
 	var reflections := 0
-	for index in maxi(1, tuning.guide_max_steps):
-		velocity = (velocity + acceleration * step) * maxf(0.0, 1.0 - damp * step)
+	for index in prediction_steps:
+		if flight_velocity_integrator.is_valid():
+			velocity=flight_velocity_integrator.call(velocity,acceleration,damp,step)
+		else:
+			velocity = (velocity + acceleration * step) * maxf(0.0, 1.0 - damp * step)
 		var remaining := step
 		# Spend the rest of a step after a bounce instead of losing travel time.
 		for bounce_step in 4:
@@ -351,6 +360,7 @@ func _fire_ball() -> void:
 	var callback := _on_flight_contact.bind(ball)
 	var flight := {"ball": ball, "direction": direction, "force": ball.constant_force, "callback": callback, "lock_rotation": ball.lock_rotation}
 	ball.lock_rotation = true
+	ball.set_meta("directional_flight",true)
 	flying_balls[ball.get_instance_id()] = flight
 	ball.body_entered.connect(callback)
 	_apply_flight_gravity(ball, flight)
@@ -378,6 +388,7 @@ func _finish_flight(ball: MergeBall) -> void:
 	var ball_id := ball.get_instance_id()
 	if not flying_balls.has(ball_id):
 		return
+	ball.remove_meta("directional_flight")
 	var flight: Dictionary = flying_balls[ball_id]
 	ball.constant_force = flight.force
 	ball.lock_rotation = flight.lock_rotation

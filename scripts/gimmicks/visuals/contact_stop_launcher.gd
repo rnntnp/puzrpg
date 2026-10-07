@@ -122,7 +122,7 @@ func restore_input() -> void:
 			continue
 		var ball: MergeBall = state.ball
 		ball.gravity_scale = state.gravity
-	original_ball_state.clear()
+	original_ball_state.clear() 
 	if is_instance_valid(game):
 		game.danger_height_direction = original_danger_direction
 		game.danger_line_y = original_danger_y

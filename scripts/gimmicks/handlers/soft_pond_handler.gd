@@ -7,6 +7,8 @@ func _on_configured() -> void:
 	super._on_configured()
 	soft_balls = attach_visual_layer(SoftLayer.new())
 	soft_balls.configure(merge_game, tuning)
+	launcher.flight_velocity_integrator = soft_balls.integrate_flight_velocity
+	launcher.prediction_step_seconds = 1.0 / (60.0 * tuning.solver_substeps)
 
 func _on_cleanup() -> void:
 	if is_instance_valid(soft_balls):

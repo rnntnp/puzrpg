@@ -54,6 +54,7 @@ func _physics_process(delta: float) -> void:
 			for pair in pairs:_collide(pair[0],pair[1])
 		for s in active: _velocity(s, dt)
 		_damp_contacts(active,dt)
+		_project_contact_energy(active)
 	for s in active: _publish(s)
 	# body_entered can synchronously lock both merge sources. Deliver every
 	# landing notification first, including the newly launched second source.
@@ -220,10 +221,20 @@ func _surface_gradient(s: Dictionary,indices: Array[int]) -> PackedFloat32Array:
 		weights[int(binding.y)]+=binding.w/indices.size()
 	return weights
 
-func _correct_surface(s: Dictionary,weights: PackedFloat32Array,correction: Vector2) -> void:
+func _correct_surface(s: Dictionary,weights: PackedFloat32Array,correction: Vector2,stabilization := 0.0) -> void:
 	var points: PackedVector2Array = s.points
-	for i in POINT_COUNT:points[i]+=weights[i]*correction
+	var previous: PackedVector2Array = s.previous
+	# Penetration stabilization moves geometry, not kinetic velocity. Moving
+	# both samples prevents a newly grown merge silhouette from launching
+	# its neighbours by penetration / dt. Impact response is handled below
+	# by contact velocities and wall restitution; material springs still
+	# contribute their own damped deformation velocity.
+	for i in POINT_COUNT:
+		var shift := weights[i]*correction
+		points[i]+=shift
+		previous[i]+=shift*stabilization
 	s.points=points
+	s.previous=previous
 	s.surface_dirty=true
 
 func _import_changes(s: Dictionary) -> void:
@@ -246,6 +257,8 @@ func _import_changes(s: Dictionary) -> void:
 	s.surface_dirty=true
 
 func _predict(s: Dictionary, dt: float) -> void:
+	s.step_dt=dt
+	s.flight_side_normal=Vector2.ZERO
 	var ball: MergeBall = s.ball
 	var gravity: float = ProjectSettings.get_setting("physics/2d/default_gravity",980.0)
 	var acceleration := Vector2(0,gravity*ball.gravity_scale)+ball.constant_force/ball.mass
@@ -268,12 +281,16 @@ func _predict(s: Dictionary, dt: float) -> void:
 		var rigid := mean+Vector2(-r.y,r.x)*angular
 		s.velocities[i]=rigid*rigid_damp+(s.velocities[i]-rigid)*internal_damp+acceleration*dt
 		s.points[i]+=s.velocities[i]*dt
+	s.motion_energy=0.5*ball.mass*_center(s.velocities).length_squared()
 	var lambdas: PackedFloat32Array = s.edge_lambdas
 	lambdas.fill(0.0)
 	s.edge_lambdas=lambdas
 	s.area_lambda=0.0
 	s.boundary.clear()
 	s.surface_dirty=true
+
+func integrate_flight_velocity(velocity: Vector2,acceleration: Vector2,damp: float,dt: float) -> Vector2:
+	return velocity*exp(-damp*dt)+acceleration*dt
 
 func _structure(s: Dictionary, dt: float) -> void:
 	var weight: float = POINT_COUNT/s.ball.mass
@@ -340,6 +357,7 @@ func _walls(s: Dictionary) -> void:
 		var gradient: PackedFloat32Array = m.gradient
 		var depth: float = m.plane-_contact_position(s,gradient).dot(normal)
 		if depth<=0.0:continue
+		if s.ball.get_meta("directional_flight",false) and absf(normal.x)>0.5:s.flight_side_normal=normal
 		_correct_surface(s,gradient,normal*depth*m.inverse_mass)
 		for i in POINT_COUNT:
 			if absf(gradient[i])>0.02:s.boundary[i]=normal
@@ -396,9 +414,21 @@ func _resolve_contact(a: Dictionary,b: Dictionary,m: Dictionary) -> void:
 	var denominator := 0.0
 	for i in POINT_COUNT:denominator+=wa*ga[i]*ga[i]+wb*gb[i]*gb[i]
 	var dl := maxf(depth,0.0)/maxf(denominator,0.000001)
-	_correct_surface(a,ga,-normal*wa*dl)
-	_correct_surface(b,gb,normal*wb*dl)
+	# Preserve ordinary contact support and spring response. Only penetration
+	# exceeding the motion predicted this substep is geometry stabilization.
+	var va := _weighted_velocity(a,ga)
+	var vb := _weighted_velocity(b,gb)
+	var allowed: float = maxf(1.0,maxf(0.0,-(vb-va).dot(normal))*a.step_dt)
+	var stabilization := clampf((depth-allowed)/maxf(depth,0.000001),0.0,1.0)
+	_correct_surface(a,ga,-normal*wa*dl,stabilization)
+	_correct_surface(b,gb,normal*wb*dl,stabilization)
 	contacts[str(a.ball.get_instance_id())+":"+str(b.ball.get_instance_id())]=[a.ball,b.ball,normal]
+
+func _weighted_velocity(s: Dictionary,weights: PackedFloat32Array) -> Vector2:
+	var result := Vector2.ZERO
+	var velocities: PackedVector2Array = s.velocities
+	for i in POINT_COUNT:result+=velocities[i]*weights[i]
+	return result
 
 func _query_shape(s: Dictionary) -> ConvexPolygonShape2D:
 	var shape: ConvexPolygonShape2D = s.query_shape
@@ -408,6 +438,29 @@ func _query_shape(s: Dictionary) -> ConvexPolygonShape2D:
 		shape.points=hull
 		s.query_dirty=false
 	return shape
+
+func _project_contact_energy(active: Array) -> void:
+	# Contact projection is passive: it can transfer or dissipate translation
+	# energy, but penetration correction cannot create it. The budget already
+	# includes this substep's external impulses and gravity. Internal material
+	# velocities remain untouched so local deformation can damp and recover.
+	var touching: Dictionary = {}
+	for pair in contacts.values():
+		touching[pair[0].get_instance_id()]=true
+		touching[pair[1].get_instance_id()]=true
+	var involved: Array = []
+	var budget := 0.0
+	var energy := 0.0
+	for s in active:
+		if s.boundary.is_empty() and not touching.has(s.ball.get_instance_id()):continue
+		involved.append(s)
+		budget+=s.motion_energy
+		energy+=0.5*s.ball.mass*_center(s.velocities).length_squared()
+	if energy<=budget+0.0001:return
+	var scale := sqrt(budget/energy)
+	for s in involved:
+		var correction := _center(s.velocities)*(scale-1.0)
+		for i in POINT_COUNT:s.velocities[i]+=correction
 
 func _candidate_pairs(active: Array,dt: float) -> Array:
 	var pairs: Array = []
@@ -454,6 +507,7 @@ func _support(points: PackedVector2Array,axis: Vector2) -> Array[int]:
 	return indices
 
 func _velocity(s: Dictionary,dt: float) -> void:
+	var incoming_mean := _center(s.velocities)
 	for i in POINT_COUNT:
 		var v: Vector2 = (s.points[i]-s.previous[i])/dt
 		if s.boundary.has(i):
@@ -466,6 +520,13 @@ func _velocity(s: Dictionary,dt: float) -> void:
 			if absf(n.y)>0.5:
 				v.x*=exp(-12.0*dt)
 		s.velocities[i]=v
+	# Flight is a translating silhouette: a side-wall hit reflects its whole
+	# centre velocity, rather than only whichever material points touched.
+	var side: Vector2 = s.flight_side_normal
+	if s.ball.get_meta("directional_flight",false) and side!=Vector2.ZERO and incoming_mean.dot(side)<-30.0:
+		var reflected := incoming_mean-2.0*side*incoming_mean.dot(side)
+		var correction := reflected-_center(s.velocities)
+		for i in POINT_COUNT:s.velocities[i]+=correction
 
 func _damp_contacts(active: Array,dt: float) -> void:
 	for pair in contacts.values():
@@ -483,6 +544,7 @@ func _damp_contacts(active: Array,dt: float) -> void:
 			b.velocities[i]-=correction*wb/(wa+wb)
 	for s in active:
 		if s.boundary.is_empty(): continue
+		if s.ball.get_meta("directional_flight",false) and s.flight_side_normal!=Vector2.ZERO:continue
 		var mean := _center(s.velocities)
 		var normal := Vector2.ZERO
 		for n in s.boundary.values(): normal+=n

@@ -3,6 +3,7 @@ extends "res://scripts/gimmicks/visuals/contact_stop_launcher.gd"
 var direction := Vector2.UP
 var flight_velocity_integrator := Callable()
 var prediction_step_seconds := 0.0
+var prediction_collision_mask := 1
 var throw_power := 0.45
 var flying_balls: Dictionary = {}
 var landing_position := Vector2.ZERO
@@ -154,7 +155,10 @@ func _update_landing_prediction() -> void:
 		step=prediction_step_seconds
 	var left_limit := game.board_inner_left
 	var right_limit := game.board_inner_right
-	# Actual compound hitbox horizontal extents; flight rotation is locked.
+	var top_limit := game.drop_position_y
+	var bottom_limit := game.board_inner_bottom
+	# Actual compound hitbox extents; flight rotation is locked. Horizontal
+	# boundaries are explicit because native physics uses an isolated query layer.
 	for child in game.preview_ball.get_children():
 		if not child is CollisionShape2D or child.disabled or child.shape == null:
 			continue
@@ -163,6 +167,8 @@ func _update_landing_prediction() -> void:
 			var offset: Vector2 = child.transform * corner
 			left_limit = maxf(left_limit, game.board_inner_left - offset.x)
 			right_limit = minf(right_limit, game.board_inner_right - offset.x)
+			top_limit = maxf(top_limit, game.drop_position_y - offset.y)
+			bottom_limit = minf(bottom_limit, game.board_inner_bottom - offset.y)
 	var reflections := 0
 	for index in prediction_steps:
 		if flight_velocity_integrator.is_valid():
@@ -187,11 +193,19 @@ func _update_landing_prediction() -> void:
 				if segment.length() > fade_remaining:
 					segment = segment.normalized() * fade_remaining
 					reaches_wall = false
-			var fraction := _cast_board_segment(at, segment)
+			var horizontal_fraction := 1.0
+			var reaches_horizontal := false
+			if segment.y > 0.0 and at.y + segment.y >= bottom_limit:
+				horizontal_fraction = clampf((bottom_limit-at.y)/segment.y,0.0,1.0)
+				reaches_horizontal = true
+			elif segment.y < 0.0 and at.y + segment.y <= top_limit:
+				horizontal_fraction = clampf((top_limit-at.y)/segment.y,0.0,1.0)
+				reaches_horizontal = true
+			var fraction := minf(_cast_board_segment(at, segment),horizontal_fraction)
 			at += segment * fraction
 			guide_length += segment.length() * fraction
 			guide_points.append(at)
-			if fraction < 1.0:
+			if fraction < 1.0 or reaches_horizontal:
 				guide_has_contact = true
 				break
 			if not reaches_wall:
@@ -242,7 +256,7 @@ func _cast_board_segment(start: Vector2, motion: Vector2) -> float:
 		query.shape = collision.shape
 		query.transform = collision.global_transform
 		query.transform.origin += world_offset
-		query.collision_mask = 1
+		query.collision_mask = prediction_collision_mask
 		query.exclude = [game.preview_ball.get_rid(), game.left_wall.get_rid(), game.right_wall.get_rid()]
 		query.margin = tuning.guide_collision_margin
 		if not space.intersect_shape(query, 1).is_empty():
@@ -391,7 +405,9 @@ func _finish_flight(ball: MergeBall) -> void:
 	ball.remove_meta("directional_flight")
 	var flight: Dictionary = flying_balls[ball_id]
 	ball.constant_force = flight.force
-	ball.lock_rotation = flight.lock_rotation
+	# A Godot body_entered callback can run while contact queries are flushing.
+	# Restoring this property changes the body mode and must wait for that batch.
+	ball.set_deferred("lock_rotation", flight.lock_rotation)
 	ball.gravity_scale = -absf(float(original_ball_state[ball_id].gravity))
 	if ball.body_entered.is_connected(flight.callback):
 		ball.body_entered.disconnect(flight.callback)

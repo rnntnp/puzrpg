@@ -1,0 +1,31 @@
+[gd_resource type="Resource" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/gimmicks/configs/soft_pond_config.gd" id="1"]
+[ext_resource type="Resource" path="res://resources/visuals/pond_surface_rendering_settings.tres" id="2"]
+
+[resource]
+script = ExtResource("1")
+physics_backend = "QuarkPhysics"
+quark_particle_count = 12
+quark_air_damping = 0.65
+quark_substeps = 2
+quark_iterations = 4
+quark_rigidity = 0.4
+quark_shape_matching = 0.8
+quark_area_rigidity = 1.0
+quark_sleep_tolerance = 0.025
+quark_friction = 0.01
+quark_wall_friction = 0.19
+maximum_compression = 0.1
+contact_bounce = 0.02
+contact_normal_damping = 18.0
+contact_tangent_damping = 18.0
+solver_iterations = 8
+solver_substeps = 2
+edge_compliance = 0.002
+shape_compliance = 0.006
+area_compliance = 0.000001
+internal_damping = 18.0
+sleep_velocity = 12.0
+sleep_delay = 0.75
+rendering_settings = ExtResource("2")

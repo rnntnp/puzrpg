@@ -1,0 +1,6 @@
+env = SConscript(ARGUMENTS["godot_cpp_dir"] + "/SConstruct")
+# Preserve the reference solver's operation order (no fast-math/FMA).
+if env["platform"] == "windows":
+    env.Append(CCFLAGS=["/fp:strict"])
+library = env.SharedLibrary("../bin/libxpbd_pond" + env["suffix"] + env["SHLIBSUFFIX"], source=Glob("*.cpp"))
+Default(library)

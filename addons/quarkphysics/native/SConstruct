@@ -1,0 +1,11 @@
+import os
+
+env = SConscript(ARGUMENTS["godot_cpp_dir"] + "/SConstruct")
+env.Append(CPPPATH=["src", "src/QuarkPhysics", "src/QuarkPhysics/extensions",
+                    "src/QuarkPhysics/json", "src/QuarkPhysics/polypartition"])
+sources = []
+for path in ["src", "src/QuarkPhysics", "src/QuarkPhysics/extensions",
+             "src/QuarkPhysics/json", "src/QuarkPhysics/polypartition"]:
+    sources += Glob(path + "/*.cpp")
+library = env.SharedLibrary("../bin/libquarkphysics" + env["suffix"] + env["SHLIBSUFFIX"], source=sources)
+Default(library)

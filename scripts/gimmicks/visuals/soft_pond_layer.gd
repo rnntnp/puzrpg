@@ -48,10 +48,7 @@ func _physics_process(delta: float) -> void:
 			s.wall_manifolds=[]
 			_predict(s, dt)
 		var pairs := _candidate_pairs(active,dt)
-		for iteration in tuning.solver_iterations:
-			for s in active: _structure(s, dt)
-			for s in active: _walls(s)
-			for pair in pairs:_collide(pair[0],pair[1])
+		_solve_constraints(active, pairs, dt)
 		for s in active: _velocity(s, dt)
 		_damp_contacts(active,dt)
 		_project_contact_energy(active)
@@ -71,6 +68,12 @@ func _physics_process(delta: float) -> void:
 			a.request_merge_with(b)
 	for s in active:s.touching=s.seen
 	_update_sleep(active,delta)
+
+func _solve_constraints(active: Array, pairs: Array, dt: float) -> void:
+	for iteration in tuning.solver_iterations:
+		for s in active: _structure(s, dt)
+		for s in active: _walls(s)
+		for pair in pairs: _collide(pair[0], pair[1])
 
 func _update_sleep(active: Array,dt: float) -> void:
 	# Sleep the interacting system as one unit, only after its kinetic energy
@@ -393,7 +396,7 @@ func _collide(a: Dictionary,b: Dictionary) -> void:
 	var ga := _surface_gradient(a,ia)
 	var gb := _surface_gradient(b,ib)
 	var offset := _contact_position(b,gb)-_contact_position(a,ga)
-	var manifold := {"normal":normal,"ga":ga,"gb":gb,"margin":offset.dot(normal)+depth}
+	var manifold := {"a":a,"b":b,"normal":normal,"ga":ga,"gb":gb,"margin":offset.dot(normal)+depth}
 	manifolds[key]=manifold
 	_resolve_contact(a,b,manifold)
 
@@ -529,19 +532,27 @@ func _velocity(s: Dictionary,dt: float) -> void:
 		for i in POINT_COUNT:s.velocities[i]+=correction
 
 func _damp_contacts(active: Array,dt: float) -> void:
-	for pair in contacts.values():
-		var a: Dictionary = states[pair[0].get_instance_id()]
-		var b: Dictionary = states[pair[1].get_instance_id()]
-		var normal: Vector2 = pair[2]
-		var relative := _center(b.velocities)-_center(a.velocities)
+	for m in manifolds.values():
+		var a: Dictionary = m.a
+		var b: Dictionary = m.b
+		var normal: Vector2 = m.normal
+		var ga: PackedFloat32Array = m.ga
+		var gb: PackedFloat32Array = m.gb
+		var gap: float = (_contact_position(b,gb)-_contact_position(a,ga)).dot(normal)-m.margin
+		if gap>0.02:continue
+		var relative := _weighted_velocity(b,gb)-_weighted_velocity(a,ga)
 		var inward := normal*minf(relative.dot(normal),0.0)
+		var outward := normal*maxf(relative.dot(normal),0.0)
 		var tangent := relative-normal*relative.dot(normal)
-		var correction := inward+tangent*(1.0-exp(-tuning.internal_damping*dt))
-		var wa: float = 1.0/a.ball.mass
-		var wb: float = 1.0/b.ball.mass
+		var correction := inward+outward*(1.0-exp(-tuning.contact_normal_damping*dt))+tangent*(1.0-exp(-tuning.contact_tangent_damping*dt))
+		var wa: float = POINT_COUNT/a.ball.mass
+		var wb: float = POINT_COUNT/b.ball.mass
+		var denominator := 0.0
+		for i in POINT_COUNT:denominator+=wa*ga[i]*ga[i]+wb*gb[i]*gb[i]
+		correction/=maxf(denominator,0.000001)
 		for i in POINT_COUNT:
-			a.velocities[i]+=correction*wa/(wa+wb)
-			b.velocities[i]-=correction*wb/(wa+wb)
+			a.velocities[i]+=correction*(wa*ga[i])
+			b.velocities[i]-=correction*(wb*gb[i])
 	for s in active:
 		if s.boundary.is_empty(): continue
 		if s.ball.get_meta("directional_flight",false) and s.flight_side_normal!=Vector2.ZERO:continue

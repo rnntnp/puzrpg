@@ -1,0 +1,18 @@
+# Softbody performance references — 2026-10-09
+
+Scope: official engine documentation, developer answers and public implementations. These do not establish the proprietary internals of Blob Merge 3D or other mobile Suika games. Desktop measurements below are not mobile benchmarks.
+
+## What is documented
+
+- [Obi CPU/GPU backends](https://obi.virtualmethodstudio.com/manual/7.0/backends.html): CPU backend uses Burst compilation, SIMD and multithreading; small simulations can be better suited to CPU because GPU has a higher minimum dispatch cost. Independent actors are easier to parallelize. Our dense pile has shared contact points, so independent parallel writes cannot be assumed safe.
+- [Obi developer's mobile response](https://obi.virtualmethodstudio.com/forum/thread-2972-post-10998.html): recommends Burst over the fallback backend on mobile and checking substeps/fixed timing. This example concerns cloth, not a published Suika-game implementation; it supports a mobile CPU-engine approach, not an exact performance comparison with our board.
+- [Obi performance guide](https://obi.virtualmethodstudio.com/manual/7.0/performancetips.html): reduce unnecessary constraints, particle counts and iterations; detailed mesh collision is expensive; watch repeated fixed updates per rendered frame. We already measured this catch-up amplification. Sleeping does not meet the requested all-moving worst-case target by itself. The guide's MeshCollider discussion is 3D and is not proof that our 2D convex query has the same cost model.
+- [Obi softbody setup](https://obi.virtualmethodstudio.com/manual/7.0/softbodysetup.html): allows a separate graphical mesh bound to a lower-resolution physical representation. Our six controls already follow this separation, but collision still regenerates a denser outline. Reducing collision-outline complexity is an additional tradeoff, not merely reducing physical control count.
+- [PBD2D source/documentation](https://github.com/andywiecko/PBD2D): 2D PBD/XPBD with Burst, structs/ECS, point-line/capsule-capsule/point-trifield collision. Dynamic bounding-tree scheduling appears on the roadmap, so do not claim it is already implemented. It is a preview library, useful as an implementation reference rather than evidence of commercial mobile deployment.
+- [Box2D collision interface](https://box2d.org/documentation/md_collision.html): collision routines and dynamic bounding tree can be used separately from rigid simulation. It is not a softbody solver. Such a tree reduces candidate work, but cannot remove genuinely touching pairs in a dense pile.
+
+## Applied to stage 61
+
+First implementation removes repeated pair-container conversion, manifold lookup, invariant contact calculations and duplicate contact-record payload construction inside the eight passes. It keeps numerical operation order, exported contacts/manifolds and gameplay timing after each substep. Before/after 80-awake-ball means: 29.476 → 24.079ms per fixed update (18.3% less); constraint solve 23.331 → 17.921ms. Final particle positions/velocities are exactly equal, and ten isolated traces match. Full point/wall state Dictionaries and convex-shape queries remain.
+
+Next computational options: store the remaining point/wall state in typed native buffers, reduce redundant outline/hull construction, and evaluate a cheaper collision outline against existing sprite shapes. Parallel contact resolution needs conflict grouping or a changed accumulation solver; do not silently change the current sequential physical response. Iteration reduction is a separate feel/accuracy experiment. No GPU/rendering migration or physics-parameter retuning was part of this change.

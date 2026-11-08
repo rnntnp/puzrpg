@@ -11,7 +11,11 @@ func _on_configured() -> void:
 		data.tuning = ReflectionConfig.new()
 	super._on_configured()
 	reflections = attach_visual_layer(ReflectionLayer.new())
-	reflections.configure(merge_game, tuning.rendering_settings)
+	reflections.configure(merge_game, tuning.rendering_settings, _integrate_reflection_with_outline())
+
+
+func _integrate_reflection_with_outline() -> bool:
+	return false
 
 
 func _on_cleanup() -> void:

@@ -1,6 +1,6 @@
 extends "res://scripts/gimmicks/visuals/soft_pond_layer.gd"
 ## Same solver lifecycle, force integration, collision queries and gameplay.
-## Only numerical hot loops are replaced with the native implementation.
+## Uses the optional Windows kernel or the GDScript contact solver.
 var kernel: RefCounted
 var native_wall_planes: Array = []
 
@@ -55,7 +55,9 @@ func _candidate_pairs(active: Array, dt: float) -> Array:
 	for i in active.size():
 		var a: Dictionary = active[i]
 		a.query_center = _center(a.points)
-		var padding: float = 2.0 + a.published_velocity.length() * dt
+		var speed: float = a.published_velocity.length()
+		a.broad_speed = speed
+		var padding := 2.0 + speed * dt
 		var extent: Vector2 = Vector2.ONE * (a.broad_radius + padding)
 		var first := Vector2i(((a.query_center - extent) / cell_size).floor())
 		var last := Vector2i(((a.query_center + extent) / cell_size).floor())
@@ -68,7 +70,7 @@ func _candidate_pairs(active: Array, dt: float) -> Array:
 					if tested.has(key): continue
 					tested[key] = true
 					var b: Dictionary = active[j]
-					var reach: float = a.broad_radius + b.broad_radius + 4.0 + (a.published_velocity.length() + b.published_velocity.length()) * dt
+					var reach: float = a.broad_radius + b.broad_radius + 4.0 + (speed + b.broad_speed) * dt
 					if (a.query_center as Vector2).distance_squared_to(b.query_center) <= reach * reach:
 						pairs.append([b, a])
 				grid[cell].append(i)
@@ -81,7 +83,7 @@ func configure(board: MergeGame, settings: Resource) -> void:
 	if ClassDB.class_exists("XPBDPondKernel"):
 		kernel = ClassDB.instantiate("XPBDPondKernel")
 	else:
-		push_warning("Native XPBD unavailable; using the identical GDScript reference.")
+		push_warning("Native XPBD unavailable; using the GDScript solver.")
 
 func _solve_constraints(active: Array, pairs: Array, dt: float) -> void:
 	if kernel == null:
@@ -117,10 +119,52 @@ func _surface_gradient(s: Dictionary, indices: Array[int]) -> PackedFloat32Array
 
 func _resolve_contact(a: Dictionary, b: Dictionary, m: Dictionary) -> void:
 	if kernel == null:
-		super._resolve_contact(a, b, m)
+		_resolve_script_contact(a, b, m)
 		return
 	if kernel.resolve_contact(a, b, m, POINT_COUNT / a.ball.mass, POINT_COUNT / b.ball.mass):
 		contacts[str(a.ball.get_instance_id())+":"+str(b.ball.get_instance_id())] = [a.ball,b.ball,m.normal]
+
+func _resolve_script_contact(a: Dictionary, b: Dictionary, contact: Dictionary) -> void:
+	var normal: Vector2 = contact.normal
+	var ga: PackedFloat32Array = contact.ga
+	var gb: PackedFloat32Array = contact.gb
+	var points_a: PackedVector2Array = a.points
+	var points_b: PackedVector2Array = b.points
+	var position_a := Vector2.ZERO
+	var position_b := Vector2.ZERO
+	for i in POINT_COUNT:
+		position_a += points_a[i] * ga[i]
+		position_b += points_b[i] * gb[i]
+	var depth: float = contact.margin - (position_b - position_a).dot(normal)
+	if depth < -0.02:
+		return
+
+	# This manifold is discarded at the next substep. Weights, mass and
+	# predicted velocities stay fixed during the iterations of this substep.
+	if not contact.has("script_key"):
+		var ball_a: MergeBall = a.ball
+		var ball_b: MergeBall = b.ball
+		var key := str(ball_a.get_instance_id()) + ":" + str(ball_b.get_instance_id())
+		contact.script_key = key
+		contacts[key] = [ball_a, ball_b, normal]
+	if depth <= 0.0:
+		return
+	if not contact.has("script_denominator"):
+		var wa: float = POINT_COUNT / a.ball.mass
+		var wb: float = POINT_COUNT / b.ball.mass
+		var denominator := 0.0
+		for i in POINT_COUNT:
+			denominator += wa * ga[i] * ga[i] + wb * gb[i] * gb[i]
+		var relative_velocity := _weighted_velocity(b, gb) - _weighted_velocity(a, ga)
+		contact.script_mass_a = wa
+		contact.script_mass_b = wb
+		contact.script_denominator = maxf(denominator, 0.000001)
+		contact.script_allowed = maxf(1.0, maxf(0.0, -relative_velocity.dot(normal)) * a.step_dt)
+
+	var dl: float = depth / contact.script_denominator
+	var stabilization := clampf((depth - contact.script_allowed) / maxf(depth, 0.000001), 0.0, 1.0)
+	_correct_surface(a, ga, -normal * contact.script_mass_a * dl, stabilization)
+	_correct_surface(b, gb, normal * contact.script_mass_b * dl, stabilization)
 
 func _contact_position(s: Dictionary, weights: PackedFloat32Array) -> Vector2:
 	if kernel == null: return super._contact_position(s, weights)

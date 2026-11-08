@@ -1,6 +1,10 @@
 shader_type canvas_item;
 render_mode unshaded;
 
+#include "res://shaders/pond_surface_reflection.gdshaderinc"
+
+uniform bool pond_reflection_enabled = false;
+
 uniform vec4 outline_color : source_color = vec4(0.36, 0.62, 0.78, 0.95);
 uniform float outline_color_texel_width : hint_range(0.0, 64.0, 0.1) = 4.0;
 uniform float outline_total_texel_width : hint_range(0.0, 64.0, 0.1) = 6.0;
@@ -24,10 +28,12 @@ void fragment() {
 		vec2 direction = vec2(cos(angle), sin(angle));
 		float outer_alpha = texture(TEXTURE, UV + direction * TEXTURE_PIXEL_SIZE * outline_color_texel_width).a;
 		float total_alpha = texture(TEXTURE, UV + direction * TEXTURE_PIXEL_SIZE * outline_total_texel_width).a;
-		float frozen_alpha = texture(TEXTURE, UV + direction * TEXTURE_PIXEL_SIZE * frozen_outer_texel_width).a;
+		if (frozen_enabled) {
+			float frozen_alpha = texture(TEXTURE, UV + direction * TEXTURE_PIXEL_SIZE * frozen_outer_texel_width).a;
+			frozen_sample = min(frozen_sample, frozen_alpha);
+		}
 		outer_sample = min(outer_sample, outer_alpha);
 		total_sample = min(total_sample, total_alpha);
-		frozen_sample = min(frozen_sample, frozen_alpha);
 	}
 	float color_complete_band = clamp(center_alpha - outer_sample, 0.0, 1.0);
 	float complete_band = clamp(center_alpha - total_sample, 0.0, 1.0);
@@ -51,5 +57,19 @@ void fragment() {
 		0.0,
 		1.0
 	);
+	if (pond_reflection_enabled && !frozen_enabled) {
+		// Map back from the expanded outline to the original gloss UV space.
+		vec2 expansion = vec2(1.0) + TEXTURE_PIXEL_SIZE * outline_expand_texels * 2.0;
+		vec2 gloss_uv = (UV - vec2(0.5)) * expansion + vec2(0.5);
+		if (all(greaterThanEqual(gloss_uv, vec2(0.0))) && all(lessThanEqual(gloss_uv, vec2(1.0)))) {
+			float gloss_mask = texture(TEXTURE, gloss_uv).a;
+			if (gloss_mask > 0.0) {
+				vec4 gloss = pond_surface_reflection(gloss_uv, gloss_mask);
+				vec4 combined = over_patch(vec4(gloss.rgb * gloss.a, gloss.a), vec4(final_color, final_alpha));
+				final_color = combined.rgb / max(combined.a, 0.0001);
+				final_alpha = combined.a;
+			}
+		}
+	}
 	COLOR = vec4(final_color, final_alpha);
 }

@@ -97,34 +97,8 @@ func _update_sleep(active: Array,dt: float) -> void:
 		s.published_velocity=Vector2.ZERO
 
 func _outline(ball: MergeBall) -> Dictionary:
-	var points := PackedVector2Array()
-	var shapes: Array = []
-	for node in ball.get_children():
-		if not node is CollisionShape2D or node.disabled or node.shape == null: continue
-		shapes.append({"node":node,"shape":node.shape,"transform":node.transform,"disabled":node.disabled})
-		var p := PackedVector2Array()
-		if node.shape is ConvexPolygonShape2D: p = node.shape.points
-		elif node.shape is CircleShape2D:
-			for i in 32: p.append(Vector2.from_angle(TAU*i/32.0)*node.shape.radius)
-		elif node.shape is CapsuleShape2D:
-			var stem: float = maxf(0,node.shape.height*0.5-node.shape.radius)
-			for i in 17: p.append(Vector2.from_angle(PI+PI*i/16.0)*node.shape.radius+Vector2(0,-stem))
-			for i in 17: p.append(Vector2.from_angle(PI*i/16.0)*node.shape.radius+Vector2(0,stem))
-		elif node.shape is RectangleShape2D:
-			var h: Vector2 = node.shape.size*0.5
-			p = PackedVector2Array([Vector2(-h.x,-h.y),Vector2(h.x,-h.y),h,Vector2(-h.x,h.y)])
-		for point in p: points.append(node.transform*point)
-	var hull := Geometry2D.convex_hull(points)
-	if hull.size()>1: hull.remove_at(hull.size()-1)
-	var lengths := PackedFloat32Array([0.0])
-	for i in hull.size(): lengths.append(lengths[-1]+hull[i].distance_to(hull[(i+1)%hull.size()]))
-	var rest := PackedVector2Array()
-	for i in POINT_COUNT:
-		var distance := lengths[-1]*i/POINT_COUNT
-		var edge := 0
-		while edge+1<hull.size() and lengths[edge+1]<distance: edge+=1
-		rest.append(hull[edge].lerp(hull[(edge+1)%hull.size()],(distance-lengths[edge])/maxf(lengths[edge+1]-lengths[edge],0.001)))
-	return {"rest":rest,"shapes":shapes,"outline":hull}
+	return preload("res://scripts/gimmicks/visuals/pond_control_cage.gd").build(ball, POINT_COUNT)
+
 
 func _register(ball: MergeBall) -> void:
 	sleeping=false
@@ -591,13 +565,16 @@ func _publish(s: Dictionary) -> void:
 	s.published_velocity=velocity
 	var local := PackedVector2Array()
 	for p in s.points: local.append((p-origin).rotated(-angle))
+	_publish_collision(s, origin, angle)
+	s.surface_points=local
+	s.visuals.update_surface(s,tuning)
+
+func _publish_collision(s: Dictionary, origin: Vector2, angle: float) -> void:
 	var outline := PackedVector2Array()
 	for p in _surface(s):outline.append((p-origin).rotated(-angle))
 	var hull := Geometry2D.convex_hull(outline)
 	if hull.size()>1: hull.remove_at(hull.size()-1)
 	(s.collider.shape as ConvexPolygonShape2D).points=hull
-	s.surface_points=local
-	s.visuals.update_surface(s,tuning)
 
 func _notify(ball: MergeBall,body: Node) -> void:
 	if body==null or ball.merge_locked:return

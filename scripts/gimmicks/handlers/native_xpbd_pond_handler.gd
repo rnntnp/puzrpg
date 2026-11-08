@@ -10,6 +10,9 @@ func _on_configured() -> void:
 	launcher.flight_velocity_integrator = soft_balls.integrate_flight_velocity
 	launcher.prediction_step_seconds = 1.0 / (60.0 * tuning.solver_substeps)
 
+func _integrate_reflection_with_outline() -> bool:
+	return true
+
 func _on_cleanup() -> void:
 	if is_instance_valid(soft_balls): soft_balls.restore_balls()
 	super._on_cleanup()

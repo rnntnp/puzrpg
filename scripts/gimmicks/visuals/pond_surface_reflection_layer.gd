@@ -1,16 +1,21 @@
 extends Node2D
 
 const ReflectionShader = preload("res://shaders/pond_surface_reflection.gdshader")
+const CELL_SIZE := 96.0
+const REFLECTION_LIMIT := 8
+
 var game: MergeGame
 var tuning: Resource
 var records: Dictionary = {}
 var last_refresh_msec := 0
 var enabled := false
+var integrate_with_outline := false
 
 
-func configure(target: MergeGame, config: Resource) -> void:
+func configure(target: MergeGame, config: Resource, integrate_outline := false) -> void:
 	game = target
 	tuning = config
+	integrate_with_outline = integrate_outline
 	enabled = true
 	game.ball_dropped.connect(_on_ball_dropped)
 	_refresh()
@@ -49,15 +54,27 @@ func _refresh() -> void:
 	if is_instance_valid(game.preview_ball):
 		balls.append(game.preview_ball)
 	var present: Dictionary = {}
-	# A spatial grid bounds the neighborhood search to nearby cells.
+	# Index the published poses. The solver grid uses predicted poses and rebuilds
+	# per substep, while reflection queries run against the visible board.
 	var grid: Dictionary = {}
-	var cell_size: float = tuning.reflection_reach + 360.0
+	var centers := PackedVector2Array()
+	var radii := PackedFloat32Array()
+	var max_radius := 0.0
 	for ball in balls:
-		var cell := Vector2i((ball.global_position / cell_size).floor())
+		var center := ball.global_position
+		var radius := ball.get_radius()
+		var index := centers.size()
+		centers.append(center)
+		radii.append(radius)
+		if ball == game.preview_ball:
+			continue
+		max_radius = maxf(max_radius, radius)
+		var cell := _cell(center)
 		if not grid.has(cell):
 			grid[cell] = []
-		grid[cell].append(ball)
-	for ball in balls:
+		grid[cell].append(index)
+	for ball_index in balls.size():
+		var ball := balls[ball_index]
 		var id := ball.get_instance_id()
 		present[id] = true
 		if not records.has(id):
@@ -65,12 +82,12 @@ func _refresh() -> void:
 		if not records.has(id):
 			continue
 		var record: Dictionary = records[id]
-		var visual: Node2D = record.visual
-		var overlay: MeshInstance2D = record.overlay
-		overlay.visible = not ball.is_ice_frozen
-		var material := overlay.material as ShaderMaterial
-		var center: Vector2 = overlay.to_local(ball.global_position)
-		var light: Vector2 = overlay.to_local(ball.global_position + Vector2(-0.6, -0.8)) - center
+		var surface: Node2D = record.surface
+		if not record.integrated:
+			surface.visible = not ball.is_ice_frozen
+		var material := surface.material as ShaderMaterial
+		var center: Vector2 = surface.to_local(ball.global_position)
+		var light: Vector2 = surface.to_local(ball.global_position + Vector2(-0.6, -0.8)) - center
 		material.set_shader_parameter("light_direction", light.normalized())
 		for index in range(3):
 			var direction := Vector3(0.0, -1.0, 0.25)
@@ -80,42 +97,24 @@ func _refresh() -> void:
 			if index < tuning.environment_light_colors.size():
 				color = tuning.environment_light_colors[index]
 			# Normals are stored in the mesh's local frame, including mask rotation.
-			var local_xy: Vector2 = (overlay.to_local(ball.global_position + Vector2(direction.x, direction.y)) - overlay.to_local(ball.global_position)).normalized()
+			var local_xy: Vector2 = (surface.to_local(ball.global_position + Vector2(direction.x, direction.y)) - surface.to_local(ball.global_position)).normalized()
 			material.set_shader_parameter("ambient_direction_%d" % index, Vector3(local_xy.x, local_xy.y, direction.z).normalized())
 			material.set_shader_parameter("ambient_color_%d" % index, color)
-		var nearest: Array[Dictionary] = []
-		var cell := Vector2i((ball.global_position / cell_size).floor())
-		for x in range(-1, 2):
-			for y in range(-1, 2):
-				for other in grid.get(cell + Vector2i(x, y), []):
-					if other == ball or other == game.preview_ball:
-						continue
-					var gap: float = maxf(0.0, ball.global_position.distance_to(other.global_position) - ball.get_radius() - other.get_radius())
-					if gap >= tuning.reflection_reach:
-						continue
-					var distance_to_other: float = maxf(ball.global_position.distance_to(other.global_position), other.get_radius() + 0.001)
-					var sine_angle: float = clampf(other.get_radius() / distance_to_other, 0.0, 0.999)
-					var cosine_angle := sqrt(1.0 - sine_angle * sine_angle)
-					var range_weight: float = 1.0 - smoothstep(tuning.reflection_reach * 0.65, tuning.reflection_reach, gap)
-					var weight := clampf(8.0 * (1.0 - cosine_angle), 0.0, 1.0) * range_weight
-					nearest.append({"ball": other, "gap": gap, "weight": weight})
-		nearest.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return a.weight > b.weight or (is_equal_approx(a.weight, b.weight) and a.gap < b.gap))
-		for index in range(8):
+		var nearest := _find_reflectors(ball_index, grid, centers, radii, max_radius)
+		for index in REFLECTION_LIMIT:
 			var color := Color(0.0, 0.0, 0.0, 0.0)
 			var direction := Vector2.RIGHT
 			var sharpness := 12.0
 			if index < nearest.size():
-				var other: MergeBall = nearest[index].ball
+				var other: MergeBall = balls[nearest[index].index]
 				color = other.visual_container.get_child(0).tint_color
-				var distance: float = maxf(ball.global_position.distance_to(other.global_position), other.get_radius() + 0.001)
-				var sine_angle: float = clampf(other.get_radius() / distance, 0.0, 0.999)
-				var cosine_angle := sqrt(1.0 - sine_angle * sine_angle)
+				var cosine_angle: float = nearest[index].cosine
 				# Solid angle (apart from 2*PI), plus a smooth finite-range cutoff.
 				color.a = nearest[index].weight
 				# SG half-maximum matches the apparent angular radius; roughness
 				# broadens it slightly. This is an artistic approximation, not GI.
 				sharpness = clampf(log(2.0) / maxf(0.001, 1.0 - cosine_angle + tuning.reflection_roughness * tuning.reflection_roughness), 2.0, 128.0)
-				direction = (overlay.to_local(other.global_position) - center).normalized()
+				direction = (surface.to_local(other.global_position) - center).normalized()
 			material.set_shader_parameter("direction_%d" % index, direction)
 			material.set_shader_parameter("color_%d" % index, color)
 			material.set_shader_parameter("sharpness_%d" % index, sharpness)
@@ -123,6 +122,46 @@ func _refresh() -> void:
 		if not present.has(id):
 			_restore(records[id])
 			records.erase(id)
+
+
+func _cell(point: Vector2) -> Vector2i:
+	return Vector2i((point / CELL_SIZE).floor())
+
+
+func _find_reflectors(ball_index: int, grid: Dictionary, centers: PackedVector2Array, radii: PackedFloat32Array, max_radius: float) -> Array[Dictionary]:
+	var nearest: Array[Dictionary] = []
+	var center := centers[ball_index]
+	var radius := radii[ball_index]
+	var reach: float = tuning.reflection_reach
+	var extent := Vector2.ONE * (radius + max_radius + reach)
+	var first := _cell(center - extent)
+	var last := _cell(center + extent)
+	for x in range(first.x, last.x + 1):
+		for y in range(first.y, last.y + 1):
+			for other_index: int in grid.get(Vector2i(x, y), []):
+				if other_index == ball_index:
+					continue
+				var other_radius := radii[other_index]
+				var limit := radius + other_radius + reach
+				var distance_squared := center.distance_squared_to(centers[other_index])
+				if distance_squared >= limit * limit:
+					continue
+				var distance := sqrt(distance_squared)
+				var gap := maxf(0.0, distance - radius - other_radius)
+				var sine := clampf(other_radius / maxf(distance, other_radius + 0.001), 0.0, 0.999)
+				var cosine := sqrt(1.0 - sine * sine)
+				var weight := clampf(8.0 * (1.0 - cosine), 0.0, 1.0) * (1.0 - smoothstep(reach * 0.65, reach, gap))
+				var insertion := nearest.size()
+				while insertion > 0:
+					var previous := nearest[insertion - 1]
+					if weight <= previous.weight and not (is_equal_approx(weight, previous.weight) and gap < previous.gap):
+						break
+					insertion -= 1
+				if insertion < REFLECTION_LIMIT:
+					nearest.insert(insertion, {"index": other_index, "gap": gap, "weight": weight, "cosine": cosine})
+					if nearest.size() > REFLECTION_LIMIT:
+						nearest.pop_back()
+	return nearest
 
 
 func _install(ball: MergeBall) -> void:
@@ -133,19 +172,31 @@ func _install(ball: MergeBall) -> void:
 	var gloss := visual.get_node_or_null("ShellGloss") as Sprite2D
 	if mask == null or mask.texture == null:
 		return
-	# Prebuilt from each stage's sprite alpha; no contour extraction in gameplay.
-	var mesh := load("res://resources/visuals/pond_meshes/ball_%02d.res" % (ball.merge_level + 1)) as ArrayMesh
-	if mesh == null:
+	var normal_texture := load("res://resources/visuals/pond_meshes/normal_%02d.res" % (ball.merge_level + 1)) as Texture2D
+	if normal_texture == null:
 		return
-	var overlay := MeshInstance2D.new()
-	overlay.name = "PondSurfaceReflection"
-	overlay.mesh = mesh
-	overlay.texture = mask.texture
-	overlay.transform = mask.transform
-	overlay.z_index = 2
-	var material := ShaderMaterial.new()
-	material.shader = ReflectionShader
-	material.set_shader_parameter("surface_normal_texture", load("res://resources/visuals/pond_meshes/normal_%02d.res" % (ball.merge_level + 1)))
+	var outline_material := mask.material as ShaderMaterial
+	var integrated := integrate_with_outline and outline_material != null
+	var surface: Node2D = mask
+	var material := outline_material
+	if integrated:
+		material.set_shader_parameter("pond_reflection_enabled", true)
+	else:
+		var mesh := load("res://resources/visuals/pond_meshes/ball_%02d.res" % (ball.merge_level + 1)) as ArrayMesh
+		if mesh == null:
+			return
+		var overlay := MeshInstance2D.new()
+		overlay.name = "PondSurfaceReflection"
+		overlay.mesh = mesh
+		overlay.texture = mask.texture
+		overlay.transform = mask.transform
+		overlay.z_index = 2
+		material = ShaderMaterial.new()
+		material.shader = ReflectionShader
+		overlay.material = material
+		visual.add_child(overlay)
+		surface = overlay
+	material.set_shader_parameter("surface_normal_texture", normal_texture)
 	material.set_shader_parameter("environment_color", tuning.environment_color)
 	material.set_shader_parameter("environment_strength", tuning.environment_strength)
 	material.set_shader_parameter("highlight_strength", tuning.highlight_strength)
@@ -160,9 +211,7 @@ func _install(ball: MergeBall) -> void:
 	material.set_shader_parameter("reflection_opacity_limit", tuning.reflection_opacity_limit)
 	material.set_shader_parameter("reflection_total_opacity_limit", tuning.reflection_total_opacity_limit)
 	material.set_shader_parameter("reflection_color_brightness", tuning.reflection_color_brightness)
-	overlay.material = material
-	visual.add_child(overlay)
-	records[ball.get_instance_id()] = {"visual": visual, "overlay": overlay, "gloss": gloss, "gloss_visible": gloss.visible if gloss != null else false}
+	records[ball.get_instance_id()] = {"surface": surface, "integrated": integrated, "gloss": gloss, "gloss_visible": gloss.visible if gloss != null else false}
 	if gloss != null:
 		gloss.hide()
 
@@ -170,8 +219,11 @@ func _install(ball: MergeBall) -> void:
 func _restore(record: Dictionary) -> void:
 	if is_instance_valid(record.gloss):
 		record.gloss.visible = record.gloss_visible
-	if is_instance_valid(record.overlay):
-		record.overlay.queue_free()
+	if is_instance_valid(record.surface):
+		if record.integrated:
+			(record.surface.material as ShaderMaterial).set_shader_parameter("pond_reflection_enabled", false)
+		else:
+			record.surface.queue_free()
 
 
 func restore_visuals() -> void:

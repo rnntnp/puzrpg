@@ -50,6 +50,8 @@ var external_merge_token := 0
 var damage_background_marked := false
 var _hitbox_radius := 0.0
 var custom_physics_enabled := false
+# Optional read-only observer; consumers copy contact values during this callback.
+var contact_observer := Callable()
 
 func _ready() -> void:
 	body_entered.connect(_on_body_entered)
@@ -115,6 +117,8 @@ func _integrate_forces(state: PhysicsDirectBodyState2D) -> void:
 	if merge_locked:
 		return
 	_recover_if_far_outside(state)
+	if contact_observer.is_valid():
+		contact_observer.call(state)
 
 
 func _recover_if_far_outside(state: PhysicsDirectBodyState2D) -> void:

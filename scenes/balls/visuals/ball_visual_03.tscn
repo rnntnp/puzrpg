@@ -1,12 +1,17 @@
 [gd_scene format=3 uid="uid://bnq3hj380hlop"]
 
 [ext_resource type="PackedScene" path="res://scenes/balls/visuals/ball_visual_base.tscn" id="1_base"]
-[ext_resource type="Texture2D" uid="uid://dl81udvkfflh4" path="res://assets/balls/generated/ball_03_axolotl_source.png" id="2_axolotl_source"]
+[ext_resource type="Texture2D" path="res://assets/balls/generated/axolotl_sprite_atlas.png" id="2_axolotl_atlas"]
 [ext_resource type="Shader" uid="uid://dyiql3rgv8fsw" path="res://shaders/ball_shell_outline.gdshader" id="2_mw00a"]
 [ext_resource type="Shader" uid="uid://b3hciqwdmjwqs" path="res://shaders/ball_shell_shadow_inset.gdshader" id="4_3aon2"]
 [ext_resource type="Texture2D" uid="uid://bwjasioimwasf" path="res://assets/balls/generated/orb_shell_candidates/candidate_06/orb_06_fill.png" id="5_wb1id"]
 [ext_resource type="Texture2D" uid="uid://cf6m52o0q3b7d" path="res://assets/balls/generated/orb_outline_heart_mask.png" id="6_heart_mask"]
 [ext_resource type="Shader" uid="uid://itru0tttro0a" path="res://shaders/ball_sprite_shape_mask.gdshader" id="7_shape_mask_shader"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_axolotl"]
+atlas = ExtResource("2_axolotl_atlas")
+region = Rect2(1071, 47, 418, 418)
+filter_clip = true
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_wb1id"]
 resource_local_to_scene = true
@@ -22,9 +27,11 @@ shader_parameter/frozen_outer_texel_width = 6.804651162790698
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_rnwhy"]
 resource_local_to_scene = true
 shader = ExtResource("7_shape_mask_shader")
-shader_parameter/mask_offset_pixels = Vector2(0, 0)
+shader_parameter/sprite_atlas_region = Vector4(1071, 47, 418, 418)
+shader_parameter/mask_offset_pixels = Vector2(0.034000, 9.000000)
 shader_parameter/mask_rotation = 0.0
-shader_parameter/mask_sprite_scale = Vector2(1, 1)
+shader_parameter/mask_sprite_scale = Vector2(0.72500000, 0.72500000)
+shader_parameter/mask_texture = ExtResource("6_heart_mask")
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_8o6qs"]
 resource_local_to_scene = true
@@ -50,9 +57,10 @@ texture = ExtResource("6_heart_mask")
 
 [node name="Axolotl" parent="." index="2"]
 material = SubResource("ShaderMaterial_rnwhy")
-position = Vector2(20.500011, -28.020033)
-scale = Vector2(0.8923446, 0.8923446)
-texture = ExtResource("2_axolotl_source")
+texture = SubResource("AtlasTexture_axolotl")
+
+position = Vector2(0.034000, 6.000000)
+scale = Vector2(0.72500000, 0.72500000)
 
 [node name="ShellShadow" parent="." index="3"]
 visible = false

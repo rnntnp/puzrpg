@@ -1,0 +1,18 @@
+[
+	{
+		"maximum_control_offset_px": 6.07354497909546,
+		"scenario": "upper_ball"
+	},
+	{
+		"maximum_control_offset_px": 10.2054271697998,
+		"scenario": "lower_ball"
+	},
+	{
+		"maximum_control_offset_px": 10.5640287399292,
+		"scenario": "diagonal_ball"
+	},
+	{
+		"maximum_control_offset_px": 7.47730779647827,
+		"scenario": "between_balls"
+	}
+]

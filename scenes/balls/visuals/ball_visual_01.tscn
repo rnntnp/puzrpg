@@ -2,12 +2,16 @@
 
 [ext_resource type="PackedScene" path="res://scenes/balls/visuals/ball_visual_base.tscn" id="1_base"]
 [ext_resource type="Shader" uid="uid://dyiql3rgv8fsw" path="res://shaders/ball_shell_outline.gdshader" id="2_3yywg"]
-[ext_resource type="Texture2D" uid="uid://culabe2ccgxdr" path="res://assets/balls/generated/ball_01_axolotl_source.png" id="2_axolotl_source"]
+[ext_resource type="Texture2D" path="res://assets/balls/generated/axolotl_sprite_atlas.png" id="2_axolotl_atlas"]
 [ext_resource type="Shader" uid="uid://b3hciqwdmjwqs" path="res://shaders/ball_shell_shadow_inset.gdshader" id="4_tmdmu"]
 [ext_resource type="Texture2D" uid="uid://bwjasioimwasf" path="res://assets/balls/generated/orb_shell_candidates/candidate_06/orb_06_fill.png" id="5_kr6e7"]
 [ext_resource type="Texture2D" uid="uid://cv8knfe12gour" path="res://assets/balls/generated/ball_01_shell_axolotl_outline_mask.png" id="7_union_mask"]
 [ext_resource type="Shader" uid="uid://itru0tttro0a" path="res://shaders/ball_sprite_shape_mask.gdshader" id="8_shape_mask_shader"]
-[ext_resource type="Texture2D" uid="uid://byg7lppe12c4q" path="res://assets/balls/generated/ball_01_axolotl_shape_mask.png" id="9_axolotl_mask"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_axolotl"]
+atlas = ExtResource("2_axolotl_atlas")
+region = Rect2(47, 47, 418, 418)
+filter_clip = true
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_qnqti"]
 resource_local_to_scene = true
@@ -34,10 +38,11 @@ shader_parameter/frozen_outer_texel_width = 6.8711656441717786
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_s8334"]
 resource_local_to_scene = true
 shader = ExtResource("8_shape_mask_shader")
-shader_parameter/mask_texture = ExtResource("9_axolotl_mask")
-shader_parameter/mask_offset_pixels = Vector2(0, 0)
+shader_parameter/mask_texture = ExtResource("7_union_mask")
+shader_parameter/sprite_atlas_region = Vector4(47, 47, 418, 418)
+shader_parameter/mask_offset_pixels = Vector2(-12.500000, 12.500000)
 shader_parameter/mask_rotation = 0.0
-shader_parameter/mask_sprite_scale = Vector2(1, 1)
+shader_parameter/mask_sprite_scale = Vector2(0.46648767, 0.46648767)
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_lh7js"]
 resource_local_to_scene = true
@@ -64,9 +69,10 @@ texture = ExtResource("7_union_mask")
 [node name="Axolotl" parent="." index="2"]
 texture_filter = 3
 material = SubResource("ShaderMaterial_s8334")
-position = Vector2(1.5, -88.50003)
-scale = Vector2(1.6722488, 1.6722488)
-texture = ExtResource("2_axolotl_source")
+texture = SubResource("AtlasTexture_axolotl")
+
+position = Vector2(3.500000, 12.500000)
+scale = Vector2(0.71423950, 0.71423950)
 
 [node name="ShellShadow" parent="." index="3"]
 modulate = Color(0.21931158, 0.32093477, 0.37999997, 1)

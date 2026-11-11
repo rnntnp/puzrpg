@@ -94,7 +94,14 @@ func _install_material(source: CanvasItem) -> Dictionary:
 	return {"material": material, "original_material": original, "original_shader": original_shader}
 
 func _install_sprite(source: Sprite2D) -> void:
-	var key := str(source.get_rect())
+	var texture := source.texture
+	var uv_rect := Rect2(Vector2.ZERO, Vector2.ONE)
+	if texture is AtlasTexture:
+		var atlas_texture := texture as AtlasTexture
+		texture = atlas_texture.atlas
+		var atlas_size := texture.get_size()
+		uv_rect = Rect2(atlas_texture.region.position / atlas_size, atlas_texture.region.size / atlas_size)
+	var key := [source.get_rect(), uv_rect]
 	if not mesh_cache.has(key):
 		var arrays := []
 		arrays.resize(Mesh.ARRAY_MAX)
@@ -107,7 +114,7 @@ func _install_sprite(source: Sprite2D) -> void:
 			for x in GRID + 1:
 				var coordinate := Vector2(x, y) / GRID
 				vertices.append(rect.position + rect.size * coordinate)
-				uv.append(coordinate)
+				uv.append(uv_rect.position + uv_rect.size * coordinate)
 		for y in GRID:
 			for x in GRID:
 				var a := y * (GRID + 1) + x
@@ -122,7 +129,7 @@ func _install_sprite(source: Sprite2D) -> void:
 	proxy.name = "SoftSurface"
 	proxy.set_meta(&"soft_mesh_proxy", true)
 	proxy.mesh = mesh_cache[key]
-	proxy.texture = source.texture
+	proxy.texture = texture
 	proxy.texture_filter = source.texture_filter
 	proxy.z_index = source.z_index
 	var record := _install_material(source)

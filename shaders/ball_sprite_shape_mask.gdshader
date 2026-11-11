@@ -2,6 +2,7 @@ shader_type canvas_item;
 render_mode unshaded;
 
 uniform sampler2D mask_texture : source_color, filter_linear_mipmap;
+uniform vec4 sprite_atlas_region = vec4(0.0);
 // 마스크 대상 Sprite2D는 그대로 두고, 셸 외곽의 로컬 변환만 마스크 UV에 반영한다.
 uniform vec2 mask_offset_pixels = vec2(0.0);
 uniform float mask_rotation = 0.0;
@@ -12,7 +13,11 @@ void fragment() {
 	// the masked axolotl itself instead of only affecting shell overlays.
 	vec4 sprite_color = texture(TEXTURE, UV) * COLOR;
 	vec2 mask_size = vec2(textureSize(mask_texture, 0));
-	vec2 centered_pixel = (UV - vec2(0.5)) * mask_size * mask_sprite_scale + mask_offset_pixels;
+	vec2 sprite_uv = UV;
+	if (sprite_atlas_region.z > 0.0) {
+		sprite_uv = (UV * vec2(textureSize(TEXTURE, 0)) - sprite_atlas_region.xy) / sprite_atlas_region.zw;
+	}
+	vec2 centered_pixel = (sprite_uv - vec2(0.5)) * mask_size * mask_sprite_scale + mask_offset_pixels;
 	float cosine = cos(-mask_rotation);
 	float sine = sin(-mask_rotation);
 	vec2 mask_pixel = vec2(

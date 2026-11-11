@@ -2,11 +2,16 @@
 
 [ext_resource type="PackedScene" path="res://scenes/balls/visuals/ball_visual_base.tscn" id="1_base"]
 [ext_resource type="Shader" uid="uid://dyiql3rgv8fsw" path="res://shaders/ball_shell_outline.gdshader" id="2_6nx0a"]
-[ext_resource type="Texture2D" uid="uid://b4681k41sdi3p" path="res://assets/balls/generated/ball_06_axolotl_source.png" id="2_axolotl_source"]
+[ext_resource type="Texture2D" path="res://assets/balls/generated/axolotl_sprite_atlas.png" id="2_axolotl_atlas"]
 [ext_resource type="Shader" uid="uid://itru0tttro0a" path="res://shaders/ball_sprite_shape_mask.gdshader" id="3_shape_mask_shader"]
 [ext_resource type="Texture2D" uid="uid://bs7nsinuv62cb" path="res://assets/balls/generated/mask_candidates/07_puffy_star.png" id="5_shape_outline"]
 [ext_resource type="Shader" uid="uid://b3hciqwdmjwqs" path="res://shaders/ball_shell_shadow_inset.gdshader" id="6_i1emw"]
 [ext_resource type="Texture2D" uid="uid://bwjasioimwasf" path="res://assets/balls/generated/orb_shell_candidates/candidate_06/orb_06_fill.png" id="7_nhikw"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_axolotl"]
+atlas = ExtResource("2_axolotl_atlas")
+region = Rect2(1071, 559, 418, 418)
+filter_clip = true
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_6nx0a"]
 resource_local_to_scene = true
@@ -23,9 +28,10 @@ shader_parameter/frozen_outer_texel_width = 6.804651162790698
 resource_local_to_scene = true
 shader = ExtResource("3_shape_mask_shader")
 shader_parameter/mask_texture = ExtResource("5_shape_outline")
-shader_parameter/mask_offset_pixels = Vector2(16, 23)
-shader_parameter/mask_rotation = -0.26731703
-shader_parameter/mask_sprite_scale = Vector2(0.8110048, 0.8110048)
+shader_parameter/sprite_atlas_region = Vector4(1071, 559, 418, 418)
+shader_parameter/mask_offset_pixels = Vector2(4.000000, -2.000000)
+shader_parameter/mask_rotation = -0.31241394
+shader_parameter/mask_sprite_scale = Vector2(0.62040000, 0.62040000)
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_nhikw"]
 resource_local_to_scene = true
@@ -46,14 +52,15 @@ modulate = Color(0.84204525, 0.69722426, 1, 1)
 [node name="ShellOutline" parent="." index="1"]
 material = SubResource("ShaderMaterial_6nx0a")
 position = Vector2(18, 0)
-rotation = -0.26731703
+rotation = -0.31241394
 texture = ExtResource("5_shape_outline")
 
 [node name="Axolotl" parent="." index="2"]
 material = SubResource("ShaderMaterial_i1emw")
-position = Vector2(34, 23)
-scale = Vector2(0.8110048, 0.8110048)
-texture = ExtResource("2_axolotl_source")
+texture = SubResource("AtlasTexture_axolotl")
+
+position = Vector2(22.000000, -2.000000)
+scale = Vector2(0.62040000, 0.62040000)
 
 [node name="ShellShadow" parent="." index="3"]
 visible = false
@@ -64,11 +71,11 @@ position = Vector2(18, 0)
 [node name="ShellGloss" parent="." index="4"]
 position = Vector2(-21.762, 19.1465)
 rotation = 0.3252128
-scale = Vector2(0.75377893, 0.7343105)
+scale = Vector2(0.62040000, 0.62040000)
 
 [node name="HitboxAuthoring" parent="." index="5"]
 position = Vector2(18, 0)
-rotation = -0.26731703
+rotation = -0.31241394
 
 [node name="HitboxBody" parent="HitboxAuthoring" index="0"]
 rotation = 1.5707963

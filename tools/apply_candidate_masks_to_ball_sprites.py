@@ -1,4 +1,5 @@
 from pathlib import Path
+import re
 from PIL import Image
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -22,7 +23,11 @@ for number, (candidate_name, position, scale) in assignments.items():
     root_mask = Image.open(CANDIDATES / candidate_name).convert("RGBA")
     sx, sy = scale
     px, py = position
-    sprite_size = Image.open(ASSETS / f"ball_{number:02d}_axolotl_source.png").size
+    scene = ROOT / "scenes/balls/visuals" / f"ball_visual_{number:02d}.tscn"
+    region = re.search(r"^region = Rect2\(\d+, \d+, (\d+), (\d+)\)$", scene.read_text(), re.MULTILINE)
+    if region is None:
+        raise ValueError(f"Missing axolotl atlas region in {scene}")
+    sprite_size = tuple(map(int, region.groups()))
     sprite_cx, sprite_cy = sprite_size[0] / 2, sprite_size[1] / 2
     affine = (sx, 0, CENTER + px - sx * sprite_cx, 0, sy, CENTER + py - sy * sprite_cy)
     transformed = root_mask.transform(sprite_size, Image.Transform.AFFINE, affine, Image.Resampling.BICUBIC)

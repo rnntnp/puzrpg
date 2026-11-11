@@ -1,12 +1,17 @@
 [gd_scene format=3 uid="uid://buc7p2qv0iqnj"]
 
 [ext_resource type="PackedScene" path="res://scenes/balls/visuals/ball_visual_base.tscn" id="1_base"]
-[ext_resource type="Texture2D" uid="uid://dxy44t2wwj24q" path="res://assets/balls/generated/ball_02_axolotl_source.png" id="2_axolotl_source"]
+[ext_resource type="Texture2D" path="res://assets/balls/generated/axolotl_sprite_atlas.png" id="2_axolotl_atlas"]
 [ext_resource type="Shader" uid="uid://dyiql3rgv8fsw" path="res://shaders/ball_shell_outline.gdshader" id="2_gjaer"]
 [ext_resource type="Shader" uid="uid://b3hciqwdmjwqs" path="res://shaders/ball_shell_shadow_inset.gdshader" id="5_yfw66"]
 [ext_resource type="Texture2D" uid="uid://bwjasioimwasf" path="res://assets/balls/generated/orb_shell_candidates/candidate_06/orb_06_fill.png" id="6_xf3ux"]
 [ext_resource type="Shader" uid="uid://itru0tttro0a" path="res://shaders/ball_sprite_shape_mask.gdshader" id="7_shape_mask_shader"]
 [ext_resource type="Texture2D" uid="uid://d3q822ttj26mk" path="res://assets/balls/generated/orb_outline_circle_mask.png" id="9_shape_outline"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_axolotl"]
+atlas = ExtResource("2_axolotl_atlas")
+region = Rect2(559, 47, 418, 418)
+filter_clip = true
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_xtc6o"]
 resource_local_to_scene = true
@@ -22,9 +27,11 @@ shader_parameter/frozen_outer_texel_width = 6.804651162790698
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_yfw66"]
 resource_local_to_scene = true
 shader = ExtResource("7_shape_mask_shader")
-shader_parameter/mask_offset_pixels = Vector2(0, 0)
+shader_parameter/sprite_atlas_region = Vector4(559, 47, 418, 418)
+shader_parameter/mask_offset_pixels = Vector2(-12.965767, 1.057341)
 shader_parameter/mask_rotation = 0.0
-shader_parameter/mask_sprite_scale = Vector2(1, 1)
+shader_parameter/mask_sprite_scale = Vector2(0.82318115, 0.82318115)
+shader_parameter/mask_texture = ExtResource("9_shape_outline")
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_wevyo"]
 resource_local_to_scene = true
@@ -60,9 +67,10 @@ position = Vector2(17, 0)
 [node name="Axolotl" parent="." index="2"]
 texture_filter = 3
 material = SubResource("ShaderMaterial_yfw66")
-position = Vector2(-1.4999919, -16.01871)
-scale = Vector2(1.0454545, 1.0431519)
-texture = ExtResource("2_axolotl_source")
+texture = SubResource("AtlasTexture_axolotl")
+
+position = Vector2(4.034233, 1.057341)
+scale = Vector2(0.82318115, 0.82318115)
 
 [node name="UnionOutline" type="CanvasGroup" parent="." index="3" unique_id=2001417805]
 z_index = 3

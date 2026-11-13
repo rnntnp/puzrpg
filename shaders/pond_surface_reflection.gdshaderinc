@@ -3,6 +3,7 @@ uniform float environment_strength = 0.035;
 uniform float highlight_strength = 1.0;
 uniform float highlight_radius = 0.20943951;
 uniform float highlight_edge = 0.01396263;
+uniform float highlight_width_scale = 1.0;
 uniform float secondary_highlight_strength = 0.75;
 uniform float secondary_highlight_radius = 0.13962634;
 uniform float secondary_highlight_angle = 3.14159265;
@@ -93,7 +94,16 @@ vec4 pond_surface_reflection(vec2 uv, float mask) {
 	illumination += ambient_light(normal, reflected_view, fresnel, ambient_direction_2, ambient_color_2);
 	vec3 light = normalize(vec3(light_direction * 0.8, 0.9));
 	vec3 half_vector = normalize(light + view);
-	float highlight = smoothstep(cos(highlight_radius + highlight_edge), cos(highlight_radius - highlight_edge), dot(normal, half_vector)) * highlight_strength;
+	float main_alignment = dot(normal, half_vector);
+	if (highlight_width_scale < 0.999) {
+		// Stretch the normal-space distance along just the short axis.
+		// A width of one retains the existing round highlight exactly.
+		vec3 across = normalize(vec3(-half_vector.y, half_vector.x, 0.0));
+		float side = dot(normal, across);
+		float narrow_side = side / max(highlight_width_scale, 0.2);
+		main_alignment *= inversesqrt(1.0 + narrow_side * narrow_side - side * side);
+	}
+	float highlight = smoothstep(cos(highlight_radius + highlight_edge), cos(highlight_radius - highlight_edge), main_alignment) * highlight_strength;
 	float c = cos(secondary_highlight_angle);
 	float s = sin(secondary_highlight_angle);
 	vec2 opposite_direction = vec2(c * light_direction.x - s * light_direction.y, s * light_direction.x + c * light_direction.y);

@@ -200,6 +200,7 @@ func _install(ball: MergeBall) -> void:
 	material.set_shader_parameter("environment_color", tuning.environment_color)
 	material.set_shader_parameter("environment_strength", tuning.environment_strength)
 	material.set_shader_parameter("highlight_strength", tuning.highlight_strength)
+	material.set_shader_parameter("highlight_width_scale", tuning.highlight_width_scale)
 	var highlight_size_scale: float = tuning.stage_8_highlight_size_scale if ball.merge_level == 7 else 1.0
 	material.set_shader_parameter("highlight_radius", deg_to_rad(tuning.highlight_radius_degrees) * highlight_size_scale)
 	material.set_shader_parameter("highlight_edge", deg_to_rad(tuning.highlight_edge_degrees))

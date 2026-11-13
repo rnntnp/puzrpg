@@ -18,7 +18,7 @@
 
 [sub_resource type="Resource" id="Gimmick"]
 script = ExtResource("7")
-display_name = "방향 중력 · 강체와 공 와핑"
+display_name = "방향 중력 · 접촉 유지"
 monster_health = 320
 normal_attack_damage = 5
 action_interval = 3
@@ -41,7 +41,7 @@ show_battle_status_label = false
 show_gimmick_status_labels = false
 recommended_ball_level = 5
 stage_gimmick_icon = ExtResource("10")
-stage_gimmick_name = "말랑한 그림"
+stage_gimmick_name = "말랑한 접촉"
 reward_name = "연못 보물상자"
 player_character = ExtResource("2")
 enemies = Array[ExtResource("6")]([ExtResource("3"), ExtResource("4"), ExtResource("5")])

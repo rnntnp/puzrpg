@@ -10,6 +10,7 @@ extends Resource
 @export_range(0.0, 1.0) var highlight_strength := 1.0
 @export_range(2.0, 25.0) var highlight_radius_degrees := 12.0
 @export_range(0.1, 4.0) var highlight_edge_degrees := 0.8
+@export_range(0.2, 1.0) var highlight_width_scale := 1.0
 @export_group("Secondary Light")
 @export_range(0.0, 1.0) var secondary_highlight_strength := 0.75
 @export_range(2.0, 25.0) var secondary_highlight_radius_degrees := 8.0

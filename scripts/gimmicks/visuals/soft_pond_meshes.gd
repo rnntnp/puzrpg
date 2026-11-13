@@ -51,7 +51,7 @@ func update_surface(state: Dictionary, _tuning: Resource) -> void:
 
 func _scan(node: Node) -> void:
 	for child in node.get_children():
-		if child.has_meta(&"soft_mesh_proxy"):
+		if child.has_meta(&"soft_mesh_proxy") or child.has_meta(&"skip_soft_deformation"):
 			continue
 		# The reflection layer owns shader highlights. Never resurrect its hidden
 		# authored gloss as a visible deformation proxy before it installs.

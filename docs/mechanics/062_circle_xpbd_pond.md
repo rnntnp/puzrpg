@@ -2,6 +2,8 @@
 
 Status: `NEEDS_PLAYTEST`
 
+- 주인공 표시: 63번과 같은 원본 13파츠 컷아웃 및 아가미 ±12° 대기 동작을 사용한다. 62번은 63번 기준 1.17배(이전 1.3배에서 10% 축소)로 균등 확대하고, 확대 후 양발 중심과 발바닥 최하단을 기존 주인공 위치에 다시 맞춘다. 기존 Fighter의 위치·그림자·전투 데이터와 피격 이동은 유지하며 정리 시 원래 이미지를 복원한다. 63번 크기는 유지한다. 전용 핸들러와 표시 레이어의 문법 검사만 수행했으며 실제 배치는 사용자 확인이 필요하다.
+
 - 59번의 기본 Godot 강체 물리와 아래→위 방향 발사, 고정 충돌체·가이드·합성·턴·적 전환을 유지한다. 공통 공간 와핑은 사용하지 않는다.
 - 공별 6점 와핑을 유지하되 접촉 처리를 단순화했다. 공마다 원 중심·반경을 원래 외곽에서 한 번 구한다. 주변 공의 원 접촉점 두 개와 분담률에 따른 공통 목표를 와핑 전에 계산하고, 각 접촉점의 6점 보간 가중치를 저장한다. 원형이 아닌 공도 시각 접촉 계산에서는 이 원 근사를 사용한다.
 - 와핑 후 계산한 접촉점이 같은 목표에 가도록 6개 변위만 조정한다. 기본 2회이며 윤곽 표본을 반복 검색하지 않는다. 강체 접촉 정보는 접촉 여부·충격 세기에 재사용한다. 떨어진 근사 원은 시각 효과만으로 당기지 않는다.
@@ -52,3 +54,21 @@ MCP: 같은 응답 50:50, 응답 90:30은 75:25, 순서를 뒤집으면 25:75, �
 - 스프라이트 광택 MCP 검사: 15개 공에 15개 부착, 광택 메시 프록시 0개, 몸체 좌표 기준 광택 종횡비 변화 0 확인. 11종 모두 부착·얼음 숨김/복구·상향 발사·정리 확인, 스크립트/셰이더 오류 없음.
 
 - 광택 가시성 보정: 작은 공에서 1px 미만이던 흰 타원 두께를 키우고 캐릭터 선과 겹치던 부착점을 공 표면 쪽으로 이동했다. MCP 15개 공의 원본/확대 캡처에서 확인했고 해당 실행 로그에 스크립트·셰이더 오류는 없었다.
+
+- 2026-11-13: Stage 62 replaces PondSpriteGloss with a procedural anisotropic specular quad (pond_compact_gloss.gdshader). Retains the previous attachment, -42 degree angle, radius x 0.30 / minimum 12 screen pixel sizing, contact-following position and cleanup. Cage slope tilts the virtual normal. Legacy sprite_gloss_* size/opacity fields remain the tuning controls; the SVG is no longer sampled. The shared main/secondary highlights stay disabled to avoid duplicate gloss. Scoped diff checks only; Godot validation unavailable (executable not found). Appearance remains NEEDS_PLAYTEST.
+
+- Follow-up 2026-11-13: Connected to the already-running Godot 4.7 editor via MCP Toolkit port 6550. script.check passed for circle_xpbd_pond_layer.gd with no diagnostics; resource.load succeeded for pond_compact_gloss.gdshader and the subsequent editor error buffer was empty. This supersedes the executable-discovery limitation above. Rendered comparison and user playtest remain pending.
+
+- 2026-11-13 correction: Replaced the body-attached compact gloss quad with the existing normal-map/half-vector surface highlight. Fixed world light is converted to each rendered surface frame every visual tick, including rotation-only motion. Main strength 1, radius 8 degrees, width 0.4; secondary disabled. Cage warp, color reflections and rigid physics remain. Normals use the authored smooth map, not reconstructed deformed 3D geometry. NEEDS_PLAYTEST.
+- 2026-11-13 tuning: User requested roughly one-third gloss dimensions; main highlight angular radius reduced from 8 to 2.67 degrees. Width ratio, brightness and fixed-world-light calculation unchanged. NEEDS_PLAYTEST.
+- 2026-11-13 gloss orientation: Narrow the radial tangent of the half-vector normal plane instead of its azimuthal tangent. The elongated highlight now follows the rim direction rather than pointing toward the light. Existing normal map still determines the detailed footprint. Only stage 62 currently opts into highlight_width_scale below 1. Scoped render verification pending.
+- 2026-11-13 tuning: User confirmed the corrected orientation. Kept the 2.67-degree highlight radius and increased width scale from 0.4 to 0.5 for a slightly fuller footprint. Appearance of this width adjustment awaits user playtest.
+- 2026-11-13 tuning: Increased highlight width scale from 0.5 to 0.75 at user request (1.5x width); angular radius and orientation unchanged.
+
+- 2026-11-17 주인공 외곽선/AA: 62번만 원본 해상도의 투명 SubViewport에서 파츠를 먼저 조립하고, 전체 실루엣에 기존 히어로와 같은 흰색·8방향 외곽선을 적용한다. 두께는 CharacterData.outline_screen_size(기본 화면 3px)를 사용하며 파츠 내부 경계에는 선을 넣지 않는다. 파츠/출력 선형 필터와 출력 픽셀당 4점 커버리지 샘플로 회전·축소 및 외곽선의 계단현상을 완화한다. 발끝 앵커와 아가미 움직임은 유지한다. 관련 3개 스크립트 문법 검사 통과; 렌더링 품질·성능은 실제 화면에서 사용자 확인 필요.
+
+- 2026-11-17 실행 오류 수정: MCP로 62번을 실제 실행해 SubViewport.own_world_2d의 잘못된 속성 접근을 재현했다. world_2d = World2D.new()로 수정했다. Compatibility/GLES3에서 미지원인 2D MSAA 요청도 제거했다. AA는 선형 필터와 셰이더 4점 커버리지 샘플로 유지한다. 수정 후 새 프로세스로 62번 진입·흰 외곽선 표시·아가미 관절 갱신을 확인했고 스크립트/셰이더 오류는 없었다. 기존 배경 Control 앵커 경고는 별개로 남아 있다. 전체 회귀·게임성 검증은 수행하지 않았다.
+
+## 웹 공개 (2026-11-17)
+
+기존 GitHub Pages 공개 목록의 마지막 항목(6/6)에 추가했다. 브라우저에서 레벨 선택·전투 진입·컷아웃 주인공 표시·공 상향 발사를 확인했고 해당 실행의 콘솔 오류는 없었다. 네이티브 확장은 웹 내보내기에서 제외한다. 전체 전투·접촉 품질·모바일 성능은 사용자 플레이테스트가 필요하다. 배포 절차는 [WEB_DEPLOYMENT.md](../WEB_DEPLOYMENT.md).

@@ -13,7 +13,6 @@ var accumulated_time := 0.0
 var pair_count := 0
 var contact_generation := 0
 var contact_shares: Dictionary = {}
-static var gloss_attachment_cache: Dictionary = {}
 
 func configure(board: MergeGame, settings: Resource) -> void:
 	game = board
@@ -43,7 +42,6 @@ func _register(ball: MergeBall) -> void:
 		"to_board": Transform2D.IDENTITY, "circle_center": center, "radius": radius,
 		"last_velocity": ball.linear_velocity, "impact_change": Vector2.ZERO}
 
-	_install_sprite_gloss(states[ball.get_instance_id()],cage.outline)
 	ball.contact_observer = observer
 
 func _capture_contacts(body: PhysicsDirectBodyState2D, id: int) -> void:
@@ -155,7 +153,6 @@ func _physics_process(delta: float) -> void:
 			for wall in state.walls: Constraints.clip(state,wall)
 	for state in active: _clamp_wall_controls(state)
 	for state in active:
-		_update_sprite_gloss(state)
 		for i in POINT_COUNT:
 			state.surface_points[i] = state.rest[i] + state.offsets[i]
 		var changed: bool = state.visuals.install_pending() or state.published_points.is_empty()
@@ -167,6 +164,7 @@ func _physics_process(delta: float) -> void:
 		if changed:
 			state.visuals.update_surface(state, tuning)
 			state.published_points = state.surface_points.duplicate()
+		_update_surface_light(state)
 
 func restore_balls() -> void:
 	for state in states.values():
@@ -174,8 +172,6 @@ func restore_balls() -> void:
 			if state.ball.contact_observer == state.observer:
 				state.ball.contact_observer = state.previous_observer
 			state.visuals.restore()
-			if is_instance_valid(state.get("gloss")):
-				state.gloss.queue_free()
 	states.clear()
 	contact_shares.clear()
 
@@ -308,60 +304,10 @@ func _update_release_filter(state: Dictionary,delta: float) -> void:
 		state.release_weight *= exp(-minf(delta,1.0/30.0)/tuning.release_filter_time)
 		if state.release_weight < 0.001: state.release_weight = 0.0
 
-func _install_sprite_gloss(state: Dictionary,outline: PackedVector2Array) -> void:
-	var direction := Vector2(-0.62,-0.78).normalized()
-	var center: Vector2 = state.circle_center
-	var distance: float = state.radius
-	# Find an authored attachment once; the ellipse itself is never deformed.
-	for i in outline.size():
-		var a := outline[i]
-		var edge := outline[(i+1)%outline.size()]-a
-		var determinant := direction.cross(edge)
-		if absf(determinant)<0.000001: continue
-		var reach := (a-center).cross(edge)/determinant
-		var along := (a-center).cross(direction)/determinant
-		if reach>0.0 and along>=0.0 and along<=1.0: distance=minf(distance,reach)
-	var point: Vector2 = _gloss_attachment(state,center+direction*distance*0.82)
-	var sprite := Sprite2D.new()
-	sprite.name = "PondSpriteGloss"
-	sprite.texture = tuning.sprite_gloss_texture
-	sprite.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
-	sprite.modulate = Color(1,1,1,tuning.sprite_gloss_opacity)
-	sprite.z_index = 4
-	sprite.set_meta(&"skip_soft_deformation",true)
-	state.ball.visual_container.get_child(0).add_child(sprite)
-	state.gloss = sprite
-	state.gloss_point = point
-	state.gloss_weights = Constraints.bind(point,state.rest)
-	_update_sprite_gloss(state)
-
-func _update_sprite_gloss(state: Dictionary) -> void:
-	var sprite: Sprite2D = state.get("gloss")
-	if not is_instance_valid(sprite): return
-	sprite.visible = not state.ball.is_ice_frozen and not state.ball.merge_locked
-	var point: Vector2 = state.gloss_point+Constraints.offset(state,state.gloss_weights)
-	var canvas_scale: float = maxf(0.0001,state.ball.get_global_transform_with_canvas().x.length())
-	var width: float = maxf(state.radius*tuning.sprite_gloss_width_ratio,tuning.sprite_gloss_min_screen_width/canvas_scale)
-	var scale: float = width/sprite.texture.get_width()
-	var local := Transform2D(deg_to_rad(tuning.sprite_gloss_angle_degrees),Vector2.ONE*scale,0.0,point)
-	sprite.transform = (sprite.get_parent() as Node2D).global_transform.affine_inverse()*state.ball.global_transform*local
-
-func _gloss_attachment(state: Dictionary,fallback: Vector2) -> Vector2:
-	var mask := state.ball.visual_container.get_child(0).get_node_or_null("ShellOutline") as Sprite2D
-	if mask==null or mask.texture==null: return fallback
-	var rect := mask.get_rect()
-	var key := [mask.texture.get_rid(),rect]
-	if not gloss_attachment_cache.has(key):
-		var image := mask.texture.get_image()
-		if image==null: return fallback
-		if image.is_compressed(): image.decompress()
-		var center := Vector2(image.get_size())*0.5
-		var direction := Vector2(-0.62,-0.78).normalized()
-		var last := 0.0
-		for step in maxi(image.get_width(),image.get_height()):
-			var pixel := Vector2i(center+direction*step)
-			if pixel.x<0 or pixel.y<0 or pixel.x>=image.get_width() or pixel.y>=image.get_height(): break
-			if image.get_pixelv(pixel).a>0.4: last=step
-		var uv := (center+direction*last*0.86)/Vector2(image.get_size())
-		gloss_attachment_cache[key]=rect.position+rect.size*uv
-	return (state.ball.global_transform.affine_inverse()*mask.global_transform)*gloss_attachment_cache[key]
+func _update_surface_light(state: Dictionary) -> void:
+	# Reuse the normal-map reflection shader; keep light fixed during rotation.
+	for record in state.visuals.records:
+		if not is_instance_valid(record.mesh_node): continue
+		var surface: Node2D = record.mesh_node
+		var direction := surface.global_transform.basis_xform_inv(Vector2(-0.6, -0.8)).normalized()
+		record.material.set_shader_parameter("light_direction", direction)

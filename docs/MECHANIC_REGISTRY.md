@@ -101,7 +101,9 @@ Runtime types:
 | 59 | 색이 비치는 연못 / 표면 색 반사 | 57번을 재사용하며 주변 색의 발광 같은 번짐을 제한된 색 반사 영역과 알파 합성으로 바꾼다. 기존 테두리와 두 광택 유지. | Modular · 3 existing enemies · [spec](mechanics/059_pond_surface_reflection.md) · [level](../resources/levels/test_pond_surface_reflection.tres) · [handler](../scripts/gimmicks/handlers/pond_surface_reflection_handler.gd) | `NEEDS_PLAYTEST` | 57, 58 (의도적 시각 변형) |
 | 60 | 말랑한 연못 | 59번 기반. 공식 QuarkPhysics 소프트바디: 독립 외곽 입자 12개와 스프링 30개, 변형 콜라이더/GPU 표면 연결. 추가 감쇠·반동 제한 제거, 엔진 파라미터 사용. 기존 6점 XPBD와 비교 가능. 정지 접촉 수면 개선 필요. | Modular · 3 existing enemies · [spec](mechanics/060_soft_pond.md) · [level](../resources/levels/test_soft_pond.tres) · [handler](../scripts/gimmicks/handlers/soft_pond_handler.gd) | `NEEDS_PLAYTEST` | 59 (기반), 5 (크기 조정과 달리 탄성 접촉) |
 | 61 | 탱글한 연못 | 이전 6점 XPBD 복원 비교 스테이지. 수치 반복 계산을 별도 C++ 확장으로 최적화. 저장된 여유 원 반경과 64px 칸으로 후보 검색, 화면 메시를 유지하며 충돌 외곽 점을 절반으로 샘플링. 윤곽 메시에서 반사 합성, 화면 좌표 격자로 인접 반사 검색. 60번 Quark 유지. | Modular · 3 existing enemies · [spec](mechanics/061_native_xpbd_pond.md) · [level](../resources/levels/test_native_xpbd_pond.tres) · [handler](../scripts/gimmicks/handlers/native_xpbd_pond_handler.gd) | `NEEDS_PLAYTEST` | 60 (사용자 요청 비교), 59 (렌더링 기반) |
-| 62 | 동글한 연못 | 59번 강체·상향 방향 발사 재사용. 공별 6점 와핑에서 원 기준 접촉 키포인트만 맞추고 벽 키포인트를 제한. 윤곽 반복 검사 없이 고정 충돌체·통합 반사 유지. | Modular · 3 existing enemies · [spec](mechanics/062_circle_xpbd_pond.md) · [level](../resources/levels/test_circle_xpbd_pond.tres) | `NEEDS_PLAYTEST` | 61 (사용자 요청 비교) |
+| 62 | 동글한 연못 | 59번 강체·상향 방향 발사 재사용. 공별 6점 와핑에서 원 기준 접촉 키포인트만 맞추고 벽 키포인트를 제한. 윤곽 반복 검사 없이 고정 충돌체·통합 반사 유지. 원본 컷아웃 주인공을 63번 대비 1.17배로 표시하고 발끝을 맞추며 흰 외곽선·안티앨리어싱을 적용한다. | Modular · 3 existing enemies · [spec](mechanics/062_circle_xpbd_pond.md) · [level](../resources/levels/test_circle_xpbd_pond.tres) | `NEEDS_PLAYTEST` | 61 (사용자 요청 비교) |
+
+| 63 | 모양대로 연못 | 62번 비교 변형. 하트·별만 각 24점 단일 볼록 폴리곤으로 근사하고 나머지 도형은 유지. 모든 충돌체를 5% 확대하며 62번의 6점 와핑·공 단위 필터를 재사용하고 접촉 위치·발사 가이드에 반영한다. 62·63번은 원본 컷아웃 주인공(아가미 ±12°)으로 표시하며 기존 그림 높이·발끝을 맞춘다. | Modular · 3 existing enemies · [spec](mechanics/063_compound_pond.md) · [level](../resources/levels/test_compound_pond.tres) · [handler](../scripts/gimmicks/handlers/compound_pond_handler.gd) | `NEEDS_PLAYTEST` | 62 (사용자 요청 비교), 60–61 |
 
 ## Non-numbered systems that block duplicates
 
@@ -124,3 +126,17 @@ Runtime types:
 - Mechanics 31–50 have modular three-enemy Resources and handlers. Their presence is statically confirmed; gameplay completion is not.
 - The legacy handler still contains compatibility branches for 31–33, but the currently registered 31–33 Resources explicitly select the modular handlers. The modular path is their active evidence.
 - No repository-local detailed behavioral-contract files were found for historical mechanics 1–42. This registry does not fabricate missing intent. Mechanics 43–50 have lightweight prototype contracts under `docs/mechanics/`.
+
+- 2026-11-13: Stage 62 compact gloss now uses an analytic normal/light shader with the previous sprite footprint and cage attachment. NEEDS_PLAYTEST; Godot executable unavailable for scoped compilation.
+
+- 2026-11-13: Stage 62 supersedes attached compact gloss with its existing surface-normal highlight and per-tick world-light conversion. No mechanic or physics rule change; NEEDS_PLAYTEST.
+
+- 2026-11-13: Stage 63 adds isolated silhouette-fitted compound circles and 12-control shape-contact warp. Seven new scripts and new Resource preloads passed scoped Godot syntax checks; profile connectivity/alpha containment and visible/test registration checks passed. No gameplay run; NEEDS_PLAYTEST.
+
+- 2026-11-14: Following reported instability, stage 63 now inherits 62's six-control/four-direction visual warp and body-level filtering directly. Only anchor positions follow installed shapes. Heart/star compound circles and 5% collider expansion remain. Scoped syntax/preload checks passed; user replay pending.
+
+- 2026-11-14: User requested single convex silhouette polygons after trembling in the circle experiment. Stage 63 now uses one 24-vertex convex polygon each for heart/star, intentionally filling concave valleys. The 1.05 collider scale and inherited 62 warp remain; face support points follow actual contact positions. Scoped syntax/convexity checks only; NEEDS_PLAYTEST.
+
+- 2026-11-14: Stage 63 retains previously observed visual contacts by actual convex-shape distance (0.5px release gap), independently of transient native reports. No time-based sticking or physical changes; stage 62 untouched. Scoped syntax checks and 13 geometry-only analytical cases passed; visible stability needs user replay.
+
+- 2026-11-17: Stage 62 added to the explicit release_web catalog (campaign 1–5 plus 62). Published on existing GitHub Pages; browser verified menu 6/6, stage entry, cutout player and upward ball launch with no new console errors. Full gameplay/mobile performance remain NEEDS_PLAYTEST. Deployment: WEB_DEPLOYMENT.md.

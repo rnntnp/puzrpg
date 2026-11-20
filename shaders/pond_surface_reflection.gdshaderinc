@@ -96,9 +96,9 @@ vec4 pond_surface_reflection(vec2 uv, float mask) {
 	vec3 half_vector = normalize(light + view);
 	float main_alignment = dot(normal, half_vector);
 	if (highlight_width_scale < 0.999) {
-		// Stretch the normal-space distance along just the short axis.
+		// Compress the radial tangent so the long axis follows the surface rim.
 		// A width of one retains the existing round highlight exactly.
-		vec3 across = normalize(vec3(-half_vector.y, half_vector.x, 0.0));
+		vec3 across = normalize(vec3(half_vector.xy, -dot(half_vector.xy, half_vector.xy) / max(half_vector.z, 0.001)));
 		float side = dot(normal, across);
 		float narrow_side = side / max(highlight_width_scale, 0.2);
 		main_alignment *= inversesqrt(1.0 + narrow_side * narrow_side - side * side);

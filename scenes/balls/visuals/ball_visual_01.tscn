@@ -67,7 +67,7 @@ position = Vector2(16, 0)
 texture = ExtResource("7_union_mask")
 
 [node name="Axolotl" parent="." index="2"]
-texture_filter = 3
+texture_filter = 4
 material = SubResource("ShaderMaterial_s8334")
 texture = SubResource("AtlasTexture_axolotl")
 

@@ -1,0 +1,286 @@
+{
+  "canvas": [
+    1086,
+    1448
+  ],
+  "root": [
+    543,
+    1065
+  ],
+  "period": 3.2,
+  "parts": [
+    {
+      "name": "head",
+      "parent": "root",
+      "pivot": [
+        529,
+        609
+      ],
+      "bounds": [
+        249,
+        225,
+        749,
+        650
+      ],
+      "z": 12,
+      "render_bounds": [
+        244,
+        220,
+        753,
+        654
+      ]
+    },
+    {
+      "name": "gill_l_top",
+      "parent": "head",
+      "pivot": [
+        352,
+        291
+      ],
+      "bounds": [
+        285,
+        113,
+        440,
+        301
+      ],
+      "z": 6,
+      "render_bounds": [
+        285,
+        113,
+        444,
+        305
+      ]
+    },
+    {
+      "name": "gill_l_mid",
+      "parent": "head",
+      "pivot": [
+        292,
+        360
+      ],
+      "bounds": [
+        178,
+        214,
+        336,
+        372
+      ],
+      "z": 7,
+      "render_bounds": [
+        178,
+        214,
+        340,
+        376
+      ]
+    },
+    {
+      "name": "gill_l_low",
+      "parent": "head",
+      "pivot": [
+        256,
+        452
+      ],
+      "bounds": [
+        147,
+        355,
+        279,
+        477
+      ],
+      "z": 8,
+      "render_bounds": [
+        147,
+        355,
+        283,
+        484
+      ]
+    },
+    {
+      "name": "gill_r_top",
+      "parent": "head",
+      "pivot": [
+        620,
+        272
+      ],
+      "bounds": [
+        560,
+        100,
+        714,
+        276
+      ],
+      "z": 9,
+      "render_bounds": [
+        556,
+        100,
+        714,
+        282
+      ]
+    },
+    {
+      "name": "gill_r_mid",
+      "parent": "head",
+      "pivot": [
+        701,
+        344
+      ],
+      "bounds": [
+        666,
+        195,
+        816,
+        354
+      ],
+      "z": 10,
+      "render_bounds": [
+        660,
+        195,
+        816,
+        360
+      ]
+    },
+    {
+      "name": "gill_r_low",
+      "parent": "head",
+      "pivot": [
+        741,
+        427
+      ],
+      "bounds": [
+        725,
+        335,
+        852,
+        460
+      ],
+      "z": 11,
+      "render_bounds": [
+        721,
+        335,
+        852,
+        467
+      ]
+    },
+    {
+      "name": "tail",
+      "parent": "root",
+      "pivot": [
+        415,
+        842
+      ],
+      "bounds": [
+        45,
+        777,
+        433,
+        1031
+      ],
+      "z": 0,
+      "render_bounds": [
+        45,
+        772,
+        437,
+        1031
+      ]
+    },
+    {
+      "name": "arm_front",
+      "parent": "root",
+      "pivot": [
+        470,
+        638
+      ],
+      "bounds": [
+        388,
+        604,
+        536,
+        928
+      ],
+      "z": 5,
+      "render_bounds": [
+        385,
+        599,
+        540,
+        932
+      ]
+    },
+    {
+      "name": "staff_arm",
+      "parent": "root",
+      "pivot": [
+        599,
+        647
+      ],
+      "bounds": [
+        592,
+        434,
+        991,
+        837
+      ],
+      "z": 4,
+      "render_bounds": [
+        588,
+        434,
+        991,
+        841
+      ]
+    },
+    {
+      "name": "boot_l",
+      "parent": "root",
+      "pivot": [
+        506,
+        984
+      ],
+      "bounds": [
+        468,
+        970,
+        569,
+        1096
+      ],
+      "z": 1,
+      "render_bounds": [
+        459,
+        966,
+        569,
+        1096
+      ]
+    },
+    {
+      "name": "boot_r",
+      "parent": "root",
+      "pivot": [
+        645,
+        966
+      ],
+      "bounds": [
+        604,
+        940,
+        722,
+        1079
+      ],
+      "z": 2,
+      "render_bounds": [
+        599,
+        936,
+        722,
+        1079
+      ]
+    },
+    {
+      "name": "body",
+      "parent": "root",
+      "pivot": [
+        543,
+        813
+      ],
+      "bounds": [
+        395,
+        597,
+        760,
+        1021
+      ],
+      "z": 3,
+      "render_bounds": [
+        386,
+        593,
+        760,
+        1021
+      ]
+    }
+  ]
+}

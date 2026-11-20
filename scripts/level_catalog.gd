@@ -7,6 +7,9 @@ extends Resource
 @export_category("Visible Level Select Order")
 @export var visible_level_paths: Array[String] = []
 
+@export_category("Web Release Level Select Order")
+@export var web_release_level_paths: Array[String] = []
+
 @export_category("Hidden Campaign")
 @export var hidden_campaign_level_paths: Array[String] = []
 
@@ -19,6 +22,8 @@ extends Resource
 
 
 func get_all_level_paths() -> Array[String]:
+	if OS.has_feature("release_web") and not web_release_level_paths.is_empty():
+		return web_release_level_paths.duplicate()
 	if not visible_level_paths.is_empty():
 		return visible_level_paths.duplicate()
 	var result: Array[String] = campaign_level_paths.duplicate()

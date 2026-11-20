@@ -65,7 +65,7 @@ material = SubResource("ShaderMaterial_xtc6o")
 position = Vector2(17, 0)
 
 [node name="Axolotl" parent="." index="2"]
-texture_filter = 3
+texture_filter = 4
 material = SubResource("ShaderMaterial_yfw66")
 texture = SubResource("AtlasTexture_axolotl")
 
@@ -84,7 +84,7 @@ texture_filter = 4
 texture = ExtResource("9_shape_outline")
 
 [node name="AxolotlMask" type="Sprite2D" parent="UnionOutline" index="1" unique_id=1041888318]
-texture_filter = 2
+texture_filter = 4
 
 [node name="ShellShadow" parent="." index="4"]
 modulate = Color(0.2672391, 0.37999997, 0.24952558, 1)

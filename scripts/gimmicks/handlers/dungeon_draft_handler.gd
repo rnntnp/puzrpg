@@ -5,18 +5,15 @@ const Visual = preload("res://scripts/gimmicks/visuals/dungeon_draft_visual.gd")
 
 var tuning: Resource
 var visual: Node2D
-var ranks: Array[int] = [0, 0, 0, 0, 0, 0]
+var cards := preload("res://scripts/gimmicks/dungeon_draft_cards.gd").new()
 var offered: Array[int] = []
-var rng := RandomNumberGenerator.new()
 var turns_remaining := 4
-var lightning_hits := 0
 var reward_wave := -1
 var owns_pause := false
 var last_effect := "가로 위치를 정해 놓기 · 같은 단계 합성 → 자동 공격"
 
 func _on_configured() -> void:
 	tuning = data.tuning if data.tuning != null else Config.new()
-	rng.randomize()
 	visual = attach_visual_layer(Visual.new())
 	visual.card_selected.connect(_select_card)
 	enemy.health_changed.connect(_on_enemy_health_changed)
@@ -33,20 +30,12 @@ func _on_enemy_changed() -> void:
 		_offer_cards()
 
 func _offer_cards() -> void:
-	offered.clear()
-	var pool: Array[int] = []
-	for card in range(ranks.size()):
-		if ranks[card] < tuning.maximum_rank:
-			pool.append(card)
-	while offered.size() < 3 and not pool.is_empty():
-		var index := rng.randi_range(0, pool.size() - 1)
-		offered.append(pool[index])
-		pool.remove_at(index)
+	offered = cards.offer(tuning.maximum_rank)
 	if offered.is_empty():
 		return
 	busy = true
 	merge_game.set_input_enabled(false)
-	visual.show_choices(offered, ranks, tuning, battle.current_enemy_index, battle.level_data.enemies.size())
+	visual.show_choices(offered, cards.ranks, tuning, battle.current_enemy_index, battle.level_data.enemies.size())
 	# The board, delayed projectiles and Danger Line all pause together.
 	# The mechanic-owned modal alone processes input while paused.
 	owns_pause = not get_tree().paused
@@ -55,9 +44,9 @@ func _offer_cards() -> void:
 func _select_card(card: int) -> void:
 	if not active or not busy or card not in offered or not player.is_alive():
 		return
-	ranks[card] += 1
+	cards.ranks[card] += 1
 	reward_wave = battle.current_enemy_index
-	last_effect = "%s Lv.%d 획득 · %s" % [Config.CARD_NAMES[card], ranks[card], tuning.card_description(card, ranks[card])]
+	last_effect = "%s Lv.%d 획득 · %s" % [Config.CARD_NAMES[card], cards.ranks[card], tuning.card_description(card, cards.ranks[card])]
 	offered.clear()
 	visual.hide_choices()
 	busy = false
@@ -69,27 +58,17 @@ func _select_card(card: int) -> void:
 func modify_player_damage(damage: int, _result_level := -1, combo_count := 1, _origin := Vector2.ZERO) -> int:
 	if not active or busy or damage <= 0 or not player.is_alive() or not enemy.is_alive():
 		return damage
-	var amplified := roundi(damage * (1.0 + ranks[0] * tuning.attack_per_rank))
-	var critical := ranks[1] > 0 and rng.randf() < minf(1.0, ranks[1] * tuning.critical_chance_per_rank)
-	if critical:
-		amplified = roundi(amplified * tuning.critical_multiplier)
-	var ricochet := roundi(amplified * ranks[3] * tuning.ricochet_per_rank)
-	var lightning := 0
-	if ranks[2] > 0:
-		lightning_hits += 1
-		if lightning_hits >= maxi(1, tuning.lightning_hit_interval):
-			lightning_hits = 0
-			lightning = ranks[2] * tuning.lightning_damage_per_rank
-	var total := amplified + ricochet + lightning
+	var bonus := cards.resolve(damage, tuning)
+	var total: int = bonus.total
 	var blocked: bool = _armored() and combo_count < tuning.armor_bypass_chain
 	if blocked:
 		total = maxi(1, roundi(total * tuning.armor_multiplier))
-	if ranks[4] > 0:
-		player.heal(ranks[4] * tuning.healing_per_rank)
+	if bonus.heal > 0:
+		player.heal(bonus.heal)
 	# Bonuses share the original hit, preserving damage stats, Weakness routing
 	# and enemy-death ownership. They never register another merge or gauge gain.
-	visual.show_hit(enemy.global_position, critical, lightning, ricochet, blocked)
-	last_effect = "%d연쇄 · 피해 %d%s%s" % [combo_count, total, " · 치명타!" if critical else "", " · 갑옷 적용" if blocked else ""]
+	visual.show_hit(enemy.global_position, bonus.critical, bonus.lightning, bonus.ricochet, blocked)
+	last_effect = "%d연쇄 · 피해 %d%s%s" % [combo_count, total, " · 치명타!" if bonus.critical else "", " · 갑옷 적용" if blocked else ""]
 	_refresh()
 	return total
 
@@ -99,7 +78,7 @@ func on_turn_completed() -> void:
 	turns_remaining -= 1
 	if turns_remaining <= 0:
 		var incoming := _incoming_damage()
-		last_effect = "반격 %d 피해 · 돌가죽 %d 감소" % [incoming, ranks[5] * tuning.guard_per_rank]
+		last_effect = "반격 %d 피해 · 돌가죽 %d 감소" % [incoming, cards.ranks[5] * tuning.guard_per_rank]
 		enemy.attack_with_damage(player, incoming)
 		turns_remaining = _interval()
 	_refresh()
@@ -121,7 +100,7 @@ func _incoming_damage() -> int:
 	var damage: int = tuning.wave_damage[mini(battle.current_enemy_index, tuning.wave_damage.size() - 1)]
 	if _enraged():
 		damage = roundi(damage * tuning.boss_enrage_multiplier)
-	return maxi(0, damage - ranks[5] * tuning.guard_per_rank)
+	return maxi(0, damage - cards.ranks[5] * tuning.guard_per_rank)
 
 func _refresh() -> void:
 	var wave := battle.current_enemy_index
@@ -131,7 +110,7 @@ func _refresh() -> void:
 		enemy_rule += " · 분노"
 	battle.update_gimmick_ui("반격 %d턴 / %d 피해%s" % [turns_remaining, _incoming_damage(), enemy_rule], last_effect)
 	battle.show_player_damage_preview(_incoming_damage())
-	visual.update_build(ranks, lightning_hits, tuning)
+	visual.update_build(cards.ranks, cards.lightning_hits, tuning)
 
 func _release_pause() -> void:
 	if owns_pause and is_inside_tree():

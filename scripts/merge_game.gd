@@ -3,6 +3,7 @@ extends Node2D
 
 # Optional, level-owned hooks; ordinary drop levels keep their existing behavior.
 var player_merge_damage_modifier := Callable()
+var player_merge_attack_collector := Callable()
 var player_merge_velocity_modifier := Callable()
 var wait_for_turn_before_next_input := false
 var turn_max_wait_msec_override := -1
@@ -865,7 +866,7 @@ func _finish_drop_sequence(sequence_id: int) -> void:
 		var exceeded_max_wait := now - sequence_started_msec >= max_wait_msec
 		var turn_is_ready: bool = dropped_ball_has_landed and merge_is_quiet
 		# 적 턴은 합성/연쇄 합성이 끝난 시점에 넘긴다. 공 전체 정지는 투하 UI 복구에만 사용한다.
-		if not turn_was_emitted and (turn_is_ready or exceeded_max_wait):
+		if not turn_was_emitted and not player_merge_attack_collector.is_valid() and (turn_is_ready or exceeded_max_wait):
 			turn_was_emitted = true
 			turn_completed.emit(sequence_id)
 		if (turn_is_ready and not _has_moving_balls()) or exceeded_max_wait:
@@ -876,6 +877,9 @@ func _finish_drop_sequence(sequence_id: int) -> void:
 	if sequence_id != drop_sequence_id:
 		return
 	drop_sequence_active = false
+	if not turn_was_emitted and player_merge_attack_collector.is_valid():
+		turn_was_emitted = true
+		turn_completed.emit(sequence_id)
 	if wait_for_turn_before_next_input and not input_locked and not is_game_over:
 		can_drop = true
 	if auto_drop_enabled:
@@ -1055,6 +1059,8 @@ func _on_merge_requested(first, second) -> void:
 		_show_combo_effect(attack_combo_count, merge_damage)
 	if is_external_merge:
 		external_merge_damage_requested.emit(merge_damage, attack_combo_count, earned_points, at, level)
+	elif player_merge_attack_collector.is_valid():
+		player_merge_attack_collector.call(merge_damage, attack_combo_count, earned_points, at, level, attack_drop_sequence_id)
 	else:
 		_emit_merge_attack_after_delay(
 			merge_damage,

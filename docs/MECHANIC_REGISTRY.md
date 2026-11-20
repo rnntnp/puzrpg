@@ -102,6 +102,7 @@ Runtime types:
 | 60 | 말랑한 연못 | 59번 기반. 공식 QuarkPhysics 소프트바디: 독립 외곽 입자 12개와 스프링 30개, 변형 콜라이더/GPU 표면 연결. 추가 감쇠·반동 제한 제거, 엔진 파라미터 사용. 기존 6점 XPBD와 비교 가능. 정지 접촉 수면 개선 필요. | Modular · 3 existing enemies · [spec](mechanics/060_soft_pond.md) · [level](../resources/levels/test_soft_pond.tres) · [handler](../scripts/gimmicks/handlers/soft_pond_handler.gd) | `NEEDS_PLAYTEST` | 59 (기반), 5 (크기 조정과 달리 탄성 접촉) |
 | 61 | 탱글한 연못 | 이전 6점 XPBD 복원 비교 스테이지. 수치 반복 계산을 별도 C++ 확장으로 최적화. 저장된 여유 원 반경과 64px 칸으로 후보 검색, 화면 메시를 유지하며 충돌 외곽 점을 절반으로 샘플링. 윤곽 메시에서 반사 합성, 화면 좌표 격자로 인접 반사 검색. 60번 Quark 유지. | Modular · 3 existing enemies · [spec](mechanics/061_native_xpbd_pond.md) · [level](../resources/levels/test_native_xpbd_pond.tres) · [handler](../scripts/gimmicks/handlers/native_xpbd_pond_handler.gd) | `NEEDS_PLAYTEST` | 60 (사용자 요청 비교), 59 (렌더링 기반) |
 | 62 | 동글한 연못 | 59번 강체·상향 방향 발사 재사용. 공별 6점 와핑에서 원 기준 접촉 키포인트만 맞추고 벽 키포인트를 제한. 윤곽 반복 검사 없이 고정 충돌체·통합 반사 유지. | Modular · 3 existing enemies · [spec](mechanics/062_circle_xpbd_pond.md) · [level](../resources/levels/test_circle_xpbd_pond.tres) | `NEEDS_PLAYTEST` | 61 (사용자 요청 비교) |
+| 63 | 연못 진형 실험 | 62번 수조 위 아군 1명·적 2열. 턴 합성 피해를 전열부터 균등 분배하고 초과분을 이월한다. 3웨이브와 선택형 슬롯 충원, 기존 카드 선택을 시험한다. | Modular · [spec](mechanics/063_pond_formation.md) · [level](../resources/levels/test_pond_formation.tres) · [handler](../scripts/gimmicks/handlers/pond_formation_handler.gd) | `NEEDS_PLAYTEST` | 62 (수조 기반), 56 (카드 재사용) |
 
 ## Non-numbered systems that block duplicates
 

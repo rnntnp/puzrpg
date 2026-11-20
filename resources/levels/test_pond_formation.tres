@@ -1,0 +1,244 @@
+[gd_resource type="Resource" script_class="LevelData" load_steps=51 format=3]
+
+[ext_resource type="Script" path="res://scripts/level_data.gd" id="1"]
+[ext_resource type="Resource" path="res://resources/characters/blue_fighter.tres" id="2"]
+[ext_resource type="Resource" path="res://resources/characters/tutorial_enemy.tres" id="3"]
+[ext_resource type="Resource" path="res://resources/characters/red_fighter.tres" id="4"]
+[ext_resource type="Resource" path="res://resources/characters/red_elite.tres" id="5"]
+[ext_resource type="Script" path="res://scripts/character_data.gd" id="6"]
+[ext_resource type="Script" path="res://scripts/test_gimmick_data.gd" id="7"]
+[ext_resource type="Texture2D" path="res://assets/backgrounds/stage_01_moonlit_pond_handdrawn_v4_clear.png" id="8"]
+[ext_resource type="Texture2D" path="res://assets/level_previews/level_01_preview.png" id="9"]
+[ext_resource type="Texture2D" path="res://assets/effects/generated/status_attack.png" id="10"]
+[ext_resource type="Script" path="res://scripts/gimmicks/handlers/pond_formation_handler.gd" id="11"]
+[ext_resource type="Resource" path="res://resources/visuals/pond_surface_rendering_settings_62.tres" id="12"]
+[ext_resource type="Texture2D" path="res://assets/backgrounds/stage_01_moonlit_pond_handdrawn_v4_clear_top.png" id="13_top"]
+[ext_resource type="Texture2D" path="res://assets/backgrounds/stage_01_moonlit_pond_handdrawn_v4_clear_middle.png" id="14_middle"]
+[ext_resource type="Texture2D" path="res://assets/backgrounds/stage_01_moonlit_pond_handdrawn_v4_clear_bottom.png" id="15_bottom"]
+
+[ext_resource type="Script" path="res://scripts/gimmicks/configs/formation_slot.gd" id="16"]
+[ext_resource type="Script" path="res://scripts/gimmicks/configs/formation_wave.gd" id="17"]
+[ext_resource type="Script" path="res://scripts/gimmicks/configs/pond_formation_config.gd" id="18"]
+[ext_resource type="Script" path="res://scripts/gimmicks/configs/dungeon_draft_config.gd" id="19"]
+
+[ext_resource type="Script" path="res://scripts/gimmicks/configs/formation_layout.gd" id="20"]
+
+[sub_resource type="Resource" id="FrontTop"]
+script = ExtResource("16")
+character = ExtResource("3")
+health = 55
+column = 0
+position = Vector2(470, 235)
+
+[sub_resource type="Resource" id="FrontBottom"]
+script = ExtResource("16")
+character = ExtResource("4")
+health = 85
+column = 0
+position = Vector2(470, 335)
+
+[sub_resource type="Resource" id="RearTop"]
+script = ExtResource("16")
+character = ExtResource("3")
+health = 65
+column = 1
+position = Vector2(615, 235)
+
+[sub_resource type="Resource" id="RearBottom"]
+script = ExtResource("16")
+character = ExtResource("4")
+health = 90
+column = 1
+position = Vector2(615, 335)
+
+[sub_resource type="Resource" id="FrontCenter"]
+script = ExtResource("16")
+character = ExtResource("4")
+health = 115
+column = 0
+position = Vector2(470, 285)
+
+[sub_resource type="Resource" id="RearElite"]
+script = ExtResource("16")
+character = ExtResource("5")
+health = 160
+column = 1
+position = Vector2(615, 285)
+
+[sub_resource type="Resource" id="FrontTopThird"]
+script = ExtResource("16")
+character = ExtResource("4")
+health = 100
+column = 0
+position = Vector2(470, 235)
+
+[sub_resource type="Resource" id="FrontBottomThird"]
+script = ExtResource("16")
+character = ExtResource("3")
+health = 85
+column = 0
+position = Vector2(470, 335)
+
+[sub_resource type="Resource" id="ReserveLight"]
+script = ExtResource("16")
+character = ExtResource("3")
+health = 45
+column = 0
+position = Vector2(470, 285)
+
+[sub_resource type="Resource" id="ReserveHeavy"]
+script = ExtResource("16")
+character = ExtResource("4")
+health = 75
+column = 0
+position = Vector2(470, 285)
+
+[sub_resource type="Resource" id="Wave1"]
+script = ExtResource("17")
+slots = Array[ExtResource("16")]([SubResource("FrontTop"), SubResource("FrontBottom"), SubResource("RearTop"), SubResource("RearBottom")])
+reinforcements = Array[ExtResource("16")]([SubResource("ReserveLight"), SubResource("ReserveLight")])
+
+[sub_resource type="Resource" id="Wave2"]
+script = ExtResource("17")
+slots = Array[ExtResource("16")]([SubResource("FrontCenter"), SubResource("RearTop"), SubResource("RearBottom")])
+reinforcements = Array[ExtResource("16")]([SubResource("ReserveLight"), SubResource("ReserveHeavy")])
+
+[sub_resource type="Resource" id="Wave3"]
+script = ExtResource("17")
+slots = Array[ExtResource("16")]([SubResource("FrontTopThird"), SubResource("FrontBottomThird"), SubResource("RearElite")])
+reinforcements = Array[ExtResource("16")]([SubResource("ReserveHeavy"), SubResource("ReserveHeavy")])
+
+[sub_resource type="Resource" id="Draft"]
+script = ExtResource("19")
+
+[sub_resource type="Resource" id="Layout1"]
+script = ExtResource("20")
+display_name = "기본"
+use_wave_positions = true
+
+[sub_resource type="Resource" id="Layout2"]
+script = ExtResource("20")
+display_name = "좁은 간격"
+front_center = Vector2(485, 285)
+rear_center = Vector2(600, 285)
+front_row_step = Vector2(0, 86)
+rear_row_step = Vector2(0, 86)
+
+[sub_resource type="Resource" id="Layout3"]
+script = ExtResource("20")
+display_name = "넓은 간격"
+front_center = Vector2(410, 285)
+rear_center = Vector2(640, 285)
+front_row_step = Vector2(0, 106)
+rear_row_step = Vector2(0, 106)
+
+[sub_resource type="Resource" id="Layout4"]
+script = ExtResource("20")
+display_name = "전열 위쪽"
+front_center = Vector2(455, 267)
+rear_center = Vector2(625, 303)
+front_row_step = Vector2(0, 88)
+rear_row_step = Vector2(0, 88)
+
+[sub_resource type="Resource" id="Layout5"]
+script = ExtResource("20")
+display_name = "후열 위쪽"
+front_center = Vector2(455, 303)
+rear_center = Vector2(625, 267)
+front_row_step = Vector2(0, 88)
+rear_row_step = Vector2(0, 88)
+
+[sub_resource type="Resource" id="Layout6"]
+script = ExtResource("20")
+display_name = "엇갈린 대각선"
+front_center = Vector2(455, 285)
+rear_center = Vector2(620, 285)
+front_row_step = Vector2(62, 96)
+rear_row_step = Vector2(-58, 96)
+
+[sub_resource type="Resource" id="Layout7"]
+script = ExtResource("20")
+display_name = "사선 일렬 · 분리"
+use_staggered_line = true
+
+[sub_resource type="Resource" id="Layout8"]
+script = ExtResource("20")
+display_name = "사선 일렬 · 약한 겹침"
+use_staggered_line = true
+overlap_ratio = 0.125
+sprite_scale_multiplier = 1.12
+
+[sub_resource type="Resource" id="Layout9"]
+script = ExtResource("20")
+display_name = "사선 일렬 · 중간 겹침"
+use_staggered_line = true
+overlap_ratio = 0.225
+sprite_scale_multiplier = 1.24
+
+[sub_resource type="Resource" id="FrontExtra"]
+script = ExtResource("16")
+character = ExtResource("3")
+health = 65
+column = 0
+position = Vector2(425, 290)
+
+[sub_resource type="Resource" id="RearExtra"]
+script = ExtResource("16")
+character = ExtResource("5")
+health = 80
+column = 1
+position = Vector2(670, 295)
+
+[sub_resource type="Resource" id="Wave4"]
+script = ExtResource("17")
+slots = Array[ExtResource("16")]([SubResource("FrontCenter"), SubResource("RearElite")])
+
+[sub_resource type="Resource" id="Wave5"]
+script = ExtResource("17")
+slots = Array[ExtResource("16")]([SubResource("FrontTop"), SubResource("FrontExtra"), SubResource("FrontBottom"), SubResource("RearTop"), SubResource("RearBottom")])
+
+[sub_resource type="Resource" id="Wave6"]
+script = ExtResource("17")
+slots = Array[ExtResource("16")]([SubResource("FrontCenter"), SubResource("RearTop"), SubResource("RearBottom"), SubResource("RearExtra")])
+
+[sub_resource type="Resource" id="Formation"]
+script = ExtResource("18")
+waves = Array[ExtResource("17")]([SubResource("Wave1"), SubResource("Wave2"), SubResource("Wave3"), SubResource("Wave4"), SubResource("Wave5"), SubResource("Wave6")])
+layouts = Array[ExtResource("20")]([SubResource("Layout1"), SubResource("Layout2"), SubResource("Layout3"), SubResource("Layout4"), SubResource("Layout5"), SubResource("Layout6"), SubResource("Layout7"), SubResource("Layout8"), SubResource("Layout9")])
+draft = SubResource("Draft")
+rendering_settings = ExtResource("12")
+
+[sub_resource type="Resource" id="Gimmick"]
+script = ExtResource("7")
+display_name = "사이드뷰 진형"
+normal_attack_damage = 4
+action_interval = 3
+normal_attack_interval = 3
+preserve_board_between_enemies = true
+handler_script = ExtResource("11")
+tuning = SubResource("Formation")
+
+[resource]
+script = ExtResource("1")
+level_name = "63. 연못 진형 실험"
+image_placeholder = "FORMATION"
+battle_background = ExtResource("8")
+battle_background_top = ExtResource("13_top")
+battle_background_middle = ExtResource("14_middle")
+battle_background_bottom = ExtResource("15_bottom")
+level_select_preview = ExtResource("9")
+show_battle_status_label = false
+show_gimmick_status_labels = true
+recommended_ball_level = 5
+stage_gimmick_icon = ExtResource("10")
+stage_gimmick_name = "전열·후열 턴 결산"
+reward_name = ""
+clear_gold_reward = 0
+player_character = ExtResource("2")
+enemies = Array[ExtResource("6")]([ExtResource("3"), ExtResource("4"), ExtResource("5"), ExtResource("3"), ExtResource("4"), ExtResource("5")])
+is_gimmick_test_level = false
+test_gimmick = SubResource("Gimmick")
+ball_drop_time_limit = -1.0
+merge_push_force = 110.0
+merge_hit_stop_time_scale = 0.18
+merge_hit_stop_duration = 0.2

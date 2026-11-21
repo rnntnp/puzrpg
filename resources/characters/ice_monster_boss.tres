@@ -17,3 +17,4 @@ max_health = 900
 attack_power = 6
 enemy_attack_drop_interval = 2
 ice_skill = ExtResource("2")
+reveal_skill_icon_after_use = true

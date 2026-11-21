@@ -7,6 +7,7 @@ var _fighter: Fighter
 var _saved_self_modulate := Color.WHITE
 var _outline_sprite: Sprite2D
 var _outline_material: ShaderMaterial
+var resting_bounds := Rect2()
 
 
 func configure(fighter: Fighter, size_multiplier := 1.0, white_outline := false) -> void:
@@ -40,6 +41,7 @@ func configure(fighter: Fighter, size_multiplier := 1.0, white_outline := false)
 	puppet.name = "AxolotlCutout"
 	puppet.scale = Vector2.ONE * ratio
 	puppet.position = old_anchor - new_anchor * ratio
+	resting_bounds = Rect2(puppet.position + source_bounds.position * ratio, source_bounds.size * ratio)
 	modulate = fighter.character_data.display_color * fighter.character_data.sprite_modulate
 	if white_outline:
 		# Composite first: outlining individual parts would draw white joint seams.

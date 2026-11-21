@@ -4,6 +4,11 @@ extends Node2D
 # Optional, level-owned hooks; ordinary drop levels keep their existing behavior.
 var player_merge_damage_modifier := Callable()
 var player_merge_attack_collector := Callable()
+var merge_quiet_settlement_msec := 0
+var attack_presentation_paused := false
+var between_drop_combo := 0
+var between_drop_merge_msec := 0
+signal player_merge_result_created(ball: MergeBall)
 var player_merge_velocity_modifier := Callable()
 var wait_for_turn_before_next_input := false
 var turn_max_wait_msec_override := -1
@@ -761,6 +766,8 @@ func configure(
 	_reset_ball_queue()
 
 func _process(delta: float) -> void:
+	if attack_presentation_paused:
+		return
 	if danger_suppression_remaining > 0.0:
 		danger_suppression_remaining = maxf(0.0, danger_suppression_remaining - delta)
 	if is_game_over:
@@ -844,6 +851,7 @@ func launch_player_ball(at: Vector2, velocity: Vector2) -> MergeBall:
 	drop_sequence_id += 1
 	var current_sequence_id := drop_sequence_id
 	combo_count = 0
+	between_drop_combo = 0
 	combo_points = 0
 	last_merge_msec = Time.get_ticks_msec()
 	next_merge_resolution_msec = last_merge_msec
@@ -858,9 +866,17 @@ func launch_player_ball(at: Vector2, velocity: Vector2) -> MergeBall:
 func _finish_drop_sequence(sequence_id: int) -> void:
 	var sequence_started_msec := Time.get_ticks_msec()
 	var turn_was_emitted := false
+	var landed_msec := -1
 	await get_tree().physics_frame
 	while is_inside_tree():
 		var now := Time.get_ticks_msec()
+		if merge_quiet_settlement_msec > 0:
+			if dropped_ball_has_landed and landed_msec < 0:
+				landed_msec = now
+			if landed_msec >= 0 and now - maxi(landed_msec, last_merge_msec) >= merge_quiet_settlement_msec:
+				break
+			await get_tree().physics_frame
+			continue
 		var merge_is_quiet := now - last_merge_msec >= COMBO_SETTLE_MSEC
 		var max_wait_msec := COMBO_MAX_WAIT_MSEC if turn_max_wait_msec_override < 0 else turn_max_wait_msec_override
 		var exceeded_max_wait := now - sequence_started_msec >= max_wait_msec
@@ -1028,6 +1044,8 @@ func _on_merge_requested(first, second) -> void:
 		var wait_seconds := float(scheduled_msec - now_msec) / 1000.0
 		if wait_seconds > 0.0:
 			await get_tree().create_timer(wait_seconds, true, false, true).timeout
+		while is_inside_tree() and attack_presentation_paused:
+			await get_tree().physics_frame
 		if not is_inside_tree() or not is_instance_valid(first) or not is_instance_valid(second):
 			return
 	merge_hit_stop.play()
@@ -1048,6 +1066,13 @@ func _on_merge_requested(first, second) -> void:
 		combo_points += earned_points
 		last_merge_msec = Time.get_ticks_msec()
 		attack_combo_count = combo_count
+	elif not is_external_merge and merge_quiet_settlement_msec > 0:
+		var now := Time.get_ticks_msec()
+		if now - between_drop_merge_msec >= COMBO_SETTLE_MSEC:
+			between_drop_combo = 0
+		between_drop_combo += 1
+		between_drop_merge_msec = now
+		attack_combo_count = between_drop_combo
 	if not is_external_merge:
 		player_merge_registered.emit(earned_points, level)
 	merge_registered.emit(level, at, attack_combo_count, source_ids, involved_cursed)
@@ -1126,6 +1151,8 @@ func _spawn_merged_ball(
 			external_merge_sfx_pitch_scale if is_external_merge else 1.0
 		)
 		merge_completed.emit(merged_ball)
+		if not is_external_merge and player_merge_attack_collector.is_valid():
+			player_merge_result_created.emit(merged_ball)
 	if not is_instance_valid(merged_ball):
 		return
 	if merge_push_force > 0.0:

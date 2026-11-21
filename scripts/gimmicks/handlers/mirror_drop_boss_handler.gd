@@ -9,6 +9,7 @@ const ReflectionActiveSprite = preload("res://assets/characters/generated/mirror
 const ReflectionShineSfx: AudioStream = preload("res://assets/audio/sfx/mirror_reflection_shine.ogg")
 const MirrorLandingSfx: AudioStream = preload("res://assets/audio/sfx/drop_002.ogg")
 const ReflectionActiveEffect: StatusEffectData = preload("res://resources/effects/mirror_reflection_active.tres")
+const ActionIcons = preload("res://scripts/enemy_action_icons.gd")
 const PHASE_NORMAL := 0
 const PHASE_MIRROR := 1
 
@@ -18,6 +19,7 @@ var mirror_face_sheen: Sprite2D
 var reflection_shine_player: AudioStreamPlayer
 var mirror_landing_player: AudioStreamPlayer
 var phase := PHASE_NORMAL
+var witnessed_mirror_drop := false
 var turns_remaining := 0
 var last_player_level := -1
 var last_player_drop_x := 0.0
@@ -171,11 +173,12 @@ func _execute_mirror_drop(level: int, player_drop_x: float) -> void:
 		_update_feedback()
 		return
 	spawned.set_damage_background_marked(true)
+	witnessed_mirror_drop = true
 	spawned.first_contact.connect(_play_mirror_landing_sfx, CONNECT_ONE_SHOT)
 	# Keep the black preview visible through the wind-up, then hand it off only
 	# after the real mirror ball exists and has received its black background.
 	mirror_action_active = true
-	_refresh_overlay()
+	_update_feedback()
 	log_event("MIRROR DROP", "stage=%d player_x=%.1f boss_x=%.1f" % [level + 1, player_drop_x, spawn_x])
 	if not mirror_tutorial_shown:
 		mirror_tutorial_shown = true
@@ -381,7 +384,8 @@ func _update_feedback() -> void:
 	if not is_instance_valid(battle):
 		return
 	if phase == PHASE_MIRROR:
-		battle.right_applied_status_effects.set_effect(ReflectionActiveEffect, turns_remaining)
+		var intent := ActionIcons.skill_intent(ReflectionActiveEffect, true, witnessed_mirror_drop)
+		battle.right_applied_status_effects.set_effect(intent, turns_remaining)
 		battle.update_gimmick_ui(
 			"MIRROR PHASE · %d" % turns_remaining,
 			"내 수 정산 후 보스가 같은 단계로 반대편에 응수 · 피해 ×%.2f" % tuning.mirror_damage_scale

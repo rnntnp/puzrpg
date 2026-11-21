@@ -160,7 +160,7 @@ func attack_with_damage(target: Fighter, damage: int) -> void:
 	play_attack_animation(target)
 
 
-func take_damage(amount: int) -> void:
+func take_damage(amount: int, use_default_hit := true) -> void:
 	if not is_alive():
 		return
 	var previous_health := current_health
@@ -169,7 +169,8 @@ func take_damage(amount: int) -> void:
 	var applied_damage: int = maxi(0, amount) if infinite_health else previous_health - current_health
 	health_changed.emit(current_health, max_health)
 	if applied_damage > 0:
-		play_hit_animation(applied_damage)
+		if use_default_hit:
+			play_hit_animation(applied_damage)
 		damage_received.emit(applied_damage)
 	if current_health == 0:
 		defeated.emit(self)
@@ -296,10 +297,10 @@ func _stop_cast_tween() -> void:
 		_cast_tween.kill()
 	_cast_tween = null
 
-func play_defeat_animation() -> void:
+func play_defeat_animation(duration := 0.65) -> void:
 	var defeated_scale := Vector2(base_scale.x * 1.15, 0.05)
 	var tween := create_tween().set_parallel(true)
-	tween.tween_property(self, "scale", defeated_scale, 0.65).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_IN)
-	tween.tween_property(self, "modulate", Color(1.0, 0.35, 0.35, 0.0), 0.65)
+	tween.tween_property(self, "scale", defeated_scale, duration).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_IN)
+	tween.tween_property(self, "modulate", Color(1.0, 0.35, 0.35, 0.0), duration)
 	await tween.finished
 	visible = false

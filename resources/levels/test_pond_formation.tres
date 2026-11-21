@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="LevelData" load_steps=51 format=3]
+[gd_resource type="Resource" script_class="LevelData" load_steps=49 format=3]
 
 [ext_resource type="Script" path="res://scripts/level_data.gd" id="1"]
 [ext_resource type="Resource" path="res://resources/characters/blue_fighter.tres" id="2"]
@@ -111,69 +111,62 @@ reinforcements = Array[ExtResource("16")]([SubResource("ReserveHeavy"), SubResou
 [sub_resource type="Resource" id="Draft"]
 script = ExtResource("19")
 
-[sub_resource type="Resource" id="Layout1"]
-script = ExtResource("20")
-display_name = "기본"
-use_wave_positions = true
+[sub_resource type="Resource" id="PreviewRearMiddle"]
+script = ExtResource("16")
+character = ExtResource("4")
+health = 85
+column = 1
 
-[sub_resource type="Resource" id="Layout2"]
-script = ExtResource("20")
-display_name = "좁은 간격"
-front_center = Vector2(485, 285)
-rear_center = Vector2(600, 285)
-front_row_step = Vector2(0, 86)
-rear_row_step = Vector2(0, 86)
+[sub_resource type="Resource" id="PreviewThreeA"]
+script = ExtResource("17")
+slots = Array[ExtResource("16")]([SubResource("FrontTop"), SubResource("FrontBottom"), SubResource("RearTop")])
 
-[sub_resource type="Resource" id="Layout3"]
-script = ExtResource("20")
-display_name = "넓은 간격"
-front_center = Vector2(410, 285)
-rear_center = Vector2(640, 285)
-front_row_step = Vector2(0, 106)
-rear_row_step = Vector2(0, 106)
+[sub_resource type="Resource" id="PreviewThreeB"]
+script = ExtResource("17")
+slots = Array[ExtResource("16")]([SubResource("FrontTop"), SubResource("PreviewRearMiddle"), SubResource("RearTop")])
 
-[sub_resource type="Resource" id="Layout4"]
+[sub_resource type="Resource" id="LayoutA"]
 script = ExtResource("20")
-display_name = "전열 위쪽"
-front_center = Vector2(455, 267)
-rear_center = Vector2(625, 303)
-front_row_step = Vector2(0, 88)
-rear_row_step = Vector2(0, 88)
-
-[sub_resource type="Resource" id="Layout5"]
-script = ExtResource("20")
-display_name = "후열 위쪽"
-front_center = Vector2(455, 303)
-rear_center = Vector2(625, 267)
-front_row_step = Vector2(0, 88)
-rear_row_step = Vector2(0, 88)
-
-[sub_resource type="Resource" id="Layout6"]
-script = ExtResource("20")
-display_name = "엇갈린 대각선"
-front_center = Vector2(455, 285)
-rear_center = Vector2(620, 285)
-front_row_step = Vector2(62, 96)
-rear_row_step = Vector2(-58, 96)
-
-[sub_resource type="Resource" id="Layout7"]
-script = ExtResource("20")
-display_name = "사선 일렬 · 분리"
+display_name = "3A · 전열 1 / 후열 2"
+preview_wave = SubResource("PreviewThreeB")
 use_staggered_line = true
+enemy_height_ratio = 0.65
+overlap_ratio = 0.30
+line_rise = 0.0
+slot_scale_multipliers = PackedFloat32Array(1.25, 1, 1)
+slot_offsets = PackedVector2Array(0, 0, 0, -86, 0, -24)
 
-[sub_resource type="Resource" id="Layout8"]
+[sub_resource type="Resource" id="LayoutB"]
 script = ExtResource("20")
-display_name = "사선 일렬 · 약한 겹침"
+display_name = "3B · 전열 2 / 후열 1"
+preview_wave = SubResource("PreviewThreeA")
 use_staggered_line = true
-overlap_ratio = 0.125
-sprite_scale_multiplier = 1.12
+enemy_height_ratio = 0.65
+overlap_ratio = 0.26
+line_rise = 0.0
+slot_scale_multipliers = PackedFloat32Array(1, 1, 1.20)
+slot_offsets = PackedVector2Array(0, -76, 0, 0, 0, -76)
+draw_order_offsets = PackedInt32Array(0, 2, 0)
 
-[sub_resource type="Resource" id="Layout9"]
+[sub_resource type="Resource" id="LayoutC"]
 script = ExtResource("20")
-display_name = "사선 일렬 · 중간 겹침"
+display_name = "3C · 삼각 진형"
+preview_wave = SubResource("PreviewThreeA")
 use_staggered_line = true
-overlap_ratio = 0.225
-sprite_scale_multiplier = 1.24
+enemy_height_ratio = 0.65
+overlap_ratio = 0.32
+line_rise = 0.0
+slot_offsets = PackedVector2Array(0, 0, 0, -86, 0, 0)
+draw_order_offsets = PackedInt32Array(0, -110, 0)
+
+[sub_resource type="Resource" id="LayoutD"]
+script = ExtResource("20")
+display_name = "대각선 교차형"
+use_staggered_line = true
+enemy_height_ratio = 0.60
+horizontal_spacing = 4.0
+line_rise = 3.0
+alternating_lift = 128.0
 
 [sub_resource type="Resource" id="FrontExtra"]
 script = ExtResource("16")
@@ -204,7 +197,7 @@ slots = Array[ExtResource("16")]([SubResource("FrontCenter"), SubResource("RearT
 [sub_resource type="Resource" id="Formation"]
 script = ExtResource("18")
 waves = Array[ExtResource("17")]([SubResource("Wave1"), SubResource("Wave2"), SubResource("Wave3"), SubResource("Wave4"), SubResource("Wave5"), SubResource("Wave6")])
-layouts = Array[ExtResource("20")]([SubResource("Layout1"), SubResource("Layout2"), SubResource("Layout3"), SubResource("Layout4"), SubResource("Layout5"), SubResource("Layout6"), SubResource("Layout7"), SubResource("Layout8"), SubResource("Layout9")])
+layouts = Array[ExtResource("20")]([SubResource("LayoutA"), SubResource("LayoutB"), SubResource("LayoutC"), SubResource("LayoutD")])
 draft = SubResource("Draft")
 rendering_settings = ExtResource("12")
 

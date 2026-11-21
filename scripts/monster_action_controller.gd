@@ -14,6 +14,7 @@ const IngestionHealEffect: StatusEffectData = preload("res://resources/effects/i
 const IngestionDurabilityEffect: StatusEffectData = preload("res://resources/effects/ingestion_durability.tres")
 const WeaknessEffect: StatusEffectData = preload("res://resources/effects/ingestion_vulnerable.tres")
 const IceEffect: StatusEffectData = preload("res://resources/effects/ice_countdown.tres")
+const ActionIcons = preload("res://scripts/enemy_action_icons.gd")
 const IceSkillDataClass = preload("res://scripts/ice_skill_data.gd")
 const IceSkillControllerClass = preload("res://scripts/ice_skill_controller.gd")
 const HealCrossParticleBurstClass = preload("res://scripts/heal_cross_particle_burst.gd")
@@ -47,6 +48,7 @@ var vulnerable_turns := 0
 var _state_version := 0
 var next_action_is_ice := false
 var ingestion_response_drop_sequence_id := -1
+var witnessed_skill_icons: Dictionary[StatusEffectData, bool] = {}
 
 
 func configure(
@@ -83,6 +85,7 @@ func configure(
 	launch_executions = 0
 	vulnerable_turns = 0
 	ingestion_response_drop_sequence_id = -1
+	witnessed_skill_icons.clear()
 	status_effects.clear_effects()
 	applied_status_effects.clear_effects()
 	durability_bar.clear_durability()
@@ -256,7 +259,7 @@ func _enter_normal_attack() -> void:
 	status_effects.remove_effect(IngestionHealEffect.effect_id)
 	if ice_skill != null and next_action_is_ice:
 		status_effects.remove_effect(EnemyAttackEffect.effect_id)
-		status_effects.set_effect(IceEffect, remaining_turns)
+		status_effects.set_effect(_skill_intent(IceEffect), remaining_turns)
 		battle.clear_player_damage_preview()
 		if remaining_turns == 1:
 			ice_controller.begin_telegraph()
@@ -282,7 +285,7 @@ func _enter_ingestion_telegraph() -> void:
 	status_effects.remove_effect(EnemyAttackEffect.effect_id)
 	status_effects.remove_effect(IceEffect.effect_id)
 	status_effects.remove_effect(IngestionHealEffect.effect_id)
-	status_effects.set_effect(IngestionEffect, remaining_turns)
+	status_effects.set_effect(_skill_intent(IngestionEffect), remaining_turns)
 	_select_target()
 
 
@@ -308,6 +311,7 @@ func _execute_ingestion() -> void:
 			merge_game.set_input_enabled(true)
 		return
 	battle.play_ingestion_swallow_sfx()
+	witnessed_skill_icons[IngestionEffect] = true
 	enemy.set_visual_override(enemy.character_data.ingestion_swallowed_sprite)
 	enemy.play_ingestion_squash()
 	enemy.show_ingestion_glow(swallowed_color)
@@ -329,10 +333,10 @@ func _execute_ingestion() -> void:
 		active_launch_damage = 0
 	ingestion_executions += 1
 	if active_ingestion_is_launch:
-		status_effects.set_effect(IngestionLaunchEffect, remaining_turns)
+		status_effects.set_effect(_get_active_ingestion_effect(), remaining_turns)
 	else:
 		status_effects.remove_effect(IngestionEffect.effect_id)
-		status_effects.set_effect(IngestionHealEffect, remaining_turns)
+		status_effects.set_effect(_get_active_ingestion_effect(), remaining_turns)
 	applied_status_effects.set_effect(IngestionDurabilityEffect, 0)
 	_update_ui()
 	await battle.show_first_ingestion_swallow_tutorial()
@@ -372,9 +376,11 @@ func _schedule_ingestion_success() -> void:
 	enemy.play_ingestion_squash()
 	if active_ingestion_is_launch:
 		battle.clear_player_damage_preview()
+		witnessed_skill_icons[IngestionLaunchEffect] = true
 		await _launch_ingested_ball_at_player(resolved_ball_level, active_launch_damage)
 		print("[INGESTION SUCCEEDED] launch_damage=%d" % active_launch_damage)
 	else:
+		witnessed_skill_icons[IngestionHealEffect] = true
 		enemy.heal(skill.heal_amount)
 		var heal_burst := HealCrossParticleBurstClass.new()
 		get_tree().current_scene.add_child(heal_burst)
@@ -462,12 +468,12 @@ func _update_ui() -> void:
 		State.NORMAL_ATTACK:
 			if ice_skill != null and next_action_is_ice:
 				status_effects.remove_effect(EnemyAttackEffect.effect_id)
-				status_effects.set_effect(IceEffect, remaining_turns)
+				status_effects.set_effect(_skill_intent(IceEffect), remaining_turns)
 			else:
 				status_effects.remove_effect(IceEffect.effect_id)
 				status_effects.set_effect(EnemyAttackEffect, remaining_turns)
 		State.INGESTION_TELEGRAPH:
-			status_effects.set_effect(IngestionEffect, remaining_turns)
+			status_effects.set_effect(_skill_intent(IngestionEffect), remaining_turns)
 		State.INGESTION_RESPONSE:
 			status_effects.set_effect(_get_active_ingestion_effect(), remaining_turns)
 	if state == State.INGESTION_RESPONSE:
@@ -495,6 +501,8 @@ func _run_ice_turn() -> void:
 		enemy.hide_ice_eye_glow()
 	if action_version != _state_version:
 		return
+	if frozen_count > 0:
+		witnessed_skill_icons[IceEffect] = true
 	if ice_skill.deals_direct_damage and frozen_count < ice_skill.freeze_count:
 		var enhanced_damage := _get_ice_no_target_damage()
 		var bonus_damage := maxi(0, enhanced_damage - enemy.attack_power)
@@ -524,7 +532,15 @@ func _get_ice_no_target_damage() -> int:
 
 
 func _get_active_ingestion_effect() -> StatusEffectData:
-	return IngestionLaunchEffect if active_ingestion_is_launch else IngestionHealEffect
+	if active_ingestion_is_launch:
+		return _skill_intent(IngestionLaunchEffect)
+	return _skill_intent(IngestionHealEffect, ActionIcons.Kind.HEAL)
+
+
+func _skill_intent(effect: StatusEffectData, generic_kind := ActionIcons.Kind.SKILL) -> StatusEffectData:
+	return ActionIcons.skill_intent(
+		effect, enemy.character_data.reveal_skill_icon_after_use, witnessed_skill_icons.has(effect), generic_kind
+	)
 
 
 func _update_ingestion_telegraph_visual() -> void:

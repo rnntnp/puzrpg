@@ -20,3 +20,4 @@ max_health = 600
 attack_power = 0
 enemy_attack_drop_interval = 1
 ingestion_skill = ExtResource("2")
+reveal_skill_icon_after_use = true

@@ -114,5 +114,6 @@ extends Resource
 @export var player_skill: Resource
 
 @export_category("몬스터 스킬")
+@export var reveal_skill_icon_after_use := false
 @export var ingestion_skill: Resource
 @export var ice_skill: Resource

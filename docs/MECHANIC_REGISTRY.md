@@ -105,7 +105,7 @@ Runtime types:
 
 | 63 | 모양대로 연못 | 62번 비교 변형. 하트·별만 각 24점 단일 볼록 폴리곤으로 근사하고 나머지 도형은 유지. 모든 충돌체를 5% 확대하며 62번의 6점 와핑·공 단위 필터를 재사용하고 접촉 위치·발사 가이드에 반영한다. 62·63번은 원본 컷아웃 주인공(아가미 ±12°)으로 표시하며 기존 그림 높이·발끝을 맞춘다. | Modular · 3 existing enemies · [spec](mechanics/063_compound_pond.md) · [level](../resources/levels/test_compound_pond.tres) · [handler](../scripts/gimmicks/handlers/compound_pond_handler.gd) | `NEEDS_PLAYTEST` | 62 (사용자 요청 비교), 60–61 |
 | 62 | 동글한 연못 | 59번 강체·상향 방향 발사 재사용. 공별 6점 와핑에서 원 기준 접촉 키포인트만 맞추고 벽 키포인트를 제한. 윤곽 반복 검사 없이 고정 충돌체·통합 반사 유지. | Modular · 3 existing enemies · [spec](mechanics/062_circle_xpbd_pond.md) · [level](../resources/levels/test_circle_xpbd_pond.tres) | `NEEDS_PLAYTEST` | 61 (사용자 요청 비교) |
-| 63 | 연못 진형 실험 | 62번 수조 위 아군 1명·적 2열. 턴 합성 피해를 전열부터 균등 분배하고 초과분을 이월한다. 3웨이브와 선택형 슬롯 충원, 기존 카드 선택을 시험한다. | Modular · [spec](mechanics/063_pond_formation.md) · [level](../resources/levels/test_pond_formation.tres) · [handler](../scripts/gimmicks/handlers/pond_formation_handler.gd) | `NEEDS_PLAYTEST` | 62 (수조 기반), 56 (카드 재사용) |
+| 63 | 연못 진형 실험 | 62번 수조 위 아군 1명·적 2열. 착지와 마지막 합성 후 1초에 결산하고, 수조를 잠시 멈춰 합성 결과 공의 레이저로 전열부터 공격한다. 초과 피해 분배와 늦은 합성의 다음 턴 이월을 시험한다. | Modular · [spec](mechanics/063_pond_formation.md) · [level](../resources/levels/test_pond_formation.tres) · [handler](../scripts/gimmicks/handlers/pond_formation_handler.gd) | `NEEDS_PLAYTEST` | 62 (수조 기반), 56 (카드 재사용) |
 
 ## Non-numbered systems that block duplicates
 

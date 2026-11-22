@@ -13,6 +13,8 @@ const LINE_RIGHT_EDGE := 710.0
 
 var formation: FormationConfig
 var formation_visual: FormationVisual
+var attack_target: Fighter
+var manual_target := false
 var turn_attack_visual: TurnAttackVisual
 var board_space := RID()
 var board_space_was_active := false
@@ -33,6 +35,12 @@ var owns_pause := false
 var previous_turn_gate := false
 var previous_quiet_settlement_msec := 0
 var player_anchor: Vector2
+var original_player_anchor: Vector2
+var original_player_scale: Vector2
+var original_shadow_position: Vector2
+var original_shadow_scale: Vector2
+var original_ally_health_scale: Vector2
+var applied_ally_multiplier := 1.0
 var original_enemy_position: Vector2
 var enemy_ui: Array[CanvasItem] = []
 var enemy_ui_visibility: Array[bool] = []
@@ -45,6 +53,11 @@ func _on_configured() -> void:
 	visual_layers.append(formation_visual)
 	formation_visual.z_index = 2
 	player_anchor = player.position
+	original_player_anchor = player.position
+	original_player_scale = player.base_scale
+	original_shadow_position = battle.left_fighter_shadow.position
+	original_shadow_scale = battle.left_fighter_shadow.scale
+	original_ally_health_scale = battle.left_bar.scale
 	original_enemy_position = enemy.position
 	enemy_ui = [battle.right_fighter_shadow, battle.right_bar, battle.right_status_effects]
 	for item in enemy_ui:
@@ -56,6 +69,7 @@ func _on_configured() -> void:
 	layout_index = mini(layout_index, maxi(0, layout_names.size() - 1))
 	formation_visual.add_layout_buttons(layout_names, layout_index)
 	formation_visual.layout_selected.connect(_select_layout)
+	formation_visual.enemy_clicked.connect(_select_attack_target)
 	action_preview_page = 1 if formation.preview_action_icons else 0
 	formation_visual.add_action_preview_button()
 	formation_visual.action_preview_pressed.connect(_cycle_action_preview)
@@ -81,7 +95,7 @@ func _on_enemy_changed() -> void:
 	formation_locked = false
 	formation_visual.set_layouts_locked(false)
 	_spawn_wave()
-	_update_status("전열 우선 · 같은 열에 균등 분배")
+	_update_status("적을 눌러 집중 공격 대상을 변경")
 	if battle.current_enemy_index > 0 and is_instance_valid(draft_visual):
 		_offer_cards()
 
@@ -95,6 +109,8 @@ func _current_wave() -> Wave:
 
 
 func _spawn_wave() -> void:
+	attack_target = null
+	manual_target = false
 	for fighter in front + rear:
 		if is_instance_valid(fighter):
 			formation_visual.remove_fighter(fighter)
@@ -115,6 +131,7 @@ func _spawn_wave() -> void:
 	enemy.set_character_data(wave_stats)
 	if is_instance_valid(player_visual):
 		_apply_layout()
+	_ensure_attack_target()
 	enemy.hide()
 
 
@@ -160,12 +177,9 @@ func on_turn_completed() -> void:
 	battle.result_max_combo = maxi(battle.result_max_combo, pending_combo)
 	pending_damage = 0
 	pending_combo = 0
-	var applied := Allocation.allocate(damage, _get_hp(front), _get_hp(rear))
-	var hits: Array[Vector3i] = []
-	for row in range(applied.size()):
-		for slot in range(applied[row].size()):
-			if applied[row][slot] > 0:
-				hits.append(Vector3i(row, slot, applied[row][slot]))
+	_ensure_attack_target()
+	var roster: Array[Fighter] = front + rear
+	var hits := Allocation.allocate(damage, roster.find(attack_target), _get_hp(roster))
 	var spent := 0
 	if not hits.is_empty():
 		var origins := turn_attack_visual.take_origins()
@@ -173,7 +187,7 @@ func on_turn_completed() -> void:
 			origins.append(player.get_spell_origin_global_position())
 		_pause_board_for_attack()
 		player.play_cast_animation()
-		spent = await _play_attack_hits(hits, origins, settlement_seconds)
+		spent = await _play_attack_hits(hits, roster, origins, settlement_seconds)
 		_restore_board_after_attack()
 		if not active or not player.is_alive() or not battle.battle_running:
 			return
@@ -196,35 +210,74 @@ func on_turn_completed() -> void:
 			return
 	if player.is_alive() and formation.refill_slots:
 		_refill_empty_slots()
+	_ensure_attack_target()
 	busy = false
 	_update_status("이번 턴 피해 %d · 적용 %d" % [damage, spent])
 	merge_game.set_input_enabled(true)
 	_log_turn_timing(settlement_seconds, carry_in)
 
 
-func _play_attack_hits(hits: Array[Vector3i], origins: PackedVector2Array, settlement_seconds: float) -> int:
+func _select_attack_target(fighter: Fighter) -> void:
+	if not active or busy or not battle.battle_running or not fighter.is_alive():
+		return
+	if merge_game.drop_sequence_active and merge_game.dropped_ball_has_landed:
+		return
+	attack_target = fighter
+	manual_target = true
+	formation_visual.set_attack_target(fighter, true)
+
+
+func _ensure_attack_target() -> void:
+	if is_instance_valid(attack_target) and attack_target.is_alive():
+		return
+	attack_target = null
+	manual_target = false
+	var highest := 0
+	for fighter: Fighter in front + rear:
+		if is_instance_valid(fighter) and fighter.current_health > highest:
+			attack_target = fighter
+			highest = fighter.current_health
+	formation_visual.set_attack_target(attack_target, false)
+
+
+func _play_attack_hits(hits: Array[PackedInt32Array], roster: Array[Fighter], origins: PackedVector2Array, settlement_seconds: float) -> int:
 	var speed := clampf(settlement_seconds / formation.acceleration_after_seconds, 1.0, formation.maximum_attack_speed)
-	var total := clampf(hits.size() * formation.seconds_per_target / speed,
+	var focus_time := clampf(formation.seconds_per_target / speed,
 		formation.minimum_attack_seconds, maxf(formation.minimum_attack_seconds, formation.maximum_attack_seconds))
-	var beat := total / hits.size()
 	var spent := 0
-	for hit in hits:
-		var column := front if hit.x == 0 else rear
-		var fighter := column[hit.y]
-		turn_attack_visual.start_shot(origins, fighter.character_sprite.global_position, hit.z, beat)
+	for phase in range(hits.size()):
+		if phase > 0:
+			var confirm := formation.first_kill_confirmation_seconds if phase == 1 else formation.chain_kill_confirmation_seconds
+			await get_tree().create_timer(confirm, false, false, true).timeout
+		if not active or not player.is_alive() or not battle.battle_running:
+			break
+		var beat := focus_time if phase == 0 else (formation.first_spread_seconds if phase == 1 else formation.chain_spread_seconds)
+		var endpoints := PackedVector2Array()
+		var amounts := PackedInt32Array()
+		for slot in range(roster.size()):
+			if hits[phase][slot] > 0:
+				endpoints.append(roster[slot].character_sprite.global_position)
+				amounts.append(hits[phase][slot])
+		turn_attack_visual.start_volley(origins, endpoints, amounts, beat, phase > 0)
 		await get_tree().create_timer(beat * TurnAttackVisual.TRAVEL_FRACTION, false, false, true).timeout
 		if not active or not player.is_alive() or not battle.battle_running:
 			break
-		var defeated := hit.z >= fighter.current_health
-		fighter.take_damage(hit.z, false)
-		turn_attack_visual.show_impact(fighter, hit.z, defeated)
-		spent += hit.z
-		if not fighter.is_alive():
-			formation_visual.retire_defeated_fighter(fighter, formation.impact_flash_seconds)
-			column[hit.y] = null
+		for slot in range(roster.size()):
+			var amount := hits[phase][slot]
+			if amount <= 0:
+				continue
+			var fighter := roster[slot]
+			var defeated := amount >= fighter.current_health
+			fighter.take_damage(amount, false)
+			turn_attack_visual.show_impact(fighter, amount, defeated)
+			spent += amount
+			if defeated:
+				formation_visual.retire_defeated_fighter(fighter, formation.impact_flash_seconds)
+				if slot < front.size():
+					front[slot] = null
+				else:
+					rear[slot - front.size()] = null
 		await get_tree().create_timer(beat * (1.0 - TurnAttackVisual.TRAVEL_FRACTION), false, false, true).timeout
-		if not active or not player.is_alive() or not battle.battle_running:
-			break
 	if is_instance_valid(turn_attack_visual):
 		turn_attack_visual.finish_shots()
 	return spent
@@ -295,7 +348,7 @@ func _refill_empty_slots() -> void:
 
 
 func _uses_joined_health_ui() -> bool:
-	return not formation.layouts.is_empty() and formation.layouts[layout_index].preview_wave != null
+	return not formation.layouts.is_empty() and formation.layouts[layout_index].preview_wave != null and _current_wave().slots.size() <= 3
 
 
 func _select_layout(index: int) -> void:
@@ -312,6 +365,8 @@ func _select_layout(index: int) -> void:
 
 func _apply_layout() -> void:
 	var layout := formation.layouts[layout_index] if not formation.layouts.is_empty() else null
+	_apply_ally_scale(layout.ally_scale_multiplier if layout != null else 1.0,
+		layout.ally_health_scale_multiplier if layout != null else 1.0)
 	var wave := _current_wave()
 	var ordered_slots: Array = []
 	for column_index in range(2):
@@ -380,9 +435,27 @@ func _apply_layout() -> void:
 	_update_action_previews()
 
 
+func _apply_ally_scale(multiplier: float, health_multiplier: float) -> void:
+	battle.left_bar.scale = original_ally_health_scale * health_multiplier
+	if is_equal_approx(applied_ally_multiplier, multiplier):
+		return
+	applied_ally_multiplier = multiplier
+	player_anchor = original_player_anchor
+	if is_instance_valid(player_visual):
+		player_anchor.y += player_visual.resting_bounds.end.y * original_player_scale.y * (1.0 - multiplier)
+	player.position = player_anchor
+	player.base_scale = original_player_scale * multiplier
+	player.scale = player.base_scale
+	battle.left_fighter_shadow.position = player_anchor + (original_shadow_position - original_player_anchor) * multiplier
+	battle.left_fighter_shadow.scale = original_shadow_scale * multiplier
+
+
 func _line_left_edge() -> float:
 	var player_bounds: Rect2 = player_visual.resting_bounds
-	return player_anchor.x + player_bounds.end.x * player.base_scale.x + formation.player_enemy_gap
+	var gap := formation.player_enemy_gap
+	if not formation.layouts.is_empty() and formation.layouts[layout_index].ally_enemy_gap_override >= 0.0:
+		gap = formation.layouts[layout_index].ally_enemy_gap_override
+	return player_anchor.x + player_bounds.end.x * player.base_scale.x + gap
 
 
 func _line_positions(ordered_slots: Array, size_factor: float, layout: Resource) -> Dictionary:
@@ -512,6 +585,8 @@ func _release_pause() -> void:
 func _on_cleanup() -> void:
 	_release_pause()
 	_restore_board_after_attack()
+	if is_instance_valid(player) and is_instance_valid(battle):
+		_apply_ally_scale(1.0, 1.0)
 	if is_instance_valid(merge_game):
 		if is_instance_valid(turn_attack_visual) and merge_game.player_merge_result_created.is_connected(turn_attack_visual.track_ball):
 			merge_game.player_merge_result_created.disconnect(turn_attack_visual.track_ball)

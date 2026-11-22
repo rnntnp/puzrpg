@@ -16,6 +16,10 @@ const Draft = preload("res://scripts/gimmicks/configs/dungeon_draft_config.gd")
 @export_group("Turn Attack Presentation")
 @export_range(0.1, 3.0, 0.05) var settlement_quiet_seconds := 1.0
 @export_range(0.1, 1.5, 0.01) var seconds_per_target := 0.36
+@export_range(0.05, 0.35, 0.01) var first_kill_confirmation_seconds := 0.10
+@export_range(0.05, 0.35, 0.01) var chain_kill_confirmation_seconds := 0.08
+@export_range(0.06, 0.5, 0.01) var first_spread_seconds := 0.18
+@export_range(0.06, 0.5, 0.01) var chain_spread_seconds := 0.15
 @export_range(0.1, 3.0, 0.01) var minimum_attack_seconds := 0.22
 @export_range(0.1, 4.0, 0.01) var maximum_attack_seconds := 1.40
 @export_range(0.1, 5.0, 0.05) var acceleration_after_seconds := 1.1

@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="LevelData" load_steps=49 format=3]
+[gd_resource type="Resource" script_class="LevelData" load_steps=54 format=3]
 
 [ext_resource type="Script" path="res://scripts/level_data.gd" id="1"]
 [ext_resource type="Resource" path="res://resources/characters/blue_fighter.tres" id="2"]
@@ -111,6 +111,31 @@ reinforcements = Array[ExtResource("16")]([SubResource("ReserveHeavy"), SubResou
 [sub_resource type="Resource" id="Draft"]
 script = ExtResource("19")
 
+[sub_resource type="Resource" id="PreviewSolo"]
+script = ExtResource("17")
+slots = Array[ExtResource("16")]([SubResource("FrontCenter")])
+
+[sub_resource type="Resource" id="PreviewDuo"]
+script = ExtResource("17")
+slots = Array[ExtResource("16")]([SubResource("FrontTop"), SubResource("RearTop")])
+
+[sub_resource type="Resource" id="LayoutSolo"]
+script = ExtResource("20")
+display_name = "1인"
+preview_wave = SubResource("PreviewSolo")
+use_staggered_line = true
+enemy_height_ratio = 0.78
+slot_offsets = PackedVector2Array(-64, 0)
+
+[sub_resource type="Resource" id="LayoutDuo"]
+script = ExtResource("20")
+display_name = "전열 1 / 후열 1"
+preview_wave = SubResource("PreviewDuo")
+use_staggered_line = true
+enemy_height_ratio = 0.64
+horizontal_spacing = 18.0
+line_rise = 16.0
+
 [sub_resource type="Resource" id="PreviewRearMiddle"]
 script = ExtResource("16")
 character = ExtResource("4")
@@ -162,11 +187,25 @@ draw_order_offsets = PackedInt32Array(0, -110, 0)
 [sub_resource type="Resource" id="LayoutD"]
 script = ExtResource("20")
 display_name = "대각선 교차형"
+preview_wave = SubResource("Wave1")
 use_staggered_line = true
 enemy_height_ratio = 0.60
 horizontal_spacing = 4.0
 line_rise = 3.0
 alternating_lift = 128.0
+
+[sub_resource type="Resource" id="LayoutLargeFour"]
+script = ExtResource("20")
+display_name = "4인 교차형 · 적 확대"
+preview_wave = SubResource("Wave1")
+use_staggered_line = true
+enemy_height_ratio = 0.95
+horizontal_spacing = 4.0
+line_rise = 3.0
+alternating_lift = 146.0
+ally_scale_multiplier = 0.72
+ally_health_scale_multiplier = 0.76
+ally_enemy_gap_override = 23.0
 
 [sub_resource type="Resource" id="FrontExtra"]
 script = ExtResource("16")
@@ -197,7 +236,7 @@ slots = Array[ExtResource("16")]([SubResource("FrontCenter"), SubResource("RearT
 [sub_resource type="Resource" id="Formation"]
 script = ExtResource("18")
 waves = Array[ExtResource("17")]([SubResource("Wave1"), SubResource("Wave2"), SubResource("Wave3"), SubResource("Wave4"), SubResource("Wave5"), SubResource("Wave6")])
-layouts = Array[ExtResource("20")]([SubResource("LayoutA"), SubResource("LayoutB"), SubResource("LayoutC"), SubResource("LayoutD")])
+layouts = Array[ExtResource("20")]([SubResource("LayoutSolo"), SubResource("LayoutDuo"), SubResource("LayoutA"), SubResource("LayoutB"), SubResource("LayoutC"), SubResource("LayoutD"), SubResource("LayoutLargeFour")])
 draft = SubResource("Draft")
 rendering_settings = ExtResource("12")
 

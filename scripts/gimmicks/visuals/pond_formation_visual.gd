@@ -2,6 +2,7 @@ extends Node2D
 
 signal layout_selected(index: int)
 signal action_preview_pressed
+signal enemy_clicked(fighter: Fighter)
 
 var info_layer := Node2D.new()
 var opaque_bounds: Dictionary = {}
@@ -11,6 +12,8 @@ var weakness_turns := 0
 var attack_reduction := 0.0
 var fighters: Dictionary[WaterHealthBar, Fighter] = {}
 var selected_enemy: Fighter
+var marked_enemy: Fighter
+var target_marker: Polygon2D
 var captured_pointer := -2
 var detail_panel: EnemyDetails
 var real_attack_turns := 0
@@ -31,6 +34,10 @@ const BAR_OFFSET := Vector2(52, 54)
 func _ready() -> void:
 	info_layer.z_index = 200
 	add_child(info_layer)
+	target_marker = Polygon2D.new()
+	target_marker.z_index = 205
+	target_marker.hide()
+	add_child(target_marker)
 	reduction_effect = WEAKNESS_EFFECT.duplicate()
 	reduction_effect.effect_id = &"formation_attack_reduction"
 	reduction_effect.display_name = "공격력 감소"
@@ -66,6 +73,8 @@ func retire_defeated_fighter(fighter: Fighter, flash_seconds: float) -> void:
 	if fighter == selected_enemy:
 		_close_details()
 	fighter.get_meta("formation_info").hide()
+	if fighter == marked_enemy:
+		target_marker.hide()
 	await get_tree().create_timer(flash_seconds, false).timeout
 	if not is_instance_valid(fighter):
 		return
@@ -75,11 +84,13 @@ func retire_defeated_fighter(fighter: Fighter, flash_seconds: float) -> void:
 
 
 func add_layout_buttons(layout_names: PackedStringArray, selected_index: int) -> void:
-	var row := HBoxContainer.new()
+	var row := GridContainer.new()
+	row.columns = 4
 	row.position = Vector2(466, 33)
 	row.z_index = 250
 	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	row.add_theme_constant_override("separation", 2)
+	row.add_theme_constant_override("h_separation", 2)
+	row.add_theme_constant_override("v_separation", 2)
 	add_child(row)
 	var group := ButtonGroup.new()
 	for index in range(layout_names.size()):
@@ -333,10 +344,31 @@ func position_info(fighter: Fighter, slot_position: Vector2, offset: Vector2) ->
 	var head := slot_position + Vector2((span.x + span.y) * 0.5, vertical.x)
 	bar.set_meta("head_anchor", head)
 	bar.set_meta("sprite_rect", Rect2(slot_position + Vector2(span.x, vertical.x), Vector2(span.y - span.x, vertical.y - vertical.x)))
+	if fighter == marked_enemy:
+		_position_target_marker(fighter)
 	var info_offset: Vector2 = bar.get_meta("info_offset")
 	var info_size: Vector2 = bar.get_meta("info_size")
 	var center_offset := info_offset.x + bar.size.x * bar.scale.x * 0.5
 	bar.set_meta("preferred_origin", head - Vector2(center_offset, info_size.y + 5.0 - offset.y))
+
+
+func set_attack_target(fighter: Fighter, manual: bool) -> void:
+	marked_enemy = fighter
+	target_marker.color = Color("#ffda79") if manual else Color("#81eaff")
+	target_marker.polygon = PackedVector2Array([Vector2(-10, 0), Vector2(0, -11), Vector2(10, 0), Vector2(0, 6)]) if manual else PackedVector2Array([Vector2(-9, -7), Vector2(9, -7), Vector2(0, 4)])
+	_position_target_marker(fighter)
+
+
+func _position_target_marker(fighter: Fighter) -> void:
+	target_marker.hide()
+	if not is_instance_valid(fighter):
+		return
+	var bar: WaterHealthBar = fighter.get_meta("formation_info")
+	if not bar.has_meta("sprite_rect"):
+		return
+	var bounds: Rect2 = bar.get_meta("sprite_rect")
+	target_marker.position = Vector2(bounds.get_center().x, bounds.end.y + 3.0)
+	target_marker.show()
 
 
 func reflow_info() -> void:
@@ -425,6 +457,7 @@ func _input(event: InputEvent) -> void:
 				clicked_enemy = fighter
 		if is_instance_valid(clicked_enemy):
 			captured_pointer = pointer
+			enemy_clicked.emit(clicked_enemy)
 			if clicked_enemy != selected_enemy:
 				selected_enemy = clicked_enemy
 				detail_panel.reset_scroll()

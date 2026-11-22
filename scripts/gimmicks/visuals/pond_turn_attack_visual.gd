@@ -15,7 +15,9 @@ class Impact:
 var participants: Array[MergeBall] = []
 var firing_balls: Array[MergeBall] = []
 var origins := PackedVector2Array()
-var target := Vector2.ZERO
+var volley_targets := PackedVector2Array()
+var volley_strengths := PackedFloat32Array()
+var spread_volley := false
 var intensity := 0.0
 var shot_start_msec := 0
 var shot_duration := 0.0
@@ -43,20 +45,31 @@ func take_origins() -> PackedVector2Array:
 	return points
 
 
-func start_shot(points: PackedVector2Array, at: Vector2, damage: int, duration: float) -> void:
+func start_volley(points: PackedVector2Array, endpoints: PackedVector2Array, amounts: PackedInt32Array, duration: float, spread: bool) -> void:
 	origins = points
-	target = at
-	intensity = clampf(sqrt(float(damage) / tuning.effect_damage_reference),
-		tuning.minimum_effect_strength, maxf(tuning.minimum_effect_strength, tuning.maximum_effect_strength))
+	volley_targets = endpoints
+	spread_volley = spread
+	volley_strengths.clear()
+	intensity = 0.0
+	for damage in amounts:
+		var strength := _damage_strength(damage)
+		volley_strengths.append(strength)
+		intensity = maxf(intensity, strength)
 	shot_duration = duration
 	shot_start_msec = Time.get_ticks_msec()
 
 
+func _damage_strength(damage: int) -> float:
+	return clampf(sqrt(float(damage) / tuning.effect_damage_reference),
+		tuning.minimum_effect_strength, maxf(tuning.minimum_effect_strength, tuning.maximum_effect_strength))
+
+
 func show_impact(fighter: Fighter, damage: int, defeated: bool) -> void:
-	_flash_and_recoil(fighter, defeated)
+	var target := fighter.character_sprite.global_position
 	var hit := Impact.new()
 	hit.position = to_local(target)
-	hit.strength = intensity
+	hit.strength = _damage_strength(damage)
+	_flash_and_recoil(fighter, target, hit.strength, defeated)
 	hit.defeated = defeated
 	var label := Label.new()
 	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -65,7 +78,7 @@ func show_impact(fighter: Fighter, damage: int, defeated: bool) -> void:
 	label.add_theme_color_override("font_color", Color("#ffe981") if defeated else Color("#fff8d3"))
 	label.add_theme_color_override("font_outline_color", Color("#21132f"))
 	label.add_theme_constant_override("outline_size", 9)
-	var font_scale := 1.0 + (intensity - 1.0) * tuning.damage_font_growth
+	var font_scale := 1.0 + (hit.strength - 1.0) * tuning.damage_font_growth
 	label.add_theme_font_size_override("font_size", clampi(roundi(tuning.damage_font_size * font_scale + (4 if defeated else 0)), 24, 52))
 	add_child(label)
 	label.reset_size()
@@ -76,7 +89,7 @@ func show_impact(fighter: Fighter, damage: int, defeated: bool) -> void:
 	_update_damage_number(hit)
 
 
-func _flash_and_recoil(fighter: Fighter, defeated: bool) -> void:
+func _flash_and_recoil(fighter: Fighter, target: Vector2, strength: float, defeated: bool) -> void:
 	var sprite := fighter.character_sprite
 	var flash := Sprite2D.new()
 	flash.texture = sprite.texture
@@ -98,7 +111,7 @@ func _flash_and_recoil(fighter: Fighter, defeated: bool) -> void:
 		source += origin
 	source /= maxi(1, origins.size())
 	var direction := (target - source).normalized()
-	var world_offset := direction * minf(18.0, tuning.recoil_distance * intensity)
+	var world_offset := direction * minf(18.0, tuning.recoil_distance * strength)
 	var position := sprite.position
 	var displaced := position + fighter.to_local(target + world_offset) - fighter.to_local(target)
 	var recoil := fighter.create_tween()
@@ -135,6 +148,8 @@ func _update_damage_number(hit: Impact) -> void:
 
 func finish_shots() -> void:
 	origins.clear()
+	volley_targets.clear()
+	volley_strengths.clear()
 	firing_balls.clear()
 	shot_duration = 0.0
 	queue_redraw()
@@ -173,14 +188,33 @@ func _draw() -> void:
 	if shot_duration <= 0.0:
 		return
 	var progress := clampf(float(Time.get_ticks_msec() - shot_start_msec) / 1000.0 / shot_duration, 0.0, 1.0)
-	var endpoint := to_local(target)
 	var alpha := 1.0 - smoothstep(0.45, 1.0, progress)
+	var travel := minf(progress / TRAVEL_FRACTION, 1.0)
+	if spread_volley:
+		var center := Vector2.ZERO
+		for origin in origins:
+			center += origin
+		center /= maxi(1, origins.size())
+		var junction := to_local(Vector2(center.x, clampf(center.y - 90.0, 445.0, 675.0)))
+		for origin in origins:
+			var start := to_local(origin)
+			_draw_beam(start, start.lerp(junction, minf(travel * 2.0, 1.0)), intensity, alpha)
+		if travel >= 0.5:
+			draw_circle(junction, 7.0 * intensity, Color(0.86, 1.0, 1.0, alpha), true, -1.0, true)
+			for index in range(volley_targets.size()):
+				var endpoint := to_local(volley_targets[index])
+				_draw_beam(junction, junction.lerp(endpoint, travel * 2.0 - 1.0), volley_strengths[index], alpha)
+		return
+	var endpoint := to_local(volley_targets[0])
 	for origin in origins:
 		var start := to_local(origin)
-		var tip := start.lerp(endpoint, minf(progress / TRAVEL_FRACTION, 1.0))
 		draw_circle(start, 7.0 + intensity * 5.0, Color(0.48, 0.95, 1.0, alpha * 0.55), true, -1.0, true)
-		draw_line(start, tip, Color(0.28, 0.83, 1.0, alpha * 0.38), 14.0 * intensity, true)
-		draw_line(start, tip, Color(0.92, 1.0, 1.0, alpha), 4.0 * intensity, true)
+		_draw_beam(start, start.lerp(endpoint, travel), intensity, alpha)
+
+
+func _draw_beam(start: Vector2, tip: Vector2, strength: float, alpha: float) -> void:
+	draw_line(start, tip, Color(0.28, 0.83, 1.0, alpha * 0.38), 14.0 * strength, true)
+	draw_line(start, tip, Color(0.92, 1.0, 1.0, alpha), 4.0 * strength, true)
 
 
 func _draw_impact(hit: Impact) -> void:

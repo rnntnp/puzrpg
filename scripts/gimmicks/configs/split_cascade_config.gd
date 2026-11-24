@@ -1,6 +1,14 @@
 class_name SplitCascadeConfig
 extends Resource
 
+@export_group("Lift outside and return")
+@export var split_above_board := false
+@export_range(0.0, 200.0, 1.0) var outside_top_clearance := 36.0
+@export_range(0.1, 1.5, 0.05) var return_duration := 0.45
+## Minimum gap between siblings' collision envelopes at reentry.
+@export_range(0.0, 100.0, 1.0) var return_sibling_clearance := 24.0
+@export_group("")
+
 ## 0=single split, 1=two simultaneous splits, 2=one two-step cascade.
 @export var enemy_modes: Array[int] = [0, 1, 2]
 @export var action_intervals: Array[int] = [5, 5, 5]

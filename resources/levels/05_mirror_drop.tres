@@ -15,6 +15,8 @@
 [ext_resource type="Texture2D" uid="uid://bhb2drq0k00q4" path="res://assets/backgrounds/generated/mirror_vanity_charcoal_flat_v1_bottom.png" id="13_background_bottom"]
 [ext_resource type="AudioStream" uid="uid://cce2puxtxqr00" path="res://assets/audio/bgm/magic_puzzle_in_game_1_bpm110.mp3" id="14_battle_music"]
 
+[ext_resource type="PackedScene" path="res://scenes/campaign_pond_ball_visuals.tscn" id="62_board_visuals"]
+
 [sub_resource type="Resource" id="MirrorDropBossConfig"]
 script = ExtResource("10_config")
 mirror_merge_effect_color = Color(0.0666667, 0.0823529, 0.133333, 1)
@@ -46,4 +48,5 @@ reward_name = "거울 보물상자"
 player_character = ExtResource("2")
 enemies = Array[ExtResource("4")]([ExtResource("3")])
 test_gimmick = SubResource("Gimmick")
+board_visual_scene = ExtResource("62_board_visuals")
 ball_drop_time_limit = -1.0

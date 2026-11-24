@@ -12,6 +12,8 @@
 [ext_resource type="Texture2D" uid="uid://cmc86551g2c8d" path="res://assets/backgrounds/stage_03_crystal_dungeon_flat_purple_middle.png" id="11_background_middle"]
 [ext_resource type="Texture2D" uid="uid://bj6lnqf2ph2eg" path="res://assets/backgrounds/stage_03_crystal_dungeon_flat_purple_bottom.png" id="12_background_bottom"]
 
+[ext_resource type="PackedScene" path="res://scenes/campaign_pond_ball_visuals.tscn" id="62_board_visuals"]
+
 [resource]
 script = ExtResource("1")
 level_name = "4. 수정 동굴"
@@ -29,6 +31,7 @@ reward_name = "수정 보물상자"
 player_character = ExtResource("2")
 enemies = Array[ExtResource("4")]([ExtResource("3"), ExtResource("8_launch"), ExtResource("9_boss")])
 ingestion_tutorial_enabled = true
+board_visual_scene = ExtResource("62_board_visuals")
 ball_drop_time_limit = -1.0
 merge_hit_stop_time_scale = 0.18
 merge_hit_stop_duration = 0.2

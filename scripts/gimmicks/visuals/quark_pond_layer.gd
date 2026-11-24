@@ -81,14 +81,15 @@ func _wall(rect: Rect2, original: Node) -> void:
 func _register(ball: MergeBall) -> void:
 	# Reuse visual installation and Godot-query cleanup, then replace the
 	# inherited six-point state with ordinary independent Quark particles.
-	super._register(ball)
-	var s: Dictionary = states[ball.get_instance_id()]
+	var s := _prepare_state(ball)
 	s.rest = _sample_outline(s.outline_rest)
 	s.points = PackedVector2Array()
 	s.velocities = PackedVector2Array()
 	ball.collision_layer=QUERY_LAYER
 	s.collider.name="QuarkQuerySilhouette"
-	s.collider.shape.points=s.rest
+	var query_hull := Geometry2D.convex_hull(s.rest)
+	if query_hull.size()>1: query_hull.remove_at(query_hull.size()-1)
+	s.collider.shape.points=query_hull
 	var body: Node2D = ClassDB.instantiate("QSoftBodyNode")
 	body.position=ball.global_position
 	body.rotation=ball.global_rotation
@@ -131,6 +132,10 @@ func _register(ball: MergeBall) -> void:
 	native_to_game[body.get_instance_id()]=ball
 	body.connect("collision",_on_native_contact)
 
+func _prepare_state(ball: MergeBall) -> Dictionary:
+	super._register(ball)
+	return states[ball.get_instance_id()]
+
 func _on_native_contact(body: Object, info: Dictionary) -> void:
 	var a: Node = native_to_game.get(body.get_instance_id())
 	var b: Node = native_to_game.get(info.body.get_instance_id())
@@ -158,8 +163,18 @@ func _step_native() -> void:
 			s.native.free()
 			states.erase(id)
 			continue
-		s.native.set("enabled",not s.ball.merge_locked and not s.ball.is_ice_frozen)
-		if s.ball.merge_locked or s.ball.is_ice_frozen:continue
+		s.native.set("enabled",not s.ball.merge_locked)
+		if s.ball.merge_locked:continue
+		# Ice and fixed tutorial examples remain native collision obstacles.
+		# Disabling the body would let shots pass through them.
+		var mode: int=1 if s.ball.is_ice_frozen or s.ball.freeze else 0
+		if s.native.get("mode")!=mode:
+			s.native.set("mode",mode)
+			for particle in s.particles:
+				particle.set_previous_global_position(particle.get_global_position())
+			s.published_velocity=Vector2.ZERO
+			s.native.wake_up()
+		if s.ball.is_ice_frozen or s.ball.freeze:continue
 		s.seen={}
 		_import_native(s)
 		active.append(s)
@@ -170,7 +185,7 @@ func _step_native() -> void:
 		_read_native(s)
 	for s in active:
 		if not s.native.get_is_sleeping() or not s.native_sleeping:_publish(s)
-		elif s.visuals.install_pending():s.visuals.update_surface(s,tuning)
+		elif s.visuals.install_pending():_publish_visuals(s)
 		s.native_sleeping=s.native.get_is_sleeping()
 	for pair in native_contacts.values():
 		for ball in pair:
@@ -272,6 +287,9 @@ func _publish(s: Dictionary) -> void:
 	if hull.size()>1:hull.remove_at(hull.size()-1)
 	s.collider.shape.points=hull
 	s.surface_points=local
+	_publish_visuals(s)
+
+func _publish_visuals(s: Dictionary) -> void:
 	s.visuals.update_surface(s,tuning)
 
 func _surface(s: Dictionary) -> PackedVector2Array:

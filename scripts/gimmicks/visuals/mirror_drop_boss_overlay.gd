@@ -15,12 +15,32 @@ var mirror_action_active := false
 var preview_level := -1
 var preview_visual: Node2D
 var preview_background: Sprite2D
+var trajectory: Line2D
+var landing_ring: Line2D
 
 
 func _ready() -> void:
+	trajectory = Line2D.new()
+	trajectory.name = "BlackMirrorGuide"
+	trajectory.default_color = Color.BLACK
+	trajectory.width = 4.0
+	trajectory.antialiased = true
+	trajectory.z_as_relative = false
+	trajectory.z_index = -1
+	add_child(trajectory)
+	landing_ring = Line2D.new()
+	landing_ring.name = "BlackMirrorLandingRing"
+	landing_ring.default_color = Color.BLACK
+	landing_ring.width = 2.0
+	landing_ring.antialiased = true
+	landing_ring.z_as_relative = false
+	landing_ring.z_index = -1
+	add_child(landing_ring)
 	preview_visual = Node2D.new()
 	preview_visual.name = "MirrorBallPreview"
 	preview_visual.visible = false
+	preview_visual.z_as_relative = false
+	preview_visual.z_index = -1
 	add_child(preview_visual)
 	preview_background = Sprite2D.new()
 	preview_background.name = "BlackBackground"
@@ -42,11 +62,26 @@ func show_state(
 	mirror_x = ghost_x
 	drop_y = spawn_y
 	mirror_action_active = action_active
+	if is_instance_valid(trajectory) and (phase != PHASE_MIRROR or mirror_action_active):
+		trajectory.visible = false
+		landing_ring.visible = false
 	_sync_preview_shape(ball_level)
 	if is_instance_valid(preview_visual):
 		preview_visual.position = Vector2(mirror_x, drop_y)
 		preview_visual.visible = phase == PHASE_MIRROR and not mirror_action_active
 	queue_redraw()
+
+
+func show_trajectory(points: PackedVector2Array, endpoint := Vector2.ZERO, radius := 0.0, has_contact := false) -> void:
+	if not is_instance_valid(trajectory): return
+	trajectory.points = points
+	trajectory.visible = phase == PHASE_MIRROR and not mirror_action_active and points.size() > 1
+	landing_ring.visible = trajectory.visible and has_contact
+	if landing_ring.visible:
+		var ring := PackedVector2Array()
+		for i in 65:
+			ring.append(endpoint + Vector2.from_angle(TAU * float(i) / 64.0) * radius)
+		landing_ring.points = ring
 
 
 func _draw() -> void:
@@ -75,9 +110,7 @@ func _sync_preview_shape(ball_level: int) -> void:
 			child.free()
 	var scene: PackedScene = ball_data.visual_scene if ball_data.visual_scene != null else LEGACY_VISUAL_SCENE
 	var visual := scene.instantiate() as Node2D
-	# Only the shell background is black. Keep gloss and the inner sprite at
-	# their authored colors; stage 1 is the exception because its large inner
-	# sprite hides nearly all of the black background.
+	# Keep the axolotl's authored colors at every stage; only its backing is black.
 	visual.modulate = Color.WHITE
 	preview_visual.add_child(visual)
 	var visual_scale: float = ball_data.get_radius() * 2.0 / VISUAL_DESIGN_SIZE
@@ -91,9 +124,6 @@ func _sync_preview_shape(ball_level: int) -> void:
 		preview_background.scale = shell_outline.scale * visual_scale
 	else:
 		preview_background.texture = null
-	var preview_axolotl := visual.get_node_or_null("Axolotl") as Sprite2D
-	if preview_axolotl != null and ball_level == 0:
-		preview_axolotl.modulate = Color.BLACK
 	if ball_data.visual_scene == null:
 		var axolotl := visual.get_node_or_null("Axolotl") as Sprite2D
 		var shell_base := visual.get_node_or_null("ShellBase") as Sprite2D

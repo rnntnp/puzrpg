@@ -15,6 +15,9 @@ var top_reference_height := TOP_REFERENCE_HEIGHT
 
 
 func _ready() -> void:
+	# This control is sized explicitly from the viewport below.
+	# Stretch anchors would override that size and emit a warning on every layout.
+	set_anchors_preset(Control.PRESET_TOP_LEFT)
 	get_viewport().size_changed.connect(_layout_layers)
 	_layout_layers()
 

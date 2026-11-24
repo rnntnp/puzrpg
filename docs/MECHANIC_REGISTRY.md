@@ -1,8 +1,8 @@
 # MECHANIC REGISTRY
 
 Last static audit: 2026-08-25
-Highest registered number: **57**
-Next available number: **58** (57 is registered)
+Highest registered number: **64**
+Next available number: **65** (64 is registered)
 
 This registry prevents a new name from hiding an already-tested player decision. The one-line rule is based on the current handler code, not on inferred fun or balance.
 
@@ -42,7 +42,7 @@ Runtime types:
 |---:|---|---|---|---|---|
 | 1 | 공 거대화 | At its action, the enemy enlarges the highest eligible non-enlarged ball, up to the configured target cap. | Legacy · 1 enemy · [level](../resources/levels/test_01_enlarge.tres) | `NEEDS_PLAYTEST` | 2, 3, 4 |
 | 2 | 공 중량화 | At its action, the enemy increases the mass of the highest eligible non-heavy ball. | Legacy · 1 enemy · [level](../resources/levels/test_02_heavy.tres) | `NEEDS_PLAYTEST` | 1, 36, 37, 39 |
-| 3 | 공 분열 | The highest-stage landed ball within the upper board band is split once, Twist selects two, and the Boss cascades one target from one ball to two then four two stages lower. | Modular · 3 enemies · [spec](mechanics/003_ball_split.md) · [level](../resources/levels/03_split_stage.tres) · [handler](../scripts/gimmicks/handlers/split_cascade_handler.gd) | `NEEDS_PLAYTEST` | 1, 4, 19 |
+| 3 | 공 분열 | Highest-stage landed targets lift above the tank, split and return inside. Twist processes two targets; Boss returns one N-1 child and splits the other into two N-2 children. | Modular · 3 enemies · [spec](mechanics/003_ball_split.md) · [level](../resources/levels/03_split_stage.tres) · [handler](../scripts/gimmicks/handlers/split_cascade_handler.gd) | `NEEDS_PLAYTEST` | 1, 4, 19 |
 | 4 | 공 복제 | The selected eligible ball creates another ball of the same stage at the drop area. | Legacy · 1 enemy · [level](../resources/levels/test_04_duplicate.tres) | `NEEDS_PLAYTEST` | 1, 3, 30 |
 | 5 | 좌우 보드 압축 | Repeated actions move both side walls inward in configured steps, reducing board width. | Legacy · 1 enemy · [level](../resources/levels/test_05_compress.tres) | `NEEDS_PLAYTEST` | 6, 7, 25, 34, 42 |
 | 6 | 바닥 상승 | Repeated actions raise the base floor in configured steps, reducing board height. | Legacy · 1 enemy · [level](../resources/levels/test_06_raise_floor.tres) | `NEEDS_PLAYTEST` | 5, 21, 25, 39 |
@@ -107,13 +107,17 @@ Runtime types:
 | 62 | 동글한 연못 | 59번 강체·상향 방향 발사 재사용. 공별 6점 와핑에서 원 기준 접촉 키포인트만 맞추고 벽 키포인트를 제한. 윤곽 반복 검사 없이 고정 충돌체·통합 반사 유지. | Modular · 3 existing enemies · [spec](mechanics/062_circle_xpbd_pond.md) · [level](../resources/levels/test_circle_xpbd_pond.tres) | `NEEDS_PLAYTEST` | 61 (사용자 요청 비교) |
 | 63 | 연못 진형 실험 | 62번 수조 위 아군 1명·적 2열. 착지와 마지막 합성 후 0.8초에 결산하고, 수조를 잠시 멈춰 합성 결과 공의 레이저로 지정한 적을 집중 공격한다. 처치 초과 피해의 샷건 연쇄와 늦은 합성의 다음 턴 이월을 시험한다. | Modular · [spec](mechanics/063_pond_formation.md) · [level](../resources/levels/test_pond_formation.tres) · [handler](../scripts/gimmicks/handlers/pond_formation_handler.gd) | `NEEDS_PLAYTEST` | 62 (수조 기반), 56 (카드 재사용) |
 
+| 64 | 소프트바디 연못 | 62번 비교판. 기존 QuarkPhysics의 독립 외곽 입자 16개로 실제 충돌과 그림을 함께 변형한다. 표정 분리·컷아웃 주인공·62번 반사 설정 재사용. 2026-11-25 요청으로 1~5 보드에도 공유(변형 7%, SDF 가림, 생성 선폭 3px). 미지원 환경은 실제 XPBD 대체. | Modular · 3 existing enemies · [spec](mechanics/064_deformable_pond.md) · [level](../resources/levels/test_deformable_pond.tres) · [handler](../scripts/gimmicks/handlers/deformable_pond_handler.gd) | `NEEDS_PLAYTEST` | 60·61 (물리 재사용), 62 (사용자 요청 비교) |
+
 | 67 | 빙결 보스 전투 실험 | 설인 3종 개별 전투. 소형·거대·연속 빙결을 시험하며 내구도 0인 얼음은 폭발 시 보스에게 역류한다. | Modular · [spec](mechanics/067_ice_boss_experiment.md) · [level](../resources/levels/test_ice_boss_experiment.tres) | `NEEDS_PLAYTEST` | 02, 63, 거울 보스 |
 
 | 68 | 일반 몬스터 전투 실험 | 1번 슬라임 단독 전투. 몬스터별 카운터와 몸통 박치기를 63번 대상 지정·초과 피해 산탄에 연결한다. | Modular · [spec](mechanics/068_normal_monster_experiment.md) · [level](../resources/levels/test_normal_monster_experiment.tres) | `NEEDS_PLAYTEST` | 63, 67 |
 
 | 69 | 얼음 동굴 (로그라이크) | 63번 진형과 증강으로 일반 몬스터 4웨이브와 빙결 예티를 연속 진행한다. | Modular · [spec](mechanics/069_ice_cave_roguelike.md) · [level](../resources/levels/test_ice_cave_roguelike.tres) | `NEEDS_PLAYTEST` | 63, 67, 68 |
 
+
 ## Non-numbered systems that block duplicates
+
 
 | System | Confirmed current scope | Status | Duplicate risk |
 |---|---|---|---|
@@ -124,6 +128,40 @@ Runtime types:
 | Player Weakness skill | Player-owned normal merges charge by result `merge_score`; at 300 the player adds 2 turns to the same ×1.3 Weakness used by ingestion interruption | `NEEDS_PLAYTEST` · [contract](mechanics/player_weakness_skill.md) | Any player gauge, active skill, persistent charge, or generic incoming-damage debuff |
 
 ## Validation history and gaps
+
+- 2026-11-24: Stage 64 added as the user-requested actual soft-body comparison. Six dedicated scripts passed syntax checks. Scoped MCP confirmed native 16-particle bodies, approximately 10.5% peak edge strain in one ceiling-shot fixture, normal 4+4→5 merge, next-drop readiness, cleanup restoration, and no runtime errors. Real XPBD fallback not exercised; crowded-board behavior and gameplay remain NEEDS_PLAYTEST.
+- 2026-11-24: Stage 64 now uses opt-in native centroid/max-radius grid search, squared-distance rejection, and live skin-inclusive secondary bounds. Windows x86_64 release DLL rebuilt. In scoped 20/40-ball snapshots, brute-force native contact comparison reported zero omitted contact pairs; 5-second timings and limitations are recorded in the stage spec. Merge/next-drop and scene re-entry passed; gameplay remains NEEDS_PLAYTEST.
+- 2026-11-24: Stage 64 defers visual uniforms to once per rendered frame and batches particle reads/deformation limits/velocities in native code. Fixed 40-ball same-session profiling: 10.39→10.88→12.61 FPS (baseline/render-only/combined). Native parity, zero omitted contact pairs, merge/next-drop, and scoped syntax checks passed. Gameplay remains NEEDS_PLAYTEST.
+- 2026-11-24: Stage 64 heart/star now use 16 boundary particles sampled from their actual concave shell masks. Scoped polygon validity, debug alignment, individual launches/landing/next-drop, and syntax checks passed. Native physical outline preserves notches; Godot guide query remains a convex approximation. NEEDS_PLAYTEST.
+- 2026-11-24: Stage 64 limits particle deviation to 15% radius and reuses stage 62 ownership masking plus colored/white antialiased cut borders through its own adapter. Scoped shader/overlap capture, native build, syntax, heart merge/next-drop and re-entry checks passed. NEEDS_PLAYTEST.
+- 2026-11-24: Stage 64 caches face shaders, removes temporary six-point registration and pools complete same-stage balls/visuals/native bodies. Generic optional lifecycle providers keep ordinary allocation as the default. Scoped identity/reset/board-clear/merge/input/re-entry checks passed; 3 burst-test worst wall intervals 49.14/33.74/28.70ms. NEEDS_PLAYTEST.
+- 2026-11-24: Shared ball glow now uses a single GPU quad; stage 64 merge bursts use a pooled MultiMesh with GPU animation/SDF shapes. Scoped shader/render/merge/expiry/capacity checks passed; 3 burst-test worst wall intervals 27.50/17.90/18.75ms. NEEDS_PLAYTEST.
+
+- 2026-11-23: Stage 62 splits the axolotl head and facial-feature residual into separate shader layers. Facial strain defaults to 15%, adjustable from 0 to 100%; shell/physics/merge geometry stays unchanged. Scoped script checks and runtime slider/material checks passed without logged errors. Skin reconstruction and animation appearance remain NEEDS_PLAYTEST.
+
+- 2026-11-23: Stage 62 adds a toggleable alpha-silhouette contact anchor correction, capped per ball at 8% radius or 12 board pixels. Existing six-control visual warp and physical colliders remain; stage 63 does not opt in. Five scripts passed scoped syntax validation; a heart/star runtime probe confirmed toggle behavior, capped anchors, and no errors. Appearance in motion remains NEEDS_PLAYTEST.
+
+- 2026-11-23: Stage 62 adds visual-only ball silhouette ownership masking to prevent rear balls showing through front transparent shells while preserving background transparency. Two scripts passed scoped validation; a two-ball overlap render was checked without new shader errors. Performance and boundary quality remain NEEDS_PLAYTEST.
+
+- 2026-11-23: Directional mirror room adds a black reflected-velocity guide and launches its response with the player's recorded `(-vx, vy)`, through the existing directional flight controller. Guide prediction reuses actual-hitbox sweeps, capped around 30Hz while aiming. Five changed scripts, stage-5/62 preloads and four reflection-invariant cases passed scoped checks; `NEEDS_PLAYTEST`.
+
+- 2026-11-23: Stage 62 warped contact now notifies first landing before requesting a merge, matching native contact ordering and preventing an unlanded source from disappearing while the next drop stays locked. Scoped syntax validation only; user replay pending.
+
+- 2026-11-23: Stage 62 adds spatial-grid merge candidate checks within fixed 1.28x ball radii, followed by intersection/containment of warped collision-hull outlines. Existing native merges remain; no final warp cap is added. Stage 63 leaves this opt-in disabled. Three changed/new scripts passed scoped Godot syntax validation; NEEDS_PLAYTEST.
+
+- 2026-11-23: Otter sibling reentry destinations are planned jointly with collision-envelope radii plus a 24px gap, preserving left/right order. Large pairs stagger vertically when needed. Fishing trajectories remain unchanged. Scoped syntax/stage preload checks and 10 analytical placement cases passed; subsequent physical motion and appearance remain `NEEDS_PLAYTEST`.
+
+- 2026-11-23: Otter split-child reentry now shares the toad ingestion-return position selection and animated arc (0.58s, scale recovery, rotation, then 35px/s downward velocity), replacing its separate straight return. Existing handler-owned cleanup/merge reservation retained. Three changed scripts and stage-3 preload passed scoped validation; appearance remains `NEEDS_PLAYTEST`.
+
+- 2026-11-23: User-requested otter split lifts outside the tank above its ceiling, then returns children through a collision-free presentation before restoring normal upward board physics. Includes double/cascade paths and cleanup; board warp pauses only for marked presentation balls. Three changed scripts and stage-3 Resource preload passed scoped validation. `NEEDS_PLAYTEST`.
+
+- 2026-11-23: User-requested campaign 1–5 migration now includes stage 62's directional upward launch, gravity, side reflections, collision guide, ceiling/lower Danger Line and cutout player. Existing enemy mechanics remain composed independently; mirror/ingestion entry positions and stage-1 instructions follow the migrated board. Six changed scripts and all five level preloads passed scoped validation. Original and visual-only backups retained; `NEEDS_PLAYTEST`.
+
+- 2026-11-22: Stage 62 main highlight width scale raised from 0.75 to 1.0 to remove elliptical compression; secondary already uses circular normal-space alignment. Scoped static check only; NEEDS_PLAYTEST.
+
+- 2026-11-22: Campaign 1–5 opt into stage 62's existing reflection/warp presentation through an optional board scene, independently of enemy handlers. Original level Resources and bridge scripts saved under `backups/campaign_before_stage62_visuals_2026-11-22/`. Existing downward drops and combat rules retained; no alpha-contour merge detector. Four scripts and the scene passed scoped syntax checks; `NEEDS_PLAYTEST`. See `campaign_pond_ball_visuals.md`.
+
+- 2026-11-22: Stage 62 uses a large main surface highlight (2.67 degrees) and a smaller secondary (1.5 degrees, strength 0.75), separated by 30 degrees on the same side, and removes the stage-8-only size reduction. Both normal-space highlights scale with the ball surface. The formation experiment shares this rendering Resource. Scoped Resource/static checks only; appearance remains NEEDS_PLAYTEST.
 
 - 2026-10-05: stage 57 received scoped script/Resource loading and visible/test catalog-reference checks. It reuses stage 55 as a visual comparison; rendered appearance and performance remain `NEEDS_PLAYTEST`.
 - 2026-10-05: stage 57 now uses 11 prebuilt sprite-silhouette meshes with surface normals. Scoped checks confirmed contour containment, unit normals, shared generation cache and script loading; rendered appearance and performance remain untested.

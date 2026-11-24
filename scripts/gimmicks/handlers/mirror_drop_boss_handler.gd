@@ -23,6 +23,9 @@ var witnessed_mirror_drop := false
 var turns_remaining := 0
 var last_player_level := -1
 var last_player_drop_x := 0.0
+var last_player_launch_velocity := Vector2.ZERO
+var last_player_launch_position := Vector2.INF
+var last_guide_update_msec := -1000
 var player_drop_recorded := false
 var mirror_combo := 0
 var mirror_damage_total := 0
@@ -60,7 +63,14 @@ func _on_configured() -> void:
 	)
 	if not merge_game.external_merge_damage_requested.is_connected(_on_external_merge_damage_requested):
 		merge_game.external_merge_damage_requested.connect(_on_external_merge_damage_requested)
+	merge_game.player_ball_launched.connect(_on_player_ball_launched)
 	_enter_normal_phase()
+
+
+func _on_player_ball_launched(ball: MergeBall) -> void:
+	if not active or busy or phase != PHASE_MIRROR: return
+	last_player_launch_velocity = ball.linear_velocity
+	last_player_launch_position = ball.position
 
 
 func _on_player_ball_landed(level: int, drop_x: float) -> void:
@@ -79,7 +89,7 @@ func _on_player_ball_dropped() -> void:
 	# ball_dropped is emitted before the queue advances, so these are the exact
 	# clamped X and stage of the released player ball.
 	last_player_level = merge_game.get_current_ball_level()
-	last_player_drop_x = merge_game.aim_x
+	last_player_drop_x = last_player_launch_position.x if last_player_launch_position.is_finite() else merge_game.aim_x
 	player_drop_recorded = true
 	# Mirror Phase is a strict player-one-drop / boss-one-drop exchange.
 	# Lock immediately on release so first contact cannot reopen a second drop
@@ -136,6 +146,8 @@ func _finish_boss_action() -> void:
 func _clear_recorded_drop() -> void:
 	player_drop_recorded = false
 	last_player_level = -1
+	last_player_launch_velocity = Vector2.ZERO
+	last_player_launch_position = Vector2.INF
 	mirror_action_active = false
 
 
@@ -161,7 +173,7 @@ func _execute_mirror_drop(level: int, player_drop_x: float) -> void:
 	mirror_external_merge_token = merge_game.begin_external_merge_window()
 	var spawned: MergeBall = merge_game.spawn_gimmick_ball(
 		level,
-		Vector2(spawn_x, merge_game.drop_position_y),
+		_ball_entry_position(level, spawn_x),
 		Vector2.ZERO,
 		mirror_external_merge_token
 	)
@@ -185,6 +197,10 @@ func _execute_mirror_drop(level: int, player_drop_x: float) -> void:
 		await _show_mirror_ball_tutorial(spawned)
 		if not _battle_is_active() or not is_instance_valid(spawned):
 			return
+	var launcher := _directional_launcher()
+	if is_instance_valid(launcher) and last_player_launch_velocity.length_squared() > 0.0:
+		# Preserve speed and vertical component; mirror the horizontal component.
+		launcher.launch_external_ball(spawned, Vector2(-last_player_launch_velocity.x, last_player_launch_velocity.y))
 	await _wait_for_mirror_resolution(spawned)
 	merge_game.end_external_merge_window()
 	mirror_external_merge_token = 0
@@ -351,6 +367,7 @@ func _enter_mirror_phase() -> void:
 func _physics_process_gimmick(_delta: float) -> void:
 	if phase == PHASE_MIRROR and not mirror_action_active:
 		_refresh_overlay()
+		_refresh_mirror_trajectory()
 
 
 func _mirror_x(player_drop_x: float, level: int) -> float:
@@ -363,6 +380,34 @@ func _mirror_x(player_drop_x: float, level: int) -> float:
 	return clampf(reflected, bounds.position.x + radius, bounds.end.x - radius)
 
 
+func _ball_entry_position(level: int, x: float) -> Vector2:
+	# A live game can still own the earlier MergeGame script when this handler
+	# is reloaded. Do not abort room configuration on a newly introduced API.
+	if merge_game.has_method("get_ball_entry_position"):
+		return merge_game.call("get_ball_entry_position", level, x)
+	return Vector2(x, merge_game.drop_position_y)
+
+
+func _directional_launcher() -> Node:
+	return merge_game.board_launch_controller if is_instance_valid(merge_game.board_launch_controller) else null
+
+
+func _refresh_mirror_trajectory() -> void:
+	var launcher := _directional_launcher()
+	var show_guide := phase == PHASE_MIRROR and not mirror_action_active and not player_drop_recorded and merge_game.can_drop and not merge_game.input_locked
+	if not show_guide or not is_instance_valid(launcher) or not is_instance_valid(merge_game.preview_ball):
+		overlay.show_trajectory(PackedVector2Array())
+		return
+	var now := Time.get_ticks_msec()
+	if now - last_guide_update_msec < 33: return
+	last_guide_update_msec = now
+	var aim_velocity: Vector2 = launcher.get_aim_velocity()
+	var preview: MergeBall = merge_game.preview_ball
+	var source := _ball_entry_position(preview.merge_level, _mirror_x(preview.position.x, preview.merge_level))
+	var predicted: Dictionary = launcher.predict_trajectory(preview, source, Vector2(-aim_velocity.x, aim_velocity.y))
+	overlay.show_trajectory(predicted.points, predicted.landing, preview.get_radius(), predicted.has_contact)
+
+
 func _refresh_overlay() -> void:
 	if not is_instance_valid(overlay) or not is_instance_valid(merge_game):
 		return
@@ -373,7 +418,7 @@ func _refresh_overlay() -> void:
 		merge_game.get_board_inner_bounds(),
 		phase,
 		_mirror_x(source_x, level),
-		merge_game.drop_position_y,
+		_ball_entry_position(level, source_x).y,
 		mirror_action_active,
 		level
 	)
@@ -433,6 +478,8 @@ func _on_cleanup() -> void:
 		mirror_landing_player.queue_free()
 	mirror_landing_player = null
 	if is_instance_valid(merge_game):
+		if merge_game.player_ball_launched.is_connected(_on_player_ball_launched):
+			merge_game.player_ball_launched.disconnect(_on_player_ball_launched)
 		_clear_mirror_ball_backgrounds()
 		merge_game.end_external_merge_window()
 		merge_game.clear_external_merge_feedback()

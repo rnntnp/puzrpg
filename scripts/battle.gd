@@ -142,7 +142,8 @@ func _load_level() -> void:
 		level_data.merge_hit_stop_time_scale,
 		level_data.merge_hit_stop_duration,
 		level_data.chain_merge_delay,
-		level_data.custom_board_physics
+		level_data.custom_board_physics,
+		level_data.board_visual_scene
 	)
 	if level_data.fixed_drop_level >= 0:
 		merge_game.set_fixed_drop_level(level_data.fixed_drop_level)
@@ -248,7 +249,10 @@ func _start_tutorial_sequence() -> void:
 	add_child(tutorial_sequence)
 	tutorial_sequence.sequence_finished.connect(_on_initial_tutorial_sequence_finished)
 	tutorial_sequence.tutorial_control_page_shown.connect(_on_tutorial_control_page_shown)
-	tutorial_sequence.play_control_tutorial(merge_game.get_drop_guide_global_x())
+	merge_game.ball_dropped.connect(tutorial_sequence.complete_control_gesture,CONNECT_ONE_SHOT)
+	var entry: Vector2=merge_game.get_ball_entry_position(merge_game.current_level,merge_game.aim_x)
+	var launch_origin: Vector2=merge_game.get_global_transform_with_canvas()*entry
+	tutorial_sequence.play_control_tutorial(merge_game.get_drop_guide_global_x(), level_data.tutorial_control_message,level_data.tutorial_control_style,launch_origin)
 
 
 func show_first_ingestion_swallow_tutorial() -> void:
@@ -448,7 +452,7 @@ func _on_tutorial_ball_dropped() -> void:
 
 func _schedule_drop_prompt(message: String, delay := 2.0) -> void:
 	tutorial_prompt_version += 1
-	tutorial_drop_prompt_text = message
+	tutorial_drop_prompt_text = level_data.tutorial_prompt_replacements.get(message, message)
 	_show_drop_prompt_after_delay(tutorial_prompt_version, delay)
 
 
@@ -496,7 +500,8 @@ func _show_combo_drop_prompt() -> void:
 	tutorial_drop_prompt.size = Vector2(580.0, 60.0)
 	tutorial_drop_prompt.add_theme_font_size_override("font_size", 25)
 	tutorial_drop_prompt.add_theme_constant_override("outline_size", 6)
-	tutorial_drop_prompt.text = "방울을 떨어뜨려 콤보 공격을 해보세요"
+	var prompt:="방울을 떨어뜨려 콤보 공격을 해보세요"
+	tutorial_drop_prompt.text = level_data.tutorial_prompt_replacements.get(prompt,prompt)
 	tutorial_drop_prompt.modulate.a = 1.0
 	tutorial_drop_prompt.show()
 

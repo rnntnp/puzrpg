@@ -1,0 +1,27 @@
+[gd_resource type="Resource" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/gimmicks/configs/deformable_pond_config.gd" id="1"]
+[ext_resource type="Resource" path="res://resources/visuals/pond_surface_rendering_settings_62.tres" id="2"]
+
+[resource]
+script = ExtResource("1")
+rendering_settings = ExtResource("2")
+physics_backend = "QuarkPhysics"
+particle_internal_damping = 24.0
+collision_padding_px = 4.0
+deformation_soft_ratio = 1.035
+deformation_hard_ratio = 1.07
+particle_deformation_limit = 0.07
+quark_particle_count = 16
+quark_air_damping = 1.8
+quark_substeps = 2
+quark_iterations = 1
+quark_rigidity = 0.45
+quark_shape_matching = 0.20
+quark_area_rigidity = 0.85
+quark_sleep_tolerance = 0.025
+quark_friction = 0.01
+quark_wall_friction = 0.19
+face_strain_weight = 0.15
+cut_border_width_px = 3.0
+show_soft_debug = true

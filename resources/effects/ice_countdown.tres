@@ -8,3 +8,4 @@ script = ExtResource("1")
 effect_id = &"ice_attack"
 display_name = "빙결 공격까지 남은 턴"
 icon = ExtResource("2")
+use_authored_intent_icon = true

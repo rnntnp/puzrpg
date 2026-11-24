@@ -29,6 +29,7 @@
 #define QWORLD_NODE_H
 
 #include <godot_cpp/classes/node2d.hpp>
+#include <godot_cpp/variant/packed_vector2_array.hpp>
 #include <godot_cpp/classes/input_event.hpp>
 #include <godot_cpp/classes/input_event_mouse_button.hpp>
 #include "QuarkPhysics/qworld.h"
@@ -39,6 +40,7 @@
 #include "qspring_object.h"
 #include "qraycast_object.h"
 #include "QuarkPhysics/extensions/qspatialhashing.h"
+#include "QuarkPhysics/extensions/qboundedbroadphase.h"
 
 
 
@@ -51,6 +53,7 @@ class QWorldNode: public Node2D{
     vector<Ref<QRaycastObject>> raycastObjects;
     QSpatialHashing *spatialHashing=nullptr;
     bool enableSpatialHashing=false;
+    QBoundedBroadPhase *boundedBroadphase=nullptr;
     float cellSize=128.0;
     bool enableDebugRenderer=true;
     
@@ -77,6 +80,7 @@ public:
         set_process(true);
         set_physics_process(true);
         spatialHashing=new QSpatialHashing(worldObject->bodies,cellSize);
+        boundedBroadphase=new QBoundedBroadPhase(worldObject->bodies);
     };
     ~QWorldNode(){
         
@@ -88,9 +92,45 @@ public:
             delete spatialHashing;
             spatialHashing=nullptr;
         }
+        delete boundedBroadphase;
     };
 
     //Built-in Override Methods
+    Dictionary read_soft_body_state(Object *body,float dt,float radius,float soft_ratio,float hard_ratio,float return_rate,bool limit,float internal_damping=0.0f,const PackedVector2Array &rest_points=PackedVector2Array(),float deformation_limit=0.0f);
+    void set_bounded_search_enabled(bool value){
+        worldObject->SetBroadphase(value ? static_cast<QBroadPhase*>(boundedBroadphase) : (enableSpatialHashing ? static_cast<QBroadPhase*>(spatialHashing) : nullptr));
+    }
+    void set_body_search_radius(Object *body,float radius){
+        auto node=Object::cast_to<QBodyNode>(body);
+        if(node && node->bodyObject) boundedBroadphase->SetRadius(node->bodyObject,radius);
+    }
+    Dictionary get_bounded_search_stats(){
+        Dictionary result;
+        result["grid_pairs"]=boundedBroadphase->gridPairs;
+        result["circle_rejected"]=boundedBroadphase->circleRejected;
+        result["narrow_candidates"]=boundedBroadphase->narrowCandidates;
+        result["expanded_bounds"]=boundedBroadphase->expandedBounds;
+        return result;
+    }
+    Dictionary validate_bounded_search(){
+        // Explicit test-only brute-force oracle; never called by the solver.
+        auto &candidates=boundedBroadphase->GetPairs();
+        int contacts=0,missed=0,tested=0;
+        auto &bodies=worldObject->bodies;
+        for(size_t i=0;i<bodies.size();++i) for(size_t j=i+1;j<bodies.size();++j) {
+            if(!boundedBroadphase->CanPair(bodies[i],bodies[j])) continue;
+            ++tested;
+            if(worldObject->GetCollisions(bodies[i],bodies[j],false).empty()) continue;
+            ++contacts;
+            auto pair=std::less<QBody*>()(bodies[i],bodies[j])?std::make_pair(bodies[i],bodies[j]):std::make_pair(bodies[j],bodies[i]);
+            if(candidates.find(pair)==candidates.end()) ++missed;
+        }
+        Dictionary result=get_bounded_search_stats();
+        result["brute_force_pairs"]=tested;
+        result["contact_pairs"]=contacts;
+        result["missed_contact_pairs"]=missed;
+        return result;
+    }
     virtual void _input(const Ref<InputEvent> &event) override;
 
     //Get Methods
@@ -180,6 +220,7 @@ public:
     };
 
     QWorldNode *set_spatial_hashing_cell_size(float value){
+        if (boundedBroadphase!=nullptr) boundedBroadphase->SetCellSize(value);
         if (value!=cellSize){
             if (spatialHashing!=nullptr){
                 spatialHashing->SetCellSize(value);

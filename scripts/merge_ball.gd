@@ -18,6 +18,8 @@ const OUT_OF_BOUNDS_RECOVERY_INSET := 4.0
 @onready var ice_durability_label: Label = $IceDurabilityLabel
 var merge_level := 0
 var merge_locked := false
+## Opt-in lifecycle pools park inactive balls without rebuilding their tree.
+var pool_inactive := false
 var ball_data: Resource
 var _has_contacted := false
 var ingestion_marked := false
@@ -398,7 +400,7 @@ func set_damage_background_marked(marked: bool) -> void:
 	if visual_container.get_child_count() > 0:
 		var visual := visual_container.get_child(0)
 		if visual != null and visual.has_method("set_background_fill"):
-			visual.call("set_background_fill", marked, Color.BLACK, merge_level == 0)
+			visual.call("set_background_fill", marked, Color.BLACK)
 	queue_redraw()
 
 

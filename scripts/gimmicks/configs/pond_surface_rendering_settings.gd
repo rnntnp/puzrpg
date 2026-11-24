@@ -13,8 +13,8 @@ extends Resource
 @export_range(0.2, 1.0) var highlight_width_scale := 1.0
 @export_group("Secondary Light")
 @export_range(0.0, 1.0) var secondary_highlight_strength := 0.75
-@export_range(2.0, 25.0) var secondary_highlight_radius_degrees := 8.0
-@export_range(90.0, 270.0) var secondary_highlight_angle_degrees := 180.0
+@export_range(0.5, 25.0) var secondary_highlight_radius_degrees := 8.0
+@export_range(0.0, 360.0) var secondary_highlight_angle_degrees := 180.0
 @export_range(0.25, 1.0) var stage_8_highlight_size_scale := 0.80
 @export_group("Environment")
 @export_range(0.01, 0.5) var reflection_roughness := 0.08

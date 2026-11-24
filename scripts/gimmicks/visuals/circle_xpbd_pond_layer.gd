@@ -6,6 +6,12 @@ const Constraints = preload("res://scripts/gimmicks/visuals/pond_warp_constraint
 const POINT_COUNT := 6
 const ControlCage = preload("res://scripts/gimmicks/visuals/pond_control_cage.gd")
 const MAX_CONTACTS := 4
+const WarpMergeContact = preload("res://scripts/gimmicks/visuals/pond_warp_merge_contact.gd")
+var detect_warp_merges := false
+var sprite_contact_fit_available := false
+var exaggerate_face_warp := false
+var sprite_fit_weight := 0.0
+var sprite_contacts = preload("res://scripts/gimmicks/visuals/pond_sprite_contact_fit.gd").new()
 var game: MergeGame
 var tuning: Resource
 var states: Dictionary = {}
@@ -16,9 +22,14 @@ var contact_shares: Dictionary = {}
 
 func configure(board: MergeGame, settings: Resource) -> void:
 	game = board
-	tuning = settings
+	# Live debug controls must not mutate the shared level Resource.
+	tuning = settings.duplicate()
 
 func _register(ball: MergeBall) -> void:
+	var face_layers: RefCounted
+	if exaggerate_face_warp:
+		face_layers = preload("res://scripts/gimmicks/visuals/pond_face_layers.gd").new()
+		face_layers.configure(ball)
 	var cage := ControlCage.build(ball, POINT_COUNT)
 	var rest: PackedVector2Array = cage.rest
 	var offsets := PackedVector2Array()
@@ -27,6 +38,7 @@ func _register(ball: MergeBall) -> void:
 		offsets.append(Vector2.ZERO)
 		velocities.append(Vector2.ZERO)
 	var meshes := WarpMeshes.new()
+	meshes.detailed_interior_mesh = exaggerate_face_warp
 	meshes.configure(ball)
 	var observer := _capture_contacts.bind(ball.get_instance_id())
 	var center := Vector2.ZERO
@@ -41,6 +53,13 @@ func _register(ball: MergeBall) -> void:
 		"touching": {}, "press_contacts": {}, "release_pose": offsets.duplicate(), "release_weight": 0.0,
 		"to_board": Transform2D.IDENTITY, "circle_center": center, "radius": radius,
 		"last_velocity": ball.linear_velocity, "impact_change": Vector2.ZERO}
+	states[ball.get_instance_id()].merge_outline = cage.outline
+	states[ball.get_instance_id()].merge_outline_scale = tuning.merge_outline_scale
+	states[ball.get_instance_id()].interior_warp_gain = tuning.interior_warp_gain if exaggerate_face_warp else 1.0
+	states[ball.get_instance_id()].face_strain_weight = tuning.face_strain_weight if exaggerate_face_warp else 1.0
+	states[ball.get_instance_id()].face_layers = face_layers
+	if sprite_contact_fit_available:
+		states[ball.get_instance_id()].sprite_contact_outline = sprite_contacts.register(ball)
 
 	ball.contact_observer = observer
 
@@ -90,10 +109,19 @@ func _physics_process(delta: float) -> void:
 	if not is_instance_valid(game):
 		return
 	for ball in game.get_active_balls():
-		if ball is MergeBall and not ball.merge_locked and not states.has(ball.get_instance_id()):
+		if ball is MergeBall and not ball.merge_locked and not ball.has_meta(&"suspend_board_warp") and not states.has(ball.get_instance_id()):
 			_register(ball)
 	for id in states.keys():
-		if not is_instance_valid(states[id].ball): states.erase(id)
+		if not is_instance_valid(states[id].ball):
+			states.erase(id)
+		elif states[id].ball.has_meta(&"suspend_board_warp"):
+			# Scripted travel outside the board must not be clipped back inside.
+			var suspended: Dictionary = states[id]
+			if suspended.ball.contact_observer == suspended.observer:
+				suspended.ball.contact_observer = suspended.previous_observer
+			suspended.visuals.restore()
+			if suspended.face_layers != null: suspended.face_layers.restore()
+			states.erase(id)
 	var active := []
 	for state in states.values():
 		if state.ball.merge_locked: continue
@@ -101,6 +129,8 @@ func _physics_process(delta: float) -> void:
 		state.anchors = []
 		state.walls = []
 		active.append(state)
+	var fit_target := 1.0 if sprite_contact_fit_available and tuning.sprite_contact_fit_enabled else 0.0
+	sprite_fit_weight = move_toward(sprite_fit_weight, fit_target, delta / maxf(0.02, tuning.press_filter_time))
 	_prepare_anchors(active)
 	for state in active:
 		var ball: MergeBall = state.ball
@@ -165,6 +195,8 @@ func _physics_process(delta: float) -> void:
 			state.visuals.update_surface(state, tuning)
 			state.published_points = state.surface_points.duplicate()
 		_update_surface_light(state)
+	if detect_warp_merges:
+		WarpMergeContact.check(active, game.max_level_index)
 
 func restore_balls() -> void:
 	for state in states.values():
@@ -172,8 +204,10 @@ func restore_balls() -> void:
 			if state.ball.contact_observer == state.observer:
 				state.ball.contact_observer = state.previous_observer
 			state.visuals.restore()
+			if state.face_layers != null: state.face_layers.restore()
 	states.clear()
 	contact_shares.clear()
+	sprite_contacts.texture_contours.clear()
 
 func _binding(state: Dictionary,point: Vector2) -> Dictionary:
 	var weights := Constraints.bind(point,state.rest)
@@ -250,6 +284,19 @@ func _add_circle_contact(a: Dictionary,b: Dictionary,contacts: Dictionary) -> vo
 	cached.generation = contact_generation
 	var share: float = cached.share if canonical else 1.0-cached.share
 	var target: Vector2 = point_a.lerp(point_b,share)
+	var target_a := target
+	var target_b := target
+	if sprite_fit_weight > 0.0:
+		var fit_a: Vector2 = sprite_contacts.facing_point(a, normal, point_a)
+		var fit_b: Vector2 = sprite_contacts.facing_point(b, -normal, point_b)
+		point_a = point_a.lerp(fit_a, sprite_fit_weight)
+		point_b = point_b.lerp(fit_b, sprite_fit_weight)
+		target = point_a.lerp(point_b, share)
+		var cap_a: float = minf(a.ball.get_radius() * tuning.sprite_contact_fit_ratio, tuning.sprite_contact_fit_max_pixels)
+		var cap_b: float = minf(b.ball.get_radius() * tuning.sprite_contact_fit_ratio, tuning.sprite_contact_fit_max_pixels)
+		# Small radial correction only: large silhouette/collider gaps remain.
+		target_a = point_a + (target - point_a).limit_length(cap_a)
+		target_b = point_b + (target - point_b).limit_length(cap_b)
 	var inverse_a: Transform2D = a.to_board.affine_inverse()
 	var inverse_b: Transform2D = b.to_board.affine_inverse()
 	var anchor_a := _binding(a,inverse_a*point_a)
@@ -258,8 +305,8 @@ func _add_circle_contact(a: Dictionary,b: Dictionary,contacts: Dictionary) -> vo
 	anchor_b.share = 1.0-share
 	anchor_a.other = b.ball.get_instance_id()
 	anchor_b.other = a.ball.get_instance_id()
-	anchor_a.target = inverse_a*target
-	anchor_b.target = inverse_b*target
+	anchor_a.target = inverse_a*target_a
+	anchor_b.target = inverse_b*target_b
 	a.anchors.append(anchor_a)
 	b.anchors.append(anchor_b)
 	pair_count += 1

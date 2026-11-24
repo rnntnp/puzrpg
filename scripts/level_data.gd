@@ -43,6 +43,7 @@ const CustomBoardPhysicsDataClass = preload("res://scripts/custom_physics/custom
 @export var tutorial_sequence: PackedStringArray = []
 ## Optional control explanation and wording replacements for this level's input mode.
 @export_multiline var tutorial_control_message := ""
+@export_enum("drop", "aim_launch") var tutorial_control_style := "drop"
 @export var tutorial_prompt_replacements: Dictionary[String, String] = {}
 ## 첫 드롭의 턴 처리 뒤에 표시하는 안내 문구다.
 @export_multiline var tutorial_turn_message: String = ""

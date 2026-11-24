@@ -3,6 +3,7 @@ extends RefCounted
 var body: Sprite2D
 var features: Sprite2D
 var original_material: Material
+static var shader_cache: Dictionary = {}
 
 func configure(ball: MergeBall) -> void:
 	if ball.visual_container.get_child_count() == 0: return
@@ -12,8 +13,29 @@ func configure(ball: MergeBall) -> void:
 	original_material = body.material
 	var source := body.material as ShaderMaterial
 	var code := source.shader.code
+	var shader: Shader = shader_cache.get(code)
+	if shader == null:
+		shader = _build_shader(code)
+		if shader == null: return
+		shader_cache[code] = shader
+	var body_material := source.duplicate() as ShaderMaterial
+	body_material.shader = shader
+	var atlas := body.texture as AtlasTexture
+	var region := Vector4(atlas.region.position.x, atlas.region.position.y, atlas.region.size.x, atlas.region.size.y)
+	body_material.set_shader_parameter("face_atlas_region", region)
+	body_material.set_shader_parameter("face_layer_role", 1)
+	var face_material := body_material.duplicate() as ShaderMaterial
+	face_material.set_shader_parameter("face_layer_role", 2)
+	features = body.duplicate() as Sprite2D
+	features.name = "FaceFeatures"
+	features.z_index = body.z_index + 1
+	features.material = face_material
+	visual.add_child(features)
+	body.material = body_material
+
+static func _build_shader(code: String) -> Shader:
 	var fragment := code.find("void fragment()")
-	if fragment < 0: return
+	if fragment < 0: return null
 	var opening := code.find("{", fragment)
 	var depth := 1
 	var end := opening + 1
@@ -29,20 +51,7 @@ func configure(ball: MergeBall) -> void:
 	code += "\nvoid vertex() { face_layer_tint = COLOR; }\n"
 	var shader := Shader.new()
 	shader.code = code
-	var body_material := source.duplicate() as ShaderMaterial
-	body_material.shader = shader
-	var atlas := body.texture as AtlasTexture
-	var region := Vector4(atlas.region.position.x, atlas.region.position.y, atlas.region.size.x, atlas.region.size.y)
-	body_material.set_shader_parameter("face_atlas_region", region)
-	body_material.set_shader_parameter("face_layer_role", 1)
-	var face_material := body_material.duplicate() as ShaderMaterial
-	face_material.set_shader_parameter("face_layer_role", 2)
-	features = body.duplicate() as Sprite2D
-	features.name = "FaceFeatures"
-	features.z_index = body.z_index + 1
-	features.material = face_material
-	visual.add_child(features)
-	body.material = body_material
+	return shader
 
 func restore() -> void:
 	if is_instance_valid(body) and original_material != null: body.material = original_material

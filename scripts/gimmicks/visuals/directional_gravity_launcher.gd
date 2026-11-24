@@ -118,6 +118,9 @@ func _apply_flight_gravity(ball: MergeBall, flight: Dictionary) -> void:
 
 func _physics_process(delta: float) -> void:
 	super._physics_process(delta)
+	if is_instance_valid(game) and game.drop_position_locked:
+		direction=Vector2.UP
+		throw_power=0.45
 	if not is_instance_valid(game) or not is_instance_valid(game.preview_ball):
 		return
 	_update_landing_prediction()
@@ -334,6 +337,9 @@ func _unhandled_input(event: InputEvent) -> void:
 	aim_vector.y = minf(aim_vector.y, -20.0)
 	direction = aim_vector.normalized()
 	throw_power = clampf(aim_vector.length() / tuning.maximum_drag_distance, 0.0, 1.0)
+	if game.drop_position_locked:
+		direction=Vector2.UP
+		throw_power=0.45
 	get_viewport().set_input_as_handled()
 	if released:
 		if pointer == -1:
@@ -389,6 +395,9 @@ func _fire_ball() -> void:
 
 
 func launch_external_ball(ball: MergeBall, velocity: Vector2) -> void:
+	# Relaunching the same active ball must not retain a previous flight callback
+	# or snapshot its directional force as the new baseline.
+	_finish_flight(ball)
 	configure_active_balls()
 	ball.linear_velocity = velocity
 	var callback := _on_flight_contact.bind(ball)

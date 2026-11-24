@@ -18,3 +18,19 @@ Status: `NEEDS_PLAYTEST`
 - 변경 스크립트 6개 문법 검사와 1~5 Resource preload 검사 통과. 실제 입력·반사·얼음/분열/포식/거울 연동·적 전환 및 성능은 사용자 플레이테스트가 필요하다.
 - 표시만 적용된 중간 상태는 backups/campaign_before_stage62_launcher_2026-11-22/ 에 추가 저장했다. 최초 원본 백업은 그대로 유지한다.
 - 거울방 진입 오류 후속: 사용자 실행 로그에서 `_refresh_overlay()`가 실행 중 보드에 없는 `get_ball_entry_position()`을 호출해 중단되는 것을 확인했다. 디스크의 보드에는 함수가 있어 실행 중 부분 재로드로 추정된다. 거울 미리보기/실제 출현 모두 API 존재를 검사하는 공통 helper로 변경하여 구버전 보드에서는 기존 상단 위치로 안전하게 처리한다. 완전 재실행 시 새 보드의 하단 위치 제공자를 사용한다. 관련 스크립트 2개 문법 및 거울방 Resource preload 검사 통과; 실제 진입 재확인은 필요하다.
+
+## 64번 설정으로 교체 (2026-11-25)
+
+사용자 요청으로 공유 board_visual_scene의 내부 구현을 64번으로 교체했다. 레벨 1~5의 적/기믹 Resource는 그대로 두고, native 16입자 소프트바디, 변형 7%, 실제 색 외곽 기준 충돌 +4px, SDF 가림 켜짐, 생성 외곽선 총 3px(색 2+흰 1)을 적용한다. 외곽선 두께 슬라이더는 제거하며 캠페인에는 디버그 HUD를 설치하지 않는다. 반사/발사 방향 중력/entry provider는 기존 경로를 유지하고 native query layer와 가이드 적분기를 연결했다. 64번의 공 풀과 GPU burst도 재사용한다. 원래 authored 외곽선은 별도이며 3px는 가림으로 생성되는 선폭이다.
+
+기믹 cleanup 후 query layer/custom integrator/얼음 freeze 및 역중력 위험선을 복원한다. Quark 얼음 공은 disabled 대신 static enabled 상태로 유지해 다른 공을 막는다. 씬 종료에는 풀/효과 provider를 먼저 정리하고 물리/반사/launcher를 복원한다. 미지원 환경은 기존 64번 XPBD fallback이며 native와 같은 변형/성능을 검증한 것은 아니다.
+
+범위 한정 검증: 5개 레벨 진입 후 실제 material width=(2,3), deformation=.07, padding=4, occlusion=true, native/pool 설치 확인. 2~5번 실제 하트 발사 2회→4단계 합성→다음 입력 가능, 1번은 기존 튜토리얼 입력 잠금을 유지하고 로드/설정 확인만 수행. 2번의 얼음 body enabled/static/위치 유지, 발사체 접촉 후 비행 종료, 해제 후 dynamic, board reset 후 query layer/역방향 위험선 확인. 전환/씬 종료에서 오류 로그 없음. 전체 적 행동 주기, 튜토리얼 완주, 전체 회귀 및 export는 하지 않았다. 사용자 플레이 확인 상태는 NEEDS_PLAYTEST 유지.
+
+## 1번 발사 튜토리얼 정합성 (2026-11-25)
+
+LevelData의 기본 drop 조작 설명은 유지하고 1번만 tutorial_control_style=aim_launch로 지정한다. 새 안내는 실제 발사 위치에서 방향/거리 변경을 보여 주고, 화면을 누른 채 조준→손 놓아 발사하면 완료된다. 투명 backdrop은 입력을 막지 않으며 첫 press로 안내가 닫히지 않는다. 실제 조준을 시작하면 예시 화살표는 숨긴다. 턴 문구는 접촉/합성 마무리 이후 턴 완료를 설명하고 반복/콤보 prompt를 발사 문구로 교체한다.
+
+콤보 예제는 MergeGame의 선택적 combo_demo_provider를 통해 board가 배치한다. 큰 공부터 천장 아래에 놓고 작은 공을 아래에 두어 아래쪽에서 위로 연쇄 합성한다. 기본 MergeGame의 바닥 배치는 다른 보드에 유지한다. 고정 조준은 기존 drop_position_locked로 위쪽 방향/기본 세기를 고정한다. native는 freeze된 튜토리얼 예제도 static 충돌체로 취급한다. clear_active_balls는 공 풀의 비활성 공을 삭제하지 않도록 수정했다.
+
+실행 검증: 스토리 2페이지→조작 안내→touch press/drag/release(비스듬한 조준 확인)→첫 착지/합성 설명→같은 공 실제 합성→적 행동/턴 설명→콤보 예제 5개→실제 5연쇄 합성으로 6번 공 생성→조준 잠금 해제/스킬 안내까지 진행했다. 오류 로그 없음. skill 이후 기존 튜토리얼 완주나 재미 검증은 수행하지 않았다. 캡처 tutorial_aim_launch.png / tutorial_combo_launch.png.

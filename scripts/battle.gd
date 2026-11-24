@@ -249,7 +249,10 @@ func _start_tutorial_sequence() -> void:
 	add_child(tutorial_sequence)
 	tutorial_sequence.sequence_finished.connect(_on_initial_tutorial_sequence_finished)
 	tutorial_sequence.tutorial_control_page_shown.connect(_on_tutorial_control_page_shown)
-	tutorial_sequence.play_control_tutorial(merge_game.get_drop_guide_global_x(), level_data.tutorial_control_message)
+	merge_game.ball_dropped.connect(tutorial_sequence.complete_control_gesture,CONNECT_ONE_SHOT)
+	var entry: Vector2=merge_game.get_ball_entry_position(merge_game.current_level,merge_game.aim_x)
+	var launch_origin: Vector2=merge_game.get_global_transform_with_canvas()*entry
+	tutorial_sequence.play_control_tutorial(merge_game.get_drop_guide_global_x(), level_data.tutorial_control_message,level_data.tutorial_control_style,launch_origin)
 
 
 func show_first_ingestion_swallow_tutorial() -> void:
@@ -497,7 +500,8 @@ func _show_combo_drop_prompt() -> void:
 	tutorial_drop_prompt.size = Vector2(580.0, 60.0)
 	tutorial_drop_prompt.add_theme_font_size_override("font_size", 25)
 	tutorial_drop_prompt.add_theme_constant_override("outline_size", 6)
-	tutorial_drop_prompt.text = "방울을 떨어뜨려 콤보 공격을 해보세요"
+	var prompt:="방울을 떨어뜨려 콤보 공격을 해보세요"
+	tutorial_drop_prompt.text = level_data.tutorial_prompt_replacements.get(prompt,prompt)
 	tutorial_drop_prompt.modulate.a = 1.0
 	tutorial_drop_prompt.show()
 

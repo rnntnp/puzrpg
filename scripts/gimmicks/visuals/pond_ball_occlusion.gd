@@ -235,7 +235,8 @@ func _install(material: ShaderMaterial) -> void:
 
 func _process(_delta: float) -> void:
 	if not is_instance_valid(layer) or viewport == null: return
-	viewport.size = Vector2i(layer.get_viewport().get_visible_rect().size)
+	var ownership_scale := _ownership_scale()
+	viewport.size = Vector2i(layer.get_viewport().get_visible_rect().size * ownership_scale)
 	var present := {}
 	var present_materials := {}
 	var order := 0
@@ -270,34 +271,26 @@ func _process(_delta: float) -> void:
 		shell_material.set_shader_parameter("ball_cut_color", shell_material.get_shader_parameter("outline_color"))
 		shell_material.set_shader_parameter("ball_cut_color_width", maxf(0.75, color_width * pixel_scale))
 		shell_material.set_shader_parameter("ball_cut_white_width", maxf(0.75, (total_width - color_width) * pixel_scale))
+		_configure_cut_metrics(shell_material,shell_node)
 		present[id] = true
 		if not masks.has(id):
-			var mask := MeshInstance2D.new()
 			var source_shader: Shader = materials[shell.material.get_instance_id()].original
-			var mask_shader := Shader.new()
-			var code := source_shader.code.replace("render_mode unshaded;", "render_mode unshaded, blend_disabled;")
-			code = code.replace("shader_type canvas_item;", "shader_type canvas_item;\nuniform vec3 mask_owner;\n")
-			mask_shader.code = _fragment_variant(code, "\nif (texture(TEXTURE, UV).a < 0.5) { discard; } COLOR = vec4(mask_owner, 1.0);\n")
-			var mask_material := ShaderMaterial.new()
-			mask_material.shader = mask_shader
-			mask.material = mask_material
-			viewport.add_child(mask)
-			masks[id] = mask
+			masks[id] = _create_mask(source_shader)
 		var mask: MeshInstance2D = masks[id]
 		var source: MeshInstance2D = shell.mesh_node
 		mask.mesh = source.mesh
 		mask.texture = source.texture
-		mask.transform = source.get_global_transform_with_canvas()
+		mask.transform = Transform2D(0.0,Vector2.ONE*ownership_scale,0.0,Vector2.ZERO) * source.get_global_transform_with_canvas()
 		mask.z_index = order
 		order += 1
 		var mask_material := mask.material as ShaderMaterial
 		mask_material.set_shader_parameter("mask_owner", owner)
-		for parameter in ["outline_expand_texels", "soft_basis", "soft_inverse", "soft_origin", "soft_deformation", "soft_offset", "soft_point_count", "soft_rest_points", "soft_point_offsets"]:
+		for parameter in ["outline_expand_texels", "soft_basis", "soft_inverse", "soft_origin", "soft_deformation", "soft_offset", "soft_point_count", "soft_rest_points", "soft_point_offsets", "soft_interior_gain", "soft_strain_weight", "soft_center_radius", "soft_vertical_gain"]:
 			var value: Variant = shell.material.get_shader_parameter(parameter)
 			if value != null: mask_material.set_shader_parameter(parameter, value)
 	for id in masks.keys():
 		if not present.has(id):
-			masks[id].queue_free()
+			_release_mask(masks[id])
 			masks.erase(id)
 	for id in materials.keys():
 		var record: Dictionary = materials[id]
@@ -305,6 +298,27 @@ func _process(_delta: float) -> void:
 			if is_instance_valid(record.material) and record.material.shader in shader_cache.values():
 				record.material.shader = record.original
 			materials.erase(id)
+
+func _create_mask(source_shader: Shader) -> MeshInstance2D:
+	var mask := MeshInstance2D.new()
+	var mask_shader := Shader.new()
+	var code := source_shader.code.replace("render_mode unshaded;", "render_mode unshaded, blend_disabled;")
+	code = code.replace("shader_type canvas_item;", "shader_type canvas_item;\nuniform vec3 mask_owner;\n")
+	mask_shader.code = _fragment_variant(code, "\nif (texture(TEXTURE, UV).a < 0.5) { discard; } COLOR = vec4(mask_owner, 1.0);\n")
+	var mask_material := ShaderMaterial.new()
+	mask_material.shader = mask_shader
+	mask.material = mask_material
+	viewport.add_child(mask)
+	return mask
+
+func _configure_cut_metrics(_material: ShaderMaterial, _shell_node: MeshInstance2D) -> void:
+	pass
+
+func _ownership_scale() -> float:
+	return 1.0
+
+func _release_mask(mask: MeshInstance2D) -> void:
+	mask.queue_free()
 
 func _exit_tree() -> void:
 	for record: Dictionary in materials.values():

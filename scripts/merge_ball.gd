@@ -18,6 +18,8 @@ const OUT_OF_BOUNDS_RECOVERY_INSET := 4.0
 @onready var ice_durability_label: Label = $IceDurabilityLabel
 var merge_level := 0
 var merge_locked := false
+## Opt-in lifecycle pools park inactive balls without rebuilding their tree.
+var pool_inactive := false
 var ball_data: Resource
 var _has_contacted := false
 var ingestion_marked := false

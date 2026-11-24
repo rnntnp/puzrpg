@@ -109,6 +109,8 @@ var board_visual_layer: Node
 ## Optional entry-position provider installed by a board control component.
 var ball_entry_position_provider := Callable()
 var board_launch_controller: Node
+## Optional board-owned tutorial layout for a different launch direction.
+var combo_demo_provider := Callable()
 var is_aiming := false
 var aim_x := 360.0
 var preview_ball
@@ -124,6 +126,10 @@ var physics_speed_multiplier := 1.0
 var merge_push_force := 110.0
 var chain_merge_delay := 0.1
 var drop_sequence_active := false
+## Optional lifecycle providers. Empty callables keep ordinary allocation/free.
+var pooled_ball_acquire := Callable()
+var pooled_ball_release := Callable()
+var merge_burst_renderer := Callable()
 var drop_sequence_id := 0
 var combo_count := 0
 var combo_points := 0
@@ -257,7 +263,11 @@ func autoplay_drop_at(x_position: float) -> void:
 		_drop_ball(aim_x)
 
 func get_active_balls() -> Array:
-	return balls.get_children()
+	var result: Array=[]
+	for ball in balls.get_children():
+		if ball is MergeBall and ball.pool_inactive:continue
+		result.append(ball)
+	return result
 
 
 func spawn_gimmick_ball(
@@ -370,12 +380,16 @@ func set_drop_position_locked(locked: bool) -> void:
 
 
 func clear_active_balls() -> void:
-	for child in balls.get_children():
+	# Parked pool entries are reusable objects, not part of the active board.
+	for child in get_active_balls():
 		if child is MergeBall:
 			(child as MergeBall).queue_free()
 
 
 func prepare_combo_demo_stack() -> void:
+	if combo_demo_provider.is_valid():
+		combo_demo_provider.call()
+		return
 	clear_active_balls()
 	var center_x: float = (board_inner_left + board_inner_right) * 0.5
 	var stage_five_radius: float = BallCatalogClass.get_ball(4).get_radius()
@@ -940,18 +954,21 @@ func _finish_drop_sequence(sequence_id: int) -> void:
 func _spawn_ball(at: Vector2, level: int, contact_sequence_id: int = -1):
 	if not is_inside_tree() or not is_instance_valid(balls) or balls.is_queued_for_deletion():
 		return null
-	var ball = BallScene.instantiate()
+	var ball = pooled_ball_acquire.call(level) if pooled_ball_acquire.is_valid() else null
+	var reused := ball != null
+	if not reused: ball = BallScene.instantiate()
 	ball.position = at
 	# CCD가 기본 위치 (0, 0)에서 생성 위치까지의 이동을 벽 관통으로 오인하지 않도록
 	# 씬 트리에 추가하기 전에 초기 위치를 지정한다.
 	ball.continuous_cd = RigidBody2D.CCD_MODE_DISABLED
-	balls.add_child(ball)
-	ball.setup(level, physics_speed_multiplier)
+	if ball.get_parent()!=balls: balls.add_child(ball)
+	if not reused: ball.setup(level, physics_speed_multiplier)
 	ball.set_sealed_visual(sealed_stage_index >= 0 and ball.merge_level == sealed_stage_index)
 	if physics_data != null:
 		if not custom_physics_solver.is_active():
 			ball.set_base_mass(physics_data.get_ball_mass(ball.merge_level))
-		var ball_material := PhysicsMaterial.new()
+		var ball_material: PhysicsMaterial = ball.physics_material_override if reused else null
+		if ball_material == null: ball_material = PhysicsMaterial.new()
 		ball_material.friction = physics_data.ball_friction
 		ball_material.bounce = physics_data.ball_bounce
 		ball_material.absorbent = false
@@ -972,15 +989,16 @@ func _spawn_ball(at: Vector2, level: int, contact_sequence_id: int = -1):
 	ball.set_play_area_bounds(global_left, global_right, global_bottom)
 	if board_tilt_active:
 		ball.horizontal_bounds_enabled = false
-	ball.merge_requested.connect(_on_merge_requested)
+	if not ball.merge_requested.is_connected(_on_merge_requested): ball.merge_requested.connect(_on_merge_requested)
 	if contact_sequence_id >= 0:
 		ball.first_contact.connect(_on_dropped_ball_first_contact.bind(contact_sequence_id, at.x), CONNECT_ONE_SHOT)
 	return ball
 
 
 func _enable_ball_ccd_after_spawn(ball: RigidBody2D) -> void:
+	var generation: int = ball.get_meta("pool_generation", 0)
 	await get_tree().physics_frame
-	if is_instance_valid(ball) and not ball.merge_locked and not custom_physics_solver.is_active():
+	if is_instance_valid(ball) and ball.get_meta("pool_generation", 0) == generation and not ball.custom_integrator and not ball.merge_locked and not custom_physics_solver.is_active():
 		ball.continuous_cd = RigidBody2D.CCD_MODE_CAST_SHAPE
 
 
@@ -1082,8 +1100,8 @@ func _on_merge_requested(first, second) -> void:
 		if not is_inside_tree() or not is_instance_valid(first) or not is_instance_valid(second):
 			return
 	merge_hit_stop.play()
-	first.queue_free()
-	second.queue_free()
+	_retire_merged_source(first)
+	_retire_merged_source(second)
 	var merged_ball_data: Resource = BallCatalogClass.get_ball(level)
 	var earned_points: int = merged_ball_data.merge_score
 	var attack_combo_count := 1
@@ -1146,15 +1164,22 @@ func _on_merge_requested(first, second) -> void:
 	)
 
 
+func _retire_merged_source(ball: MergeBall) -> void:
+	if pooled_ball_release.is_valid() and pooled_ball_release.call(ball): return
+	ball.queue_free()
+
 func _spawn_merge_burst(at: Vector2, data: Resource, merge_combo_count: int, is_external_merge := false, damage := 0) -> void:
-	var burst = MergeBurstEffectScene.instantiate()
-	add_child(burst)
 	var burst_color: Color = data.glow_color
 	var burst_scale := 1.0
 	if is_external_merge:
 		if external_merge_effect_color.a > 0.0:
 			burst_color = external_merge_effect_color
 		burst_scale = external_merge_effect_scale
+	if merge_burst_renderer.is_valid():
+		merge_burst_renderer.call(at,burst_color,data.get_radius(),merge_combo_count,data.level,burst_scale,damage)
+		return
+	var burst = MergeBurstEffectScene.instantiate()
+	add_child(burst)
 	burst.play(at, burst_color, data.get_radius(), merge_combo_count, data.level, burst_scale, damage)
 
 

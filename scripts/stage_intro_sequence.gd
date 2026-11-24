@@ -9,6 +9,10 @@ const LOGO_HOLD_DURATION := 0.7
 const TutorialMouseCursorClass = preload("res://scripts/tutorial_mouse_cursor.gd")
 const TutorialControlArrowClass = preload("res://scripts/tutorial_control_arrow.gd")
 const TutorialPointerArrowClass = preload("res://scripts/tutorial_pointer_arrow.gd")
+const LaunchGesture = preload("res://scripts/tutorial_launch_gesture.gd")
+var _control_style := "drop"
+var _launch_origin := Vector2.INF
+var _launch_gesture: Node2D
 
 var _pages: PackedStringArray = []
 var _story_images: Array[Texture2D] = []
@@ -61,7 +65,9 @@ func play_tutorial(pages: PackedStringArray, control_center_x := 360.0) -> void:
 	_play(pages)
 
 
-func play_control_tutorial(control_center_x := 360.0, control_message := "") -> void:
+func play_control_tutorial(control_center_x := 360.0, control_message := "", control_style := "drop", launch_origin := Vector2.INF) -> void:
+	_control_style=control_style
+	_launch_origin=launch_origin
 	_logo_first = false
 	_enemy_intent_tutorial = true
 	_control_only_tutorial = true
@@ -237,6 +243,9 @@ func _build_overlay() -> void:
 	_mouse_cursor.scale = Vector2(0.38, 0.38)
 	_mouse_cursor.hide()
 	_backdrop.add_child(_mouse_cursor)
+	_launch_gesture=LaunchGesture.new()
+	_launch_gesture.hide()
+	_backdrop.add_child(_launch_gesture)
 
 
 func _setup_click_hint_visuals() -> void:
@@ -390,7 +399,21 @@ func _show_drop_control_tutorial() -> void:
 	_control_arrow.show()
 	_mouse_cursor.show()
 	_show_click_hint_centered()
+	if _control_style=="aim_launch":
+		# Let the real board receive the press, drag and release. A click-to-
+		# dismiss overlay used to consume the first aiming gesture instead.
+		_backdrop.mouse_filter=Control.MOUSE_FILTER_IGNORE
+		_control_arrow.hide()
+		_mouse_cursor.hide()
+		_click_hint.hide()
+		_guide_panel.size.y=145.0
+		_guide_label.size.y=145.0
+		_launch_gesture.position=_launch_origin if _launch_origin.is_finite() else Vector2(_control_center_x,1130.0)
+		_launch_gesture.show()
 	tutorial_control_page_shown.emit()
+
+func complete_control_gesture() -> void:
+	if _control_only_tutorial and _control_style=="aim_launch":_finish()
 
 
 func _show_turn_tutorial() -> void:
@@ -584,6 +607,10 @@ func _play_logo() -> void:
 
 
 func _input(event: InputEvent) -> void:
+	if _control_only_tutorial and _control_style=="aim_launch":
+		if (event is InputEventMouseButton and event.pressed) or (event is InputEventScreenTouch and event.pressed):
+			_launch_gesture.hide()
+		return
 	if _logo_first and _page_index == 0:
 		return
 	if event is InputEventMouseButton and event.pressed:

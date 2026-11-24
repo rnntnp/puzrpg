@@ -31,13 +31,15 @@ enemies = Array[ExtResource("4_character_type")]([ExtResource("13_tutorial_enemy
 opening_sequence = PackedStringArray("컷씬 1", "컷씬 2")
 opening_story_images = Array[Texture2D]([ExtResource("11_story_page_01"), ExtResource("12_story_page_02")])
 tutorial_sequence = PackedStringArray("드롭 조작")
-tutorial_control_message = "수조 안을 누른 채 방향과 세기를 정하고\n손을 놓으면 아래에서 위로 발사해요."
+tutorial_control_style = "aim_launch"
+tutorial_control_message = "수조 안을 누른 채 움직여 조준하세요.\n멀리 조준할수록 세게 발사돼요.\n손을 놓으면 화살표 방향으로 발사돼요."
 tutorial_prompt_replacements = Dictionary[String, String]({
 "클릭해 방울을 떨어뜨려 보세요.": "방향을 정한 뒤 손을 놓아 방울을 발사하세요.",
 "방울을 떨어뜨려보세요": "방울을 위쪽으로 발사해 보세요.",
-"방울 위에 다른 방울을 떨어뜨려 보세요.": "같은 방울을 향해 발사해 보세요."
+"방울 위에 다른 방울을 떨어뜨려 보세요.": "같은 방울을 향해 조준하고 발사하세요.",
+"방울을 떨어뜨려 콤보 공격을 해보세요": "가운데 방울을 향해 발사해 콤보를 만들어 보세요"
 })
-tutorial_turn_message = "방울을 한 번 발사하면\n1턴이 지나갑니다."
+tutorial_turn_message = "발사한 방울이 닿고 합성이 마무리되면\n1턴이 지나갑니다."
 tutorial_evolution_messages = PackedStringArray("같은 종류의 방울끼리 만나도록\n방울을 발사해 보세요.", "방울 속 우파루파 정령이 더 크게\n성장하고, 적을 공격합니다.")
 fixed_drop_level = 0
 board_visual_scene = ExtResource("62_board_visuals")

@@ -1,8 +1,8 @@
 # MECHANIC REGISTRY
 
 Last static audit: 2026-08-25
-Highest registered number: **57**
-Next available number: **58** (57 is registered)
+Highest registered number: **64**
+Next available number: **65** (64 is registered)
 
 This registry prevents a new name from hiding an already-tested player decision. The one-line rule is based on the current handler code, not on inferred fun or balance.
 
@@ -107,7 +107,10 @@ Runtime types:
 | 62 | 동글한 연못 | 59번 강체·상향 방향 발사 재사용. 공별 6점 와핑에서 원 기준 접촉 키포인트만 맞추고 벽 키포인트를 제한. 윤곽 반복 검사 없이 고정 충돌체·통합 반사 유지. | Modular · 3 existing enemies · [spec](mechanics/062_circle_xpbd_pond.md) · [level](../resources/levels/test_circle_xpbd_pond.tres) | `NEEDS_PLAYTEST` | 61 (사용자 요청 비교) |
 | 63 | 연못 진형 실험 | 62번 수조 위 아군 1명·적 2열. 착지와 마지막 합성 후 1초에 결산하고, 수조를 잠시 멈춰 합성 결과 공의 레이저로 지정한 적을 집중 공격한다. 처치 초과 피해의 샷건 연쇄와 늦은 합성의 다음 턴 이월을 시험한다. | Modular · [spec](mechanics/063_pond_formation.md) · [level](../resources/levels/test_pond_formation.tres) · [handler](../scripts/gimmicks/handlers/pond_formation_handler.gd) | `NEEDS_PLAYTEST` | 62 (수조 기반), 56 (카드 재사용) |
 
+| 64 | 소프트바디 연못 | 62번 비교판. 기존 QuarkPhysics의 독립 외곽 입자 16개로 실제 충돌과 그림을 함께 변형한다. 표정 분리·컷아웃 주인공·62번 반사 설정 재사용. 2026-11-25 요청으로 1~5 보드에도 공유(변형 7%, SDF 가림, 생성 선폭 3px). 미지원 환경은 실제 XPBD 대체. | Modular · 3 existing enemies · [spec](mechanics/064_deformable_pond.md) · [level](../resources/levels/test_deformable_pond.tres) · [handler](../scripts/gimmicks/handlers/deformable_pond_handler.gd) | `NEEDS_PLAYTEST` | 60·61 (물리 재사용), 62 (사용자 요청 비교) |
+
 ## Non-numbered systems that block duplicates
+
 
 | System | Confirmed current scope | Status | Duplicate risk |
 |---|---|---|---|
@@ -118,6 +121,14 @@ Runtime types:
 | Player Weakness skill | Player-owned normal merges charge by result `merge_score`; at 300 the player adds 2 turns to the same ×1.3 Weakness used by ingestion interruption | `NEEDS_PLAYTEST` · [contract](mechanics/player_weakness_skill.md) | Any player gauge, active skill, persistent charge, or generic incoming-damage debuff |
 
 ## Validation history and gaps
+
+- 2026-11-24: Stage 64 added as the user-requested actual soft-body comparison. Six dedicated scripts passed syntax checks. Scoped MCP confirmed native 16-particle bodies, approximately 10.5% peak edge strain in one ceiling-shot fixture, normal 4+4→5 merge, next-drop readiness, cleanup restoration, and no runtime errors. Real XPBD fallback not exercised; crowded-board behavior and gameplay remain NEEDS_PLAYTEST.
+- 2026-11-24: Stage 64 now uses opt-in native centroid/max-radius grid search, squared-distance rejection, and live skin-inclusive secondary bounds. Windows x86_64 release DLL rebuilt. In scoped 20/40-ball snapshots, brute-force native contact comparison reported zero omitted contact pairs; 5-second timings and limitations are recorded in the stage spec. Merge/next-drop and scene re-entry passed; gameplay remains NEEDS_PLAYTEST.
+- 2026-11-24: Stage 64 defers visual uniforms to once per rendered frame and batches particle reads/deformation limits/velocities in native code. Fixed 40-ball same-session profiling: 10.39→10.88→12.61 FPS (baseline/render-only/combined). Native parity, zero omitted contact pairs, merge/next-drop, and scoped syntax checks passed. Gameplay remains NEEDS_PLAYTEST.
+- 2026-11-24: Stage 64 heart/star now use 16 boundary particles sampled from their actual concave shell masks. Scoped polygon validity, debug alignment, individual launches/landing/next-drop, and syntax checks passed. Native physical outline preserves notches; Godot guide query remains a convex approximation. NEEDS_PLAYTEST.
+- 2026-11-24: Stage 64 limits particle deviation to 15% radius and reuses stage 62 ownership masking plus colored/white antialiased cut borders through its own adapter. Scoped shader/overlap capture, native build, syntax, heart merge/next-drop and re-entry checks passed. NEEDS_PLAYTEST.
+- 2026-11-24: Stage 64 caches face shaders, removes temporary six-point registration and pools complete same-stage balls/visuals/native bodies. Generic optional lifecycle providers keep ordinary allocation as the default. Scoped identity/reset/board-clear/merge/input/re-entry checks passed; 3 burst-test worst wall intervals 49.14/33.74/28.70ms. NEEDS_PLAYTEST.
+- 2026-11-24: Shared ball glow now uses a single GPU quad; stage 64 merge bursts use a pooled MultiMesh with GPU animation/SDF shapes. Scoped shader/render/merge/expiry/capacity checks passed; 3 burst-test worst wall intervals 27.50/17.90/18.75ms. NEEDS_PLAYTEST.
 
 - 2026-11-23: Stage 62 splits the axolotl head and facial-feature residual into separate shader layers. Facial strain defaults to 15%, adjustable from 0 to 100%; shell/physics/merge geometry stays unchanged. Scoped script checks and runtime slider/material checks passed without logged errors. Skin reconstruction and animation appearance remain NEEDS_PLAYTEST.
 

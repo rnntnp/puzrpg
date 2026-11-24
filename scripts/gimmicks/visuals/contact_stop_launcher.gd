@@ -40,7 +40,7 @@ func configure(target: MergeGame, config: Resource) -> void:
 func configure_active_balls() -> void:
 	if not is_instance_valid(game):
 		return
-	for child in game.balls.get_children():
+	for child in game.get_active_balls():
 		if not child is MergeBall:
 			continue
 		var ball := child as MergeBall

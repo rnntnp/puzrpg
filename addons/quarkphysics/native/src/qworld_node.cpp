@@ -1,6 +1,25 @@
 #include <godot_cpp/core/class_db.hpp>
 #include "qworld_node.h"
 #include <godot_cpp/variant/utility_functions.hpp>
+#include <godot_cpp/variant/packed_vector2_array.hpp>
+#include "QuarkPhysics/extensions/qsoftbodysnapshot.h"
+
+Dictionary QWorldNode::read_soft_body_state(Object *body,float dt,float radius,float soft_ratio,float hard_ratio,float return_rate,bool limit,float internal_damping,const PackedVector2Array &rest_points,float deformation_limit) {
+    Dictionary result;
+    auto node=Object::cast_to<QBodyNode>(body);
+    if(!node || !node->bodyObject) return result;
+    std::vector<QVector> rest;
+    if(deformation_limit>0.0f) for(int i=0;i<rest_points.size();++i) rest.push_back(QVector(rest_points[i].x,rest_points[i].y));
+    auto snapshot=QSoftBodySnapshot::Read(node->bodyObject,dt,radius,soft_ratio,hard_ratio,return_rate,limit,internal_damping,rest,deformation_limit);
+    PackedVector2Array points,velocities;
+    points.resize(snapshot.points.size()); velocities.resize(snapshot.velocities.size());
+    for(size_t i=0;i<snapshot.points.size();++i) {
+        points.set(i,Vector2(snapshot.points[i].x,snapshot.points[i].y));
+        velocities.set(i,Vector2(snapshot.velocities[i].x,snapshot.velocities[i].y));
+    }
+    result["points"]=points; result["velocities"]=velocities;
+    return result;
+}
 
 
 
@@ -475,6 +494,11 @@ void QWorldNode::create_joint_or_spring_between_mouse_and_body(Vector2 mousePosi
 }
 void QWorldNode::_bind_methods()
 {
+    ClassDB::bind_method(D_METHOD("read_soft_body_state","body","dt","radius","soft_ratio","hard_ratio","return_rate","limit","internal_damping","rest_points","deformation_limit"),&QWorldNode::read_soft_body_state,DEFVAL(0.0f),DEFVAL(PackedVector2Array()),DEFVAL(0.0f));
+    ClassDB::bind_method(D_METHOD("set_bounded_search_enabled","value"),&QWorldNode::set_bounded_search_enabled);
+    ClassDB::bind_method(D_METHOD("set_body_search_radius","body","radius"),&QWorldNode::set_body_search_radius);
+    ClassDB::bind_method(D_METHOD("get_bounded_search_stats"),&QWorldNode::get_bounded_search_stats);
+    ClassDB::bind_method(D_METHOD("validate_bounded_search"),&QWorldNode::validate_bounded_search);
 
     //Get
 	ClassDB::bind_method(D_METHOD("get_gravity"),&QWorldNode::get_gravity );

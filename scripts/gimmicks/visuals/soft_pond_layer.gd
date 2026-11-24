@@ -137,7 +137,9 @@ func _register(ball: MergeBall) -> void:
 	var collider := CollisionShape2D.new()
 	collider.name = "XPBDSilhouette"
 	collider.shape = ConvexPolygonShape2D.new()
-	collider.shape.points = data.outline
+	var query_hull := Geometry2D.convex_hull(data.outline)
+	if query_hull.size()>1: query_hull.remove_at(query_hull.size()-1)
+	collider.shape.points = query_hull
 	ball.add_child(collider)
 	var velocities := PackedVector2Array()
 	velocities.resize(POINT_COUNT)

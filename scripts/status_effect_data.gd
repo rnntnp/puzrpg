@@ -4,6 +4,8 @@ extends Resource
 @export var effect_id: StringName
 @export var display_name: String = "Effect"
 @export var icon: Texture2D
+## Keep an action's authored icon instead of the generic skill/unknown badge.
+@export var use_authored_intent_icon := false
 @export var icon_modulate: Color = Color.WHITE
 @export var show_turns: bool = true
 @export var play_apply_pop: bool = false

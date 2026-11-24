@@ -15,6 +15,8 @@ static var intent_effects: Dictionary[Vector2i, StatusEffectData] = {}
 
 
 static func skill_intent(effect: StatusEffectData, boss: bool, witnessed: bool, generic_kind := Kind.SKILL) -> StatusEffectData:
+	if effect.use_authored_intent_icon:
+		return effect
 	if boss and witnessed:
 		return effect
 	var kind: int = Kind.UNKNOWN if boss else generic_kind

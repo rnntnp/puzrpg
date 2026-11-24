@@ -14,6 +14,10 @@ var fighters: Dictionary[WaterHealthBar, Fighter] = {}
 var selected_enemy: Fighter
 var marked_enemy: Fighter
 var target_marker: Polygon2D
+var manual_target_reticle := false
+var target_is_manual := false
+var vulnerable_enemy: Fighter
+var targeted_weakness_turns := 0
 var captured_pointer := -2
 var detail_panel: EnemyDetails
 var real_attack_turns := 0
@@ -41,6 +45,7 @@ func _ready() -> void:
 	reduction_effect = WEAKNESS_EFFECT.duplicate()
 	reduction_effect.effect_id = &"formation_attack_reduction"
 	reduction_effect.display_name = "공격력 감소"
+	reduction_effect.icon = ActionIcons.ATTACK_ICON
 	reduction_effect.icon_modulate = Color(1.0, 0.72, 0.62)
 	reduction_effect.show_turns = false
 	_create_detail_panel()
@@ -75,12 +80,34 @@ func retire_defeated_fighter(fighter: Fighter, flash_seconds: float) -> void:
 	fighter.get_meta("formation_info").hide()
 	if fighter == marked_enemy:
 		target_marker.hide()
+	if manual_target_reticle:
+		_show_defeat_mark(fighter)
 	await get_tree().create_timer(flash_seconds, false).timeout
 	if not is_instance_valid(fighter):
 		return
 	await fighter.play_defeat_animation(0.17)
 	if is_instance_valid(fighter):
 		fighter.get_parent().queue_free()
+
+
+func _show_defeat_mark(fighter: Fighter) -> void:
+	var mark := Label.new()
+	mark.text = "×"
+	mark.size = Vector2(52, 52)
+	mark.position = to_local(fighter.character_sprite.global_position) - mark.size * 0.5
+	mark.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	mark.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	mark.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	mark.add_theme_font_size_override("font_size", 52)
+	mark.add_theme_color_override("font_color", Color("#ffb6a3"))
+	mark.add_theme_color_override("font_outline_color", Color("#201328"))
+	mark.add_theme_constant_override("outline_size", 10)
+	mark.z_index = 206
+	add_child(mark)
+	var fade := mark.create_tween()
+	fade.tween_interval(0.45)
+	fade.tween_property(mark, "modulate:a", 0.0, 0.25)
+	fade.tween_callback(mark.queue_free)
 
 
 func add_layout_buttons(layout_names: PackedStringArray, selected_index: int) -> void:
@@ -304,14 +331,19 @@ func _add_health_gauge_track(bar: WaterHealthBar, joined: bool) -> void:
 		divisions.add_child(marker)
 
 
-func set_action_preview(fighter: Fighter, kind: int, turns: int, demo := false) -> void:
+func set_action_preview(fighter: Fighter, kind: int, turns: int, demo := false, heal_amount := 0,
+	visible_badge := true, icon_override: Texture2D = null) -> void:
 	var bar: WaterHealthBar = fighter.get_meta("formation_info")
 	var icon := bar.get_node("AttackCountdown/Icon") as TextureRect
 	var counter := bar.get_node("AttackCountdown/Turns") as Label
-	if not bar.has_meta("action_kind") or bar.get_meta("action_kind") != kind:
-		icon.texture = ActionIcons.texture_for(kind)
+	var texture := icon_override if icon_override != null else ActionIcons.texture_for(kind)
+	if icon.texture != texture:
+		icon.texture = texture
+	(icon.get_parent() as Control).visible = visible_badge
+	(bar.get_node("AttackBadgeBackdrop") as Control).visible = visible_badge
 	bar.set_meta("action_kind", kind)
 	bar.set_meta("action_demo", demo)
+	bar.set_meta("action_heal_amount", heal_amount)
 	counter.text = str(turns) if turns >= 0 else "–"
 
 
@@ -321,12 +353,24 @@ func set_effect_state(vulnerable: int, reduced_attack: float) -> void:
 	attack_reduction = reduced_attack
 	weakness_turns = vulnerable
 	for bar in fighters:
-		_update_effects(bar.get_node("Effects") as StatusEffectBar)
+		_update_effects(bar.get_node("Effects") as StatusEffectBar, fighters[bar])
 
 
-func _update_effects(effects: StatusEffectBar) -> void:
-	if weakness_turns > 0:
-		effects.set_effect(WEAKNESS_EFFECT, weakness_turns)
+func set_targeted_weakness(fighter: Fighter, turns: int) -> void:
+	vulnerable_enemy = fighter
+	targeted_weakness_turns = turns
+	for bar in fighters:
+		_update_effects(bar.get_node("Effects") as StatusEffectBar, fighters[bar])
+
+
+func _weakness_turns_for(fighter: Fighter) -> int:
+	return targeted_weakness_turns if fighter == vulnerable_enemy else weakness_turns
+
+
+func _update_effects(effects: StatusEffectBar, fighter: Fighter = null) -> void:
+	var turns := _weakness_turns_for(fighter) if fighter != null else weakness_turns
+	if turns > 0:
+		effects.set_effect(WEAKNESS_EFFECT, turns)
 	else:
 		effects.remove_effect(WEAKNESS_EFFECT.effect_id)
 	if attack_reduction > 0.0:
@@ -354,20 +398,44 @@ func position_info(fighter: Fighter, slot_position: Vector2, offset: Vector2) ->
 
 func set_attack_target(fighter: Fighter, manual: bool) -> void:
 	marked_enemy = fighter
+	target_is_manual = manual
 	target_marker.color = Color("#ffda79") if manual else Color("#81eaff")
-	target_marker.polygon = PackedVector2Array([Vector2(-10, 0), Vector2(0, -11), Vector2(10, 0), Vector2(0, 6)]) if manual else PackedVector2Array([Vector2(-9, -7), Vector2(9, -7), Vector2(0, 4)])
+	if not manual_target_reticle:
+		target_marker.polygon = PackedVector2Array([Vector2(-10, 0), Vector2(0, -11), Vector2(10, 0), Vector2(0, 6)]) if manual else PackedVector2Array([Vector2(-9, -7), Vector2(9, -7), Vector2(0, 4)])
 	_position_target_marker(fighter)
+
+
+func enable_manual_target_reticle() -> void:
+	manual_target_reticle = true
+	target_marker.polygon = PackedVector2Array()
+	var ring := PackedVector2Array()
+	for index in range(33):
+		ring.append(Vector2.from_angle(TAU * index / 32.0) * 28.0)
+	var strokes: Array[PackedVector2Array] = [ring]
+	for direction in [Vector2.UP, Vector2.RIGHT, Vector2.DOWN, Vector2.LEFT]:
+		strokes.append(PackedVector2Array([direction * 18.0, direction * 39.0]))
+	for width in [7.0, 3.5]:
+		for points in strokes:
+			var stroke := Line2D.new()
+			stroke.points = points
+			stroke.width = width
+			stroke.default_color = Color("#151428") if width > 5.0 else Color("#ffda79")
+			stroke.antialiased = true
+			target_marker.add_child(stroke)
+	_position_target_marker(marked_enemy)
 
 
 func _position_target_marker(fighter: Fighter) -> void:
 	target_marker.hide()
-	if not is_instance_valid(fighter):
+	if not is_instance_valid(fighter) or not fighter.is_alive() or (manual_target_reticle and not target_is_manual):
 		return
 	var bar: WaterHealthBar = fighter.get_meta("formation_info")
 	if not bar.has_meta("sprite_rect"):
 		return
 	var bounds: Rect2 = bar.get_meta("sprite_rect")
 	target_marker.position = Vector2(bounds.get_center().x, bounds.end.y + 3.0)
+	if manual_target_reticle:
+		target_marker.position = bounds.get_center()
 	target_marker.show()
 
 
@@ -450,6 +518,8 @@ func _input(event: InputEvent) -> void:
 			if not bar.visible or not bar.has_meta("sprite_rect"):
 				continue
 			var fighter := fighters[bar]
+			if not is_instance_valid(fighter) or not fighter.is_alive():
+				continue
 			var sprite_rect: Rect2 = bar.get_meta("sprite_rect")
 			var fighter_z: int = fighter.get_parent().z_index
 			if sprite_rect.has_point(local_point) and fighter_z >= top_z:
@@ -481,11 +551,13 @@ func _refresh_details() -> void:
 	var counter := bar.get_node("AttackCountdown/Turns") as Label
 	var icon := bar.get_node("AttackCountdown/Icon") as TextureRect
 	var damage := roundi(selected_enemy.attack_power * (1.0 - attack_reduction))
-	detail_panel.present(selected_enemy, kind, counter.text, icon.texture, damage, demo)
+	detail_panel.present(selected_enemy, kind, counter.text, icon.texture, damage, demo,
+		int(bar.get_meta("action_heal_amount", 0)))
 	var effect_count := 0
-	if weakness_turns > 0:
+	var selected_weakness_turns := _weakness_turns_for(selected_enemy)
+	if selected_weakness_turns > 0:
 		var extra_damage := roundi((WEAKNESS_EFFECT.incoming_damage_multiplier - 1.0) * 100.0)
-		detail_panel.set_effect(effect_count, WEAKNESS_EFFECT.icon, "쇠약", "%d턴" % weakness_turns,
+		detail_panel.set_effect(effect_count, WEAKNESS_EFFECT.icon, "쇠약", "%d턴" % selected_weakness_turns,
 			"받는 피해가 %d%% 증가합니다." % extra_damage)
 		effect_count += 1
 	if attack_reduction > 0.0:

@@ -91,7 +91,7 @@ Primary runtime evidence: `scripts/merge_ball.gd` and `scripts/merge_game.gd`.
 - Logical turn completion is emitted after the dropped ball has made its first valid landing contact and no merge has occurred for 500 ms.
 - There is a 4,000 ms maximum wait. At that point turn completion is emitted even if the ideal condition was not reached.
 - Full board stillness is not required for the base `turn_completed` signal. Some mechanic handlers explicitly call `wait_until_board_settled()` before measuring board state or moving terrain.
-- The stage 63 formation experiment opts into 1,000 ms of quiet after landing and the latest merge, without a board-stillness check or maximum wait. Its auto-attack briefly pauses board simulation after settlement. See `mechanics/063_pond_formation.md`.
+- The stage 63 formation experiment opts into 800 ms of quiet after landing and the latest merge, without a board-stillness check or maximum wait. Its auto-attack briefly pauses board simulation after settlement. See `mechanics/063_pond_formation.md`.
 - `MonsterActionController.on_ball_dropped()` is connected to this logical `turn_completed` signal despite its historical method name. Mechanic design should reason in completed player turns, not raw input-press events.
 
 ## 7. Score, player damage, and combo

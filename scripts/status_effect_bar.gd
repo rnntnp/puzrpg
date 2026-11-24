@@ -26,6 +26,7 @@ func remove_effect(effect_id: StringName) -> void:
 	if not is_instance_valid(indicator):
 		return
 	indicators.erase(effect_id)
+	remove_child(indicator)
 	indicator.queue_free()
 
 
@@ -40,5 +41,6 @@ func dismiss_effect_with_shake(effect_id: StringName) -> void:
 func clear_effects() -> void:
 	for indicator in indicators.values():
 		if is_instance_valid(indicator):
+			remove_child(indicator)
 			indicator.queue_free()
 	indicators.clear()

@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="StatusEffectData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/status_effect_data.gd" id="1"]
+[ext_resource type="Texture2D" path="res://assets/effects/ice_burst_icon.svg" id="2"]
+
+[resource]
+script = ExtResource("1")
+effect_id = &"ice_burst"
+display_name = "냉기 폭발까지 남은 턴"
+icon = ExtResource("2")

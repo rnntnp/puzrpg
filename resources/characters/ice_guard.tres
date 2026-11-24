@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="CharacterData" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/character_data.gd" id="1"]
+[ext_resource type="Texture2D" path="res://assets/characters/generated/ice_guard_idle.png" id="2"]
+
+[sub_resource type="AtlasTexture" id="Idle"]
+atlas = ExtResource("2")
+region = Rect2(172, 150, 916, 994)
+filter_clip = true
+
+[resource]
+script = ExtResource("1")
+display_name = "얼음 방패병"
+health_bar_color = Color(0.44, 0.68, 0.95, 1)
+sprite = SubResource("Idle")
+sprite_size = Vector2(220, 239)
+max_health = 100
+attack_power = 2
+enemy_attack_drop_interval = 3

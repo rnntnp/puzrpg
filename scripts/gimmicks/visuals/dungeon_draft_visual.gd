@@ -2,6 +2,7 @@ extends Node2D
 
 signal card_selected(card: int)
 
+const Augments = preload("res://scripts/gimmicks/configs/ice_cave_augments.gd")
 const Config = preload("res://scripts/gimmicks/configs/dungeon_draft_config.gd")
 var canvas: CanvasLayer
 var root: Control
@@ -34,7 +35,16 @@ func _ready() -> void:
 	modal.hide()
 	root.add_child(modal)
 
-func update_build(ranks: Array[int], lightning_hits: int, tuning: Resource) -> void:
+func update_build(ranks: Array[int], lightning_hits: int, tuning: Resource, stacks := 0, resolve_active := false) -> void:
+	if tuning is Augments:
+		var parts := _augment_names(ranks)
+		if ranks[Augments.Card.LIGHTNING] > 0:
+			parts.append("⚡ %d/%d" % [lightning_hits, tuning.lightning_hit_interval])
+		if ranks[Augments.Card.BUILDUP] > 0:
+			parts.append("축적 %d/%d" % [stacks, tuning.max_stacks])
+		build_label.text = " · ".join(parts)
+		build_label.modulate = Color("ffb08c") if resolve_active else Color.WHITE
+		return
 	var parts: PackedStringArray = []
 	for card in range(ranks.size()):
 		if ranks[card] > 0:
@@ -43,7 +53,16 @@ func update_build(ranks: Array[int], lightning_hits: int, tuning: Resource) -> v
 	if ranks[2] > 0:
 		build_label.text += "  ⚡ %d/%d" % [lightning_hits, tuning.lightning_hit_interval]
 
+func _augment_names(ranks: Array[int]) -> PackedStringArray:
+	var names: PackedStringArray = []
+	for card in range(ranks.size()):
+		if ranks[card] > 0:
+			names.append(Augments.NAMES[card])
+	return names
+
+
 func show_choices(cards: Array[int], ranks: Array[int], tuning: Resource, cleared: int, total: int) -> void:
+	var unique := tuning is Augments
 	for child in modal.get_children():
 		modal.remove_child(child)
 		child.queue_free()
@@ -62,23 +81,32 @@ func show_choices(cards: Array[int], ranks: Array[int], tuning: Resource, cleare
 		var rank := ranks[card] + 1
 		var button := Button.new()
 		button.custom_minimum_size = Vector2(620, 156)
-		button.text = "%s   Lv.%d  %s\n\n%s" % [Config.CARD_NAMES[card], rank, "UPGRADE" if ranks[card] > 0 else "NEW", tuning.card_description(card, rank)]
+		if not unique:
+			button.text = "%s   Lv.%d  %s\n\n%s" % [Config.CARD_NAMES[card], rank, "UPGRADE" if ranks[card] > 0 else "NEW", tuning.card_description(card, rank)]
+		if unique:
+			var tag := "   상위 증강" if Augments.PREREQUISITES.has(card) else ""
+			button.text = "%s  %s%s\n\n%s" % [Augments.ICONS[card], Augments.NAMES[card], tag, tuning.card_description(card, 1)]
+			button.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		var color: Color = Config.CARD_COLORS[card % Config.CARD_COLORS.size()]
 		button.add_theme_font_size_override("font_size", 23)
 		button.add_theme_color_override("font_color", Color("fff4e4"))
-		button.add_theme_stylebox_override("normal", _card_style(Config.CARD_COLORS[card], false))
-		button.add_theme_stylebox_override("hover", _card_style(Config.CARD_COLORS[card], true))
-		button.add_theme_stylebox_override("focus", _card_style(Config.CARD_COLORS[card], true))
+		button.add_theme_stylebox_override("normal", _card_style(color, false))
+		button.add_theme_stylebox_override("hover", _card_style(color, true))
+		button.add_theme_stylebox_override("focus", _card_style(color, true))
 		button.add_theme_stylebox_override("pressed", _card_style(Color.WHITE, true))
 		button.pressed.connect(_choose.bind(card))
 		column.add_child(button)
 		if first == null:
 			first = button
-	_label(column, "같은 카드는 최대 Lv.%d · 효과는 이번 도전에서만 유지" % tuning.maximum_rank, 19, Color("a99abc"))
-	var owned: PackedStringArray = []
-	for card in range(ranks.size()):
-		if ranks[card] > 0:
-			owned.append("%s %d" % [Config.CARD_NAMES[card], ranks[card]])
-	_label(column, "보유: " + (" · ".join(owned) if not owned.is_empty() else "없음"), 19, Color("ffe9a8"))
+	if unique:
+		_label(column, "보유: " + " · ".join(_augment_names(ranks)), 19, Color("ffe9a8"))
+	else:
+		_label(column, "같은 카드는 최대 Lv.%d · 효과는 이번 도전에서만 유지" % tuning.maximum_rank, 19, Color("a99abc"))
+		var owned: PackedStringArray = []
+		for card in range(ranks.size()):
+			if ranks[card] > 0:
+				owned.append("%s %d" % [Config.CARD_NAMES[card], ranks[card]])
+		_label(column, "보유: " + (" · ".join(owned) if not owned.is_empty() else "없음"), 19, Color("ffe9a8"))
 	modal.show()
 	if first != null:
 		first.grab_focus()

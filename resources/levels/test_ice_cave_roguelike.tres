@@ -1,0 +1,216 @@
+[gd_resource type="Resource" script_class="LevelData" load_steps=46 format=3]
+
+[ext_resource type="Script" path="res://scripts/level_data.gd" id="1"]
+[ext_resource type="Resource" path="res://resources/characters/blue_fighter.tres" id="2"]
+[ext_resource type="Script" path="res://scripts/character_data.gd" id="3"]
+[ext_resource type="Script" path="res://scripts/test_gimmick_data.gd" id="4"]
+[ext_resource type="Script" path="res://scripts/gimmicks/handlers/ice_cave_handler.gd" id="5"]
+[ext_resource type="Script" path="res://scripts/gimmicks/configs/ice_cave_config.gd" id="6"]
+[ext_resource type="Script" path="res://scripts/gimmicks/configs/formation_slot.gd" id="7"]
+[ext_resource type="Script" path="res://scripts/gimmicks/configs/formation_wave.gd" id="8"]
+[ext_resource type="Script" path="res://scripts/gimmicks/configs/normal_monster_slot.gd" id="9"]
+[ext_resource type="Script" path="res://scripts/gimmicks/configs/healer_monster_slot.gd" id="10"]
+[ext_resource type="Script" path="res://scripts/gimmicks/configs/ice_guard_slot.gd" id="11"]
+[ext_resource type="Script" path="res://scripts/gimmicks/configs/ice_spirit_slot.gd" id="12"]
+[ext_resource type="Resource" path="res://resources/characters/slime.tres" id="13"]
+[ext_resource type="Resource" path="res://resources/characters/skeleton_knight.tres" id="14"]
+[ext_resource type="Resource" path="res://resources/characters/healer_slime.tres" id="15"]
+[ext_resource type="Resource" path="res://resources/characters/ice_guard.tres" id="16"]
+[ext_resource type="Resource" path="res://resources/characters/ice_spirit.tres" id="17"]
+[ext_resource type="Resource" path="res://resources/characters/ice_monster.tres" id="18"]
+[ext_resource type="Resource" path="res://resources/levels/test_pond_formation.tres" id="19"]
+[ext_resource type="Resource" path="res://resources/levels/test_ice_boss_experiment.tres" id="20"]
+[ext_resource type="Resource" path="res://resources/visuals/pond_surface_rendering_settings_62.tres" id="21"]
+[ext_resource type="Texture2D" path="res://assets/backgrounds/stage_02_snow_mountain_handdrawn_v1.png" id="22"]
+[ext_resource type="Texture2D" path="res://assets/backgrounds/stage_02_snow_mountain_handdrawn_v1_top.png" id="23"]
+[ext_resource type="Texture2D" path="res://assets/backgrounds/stage_02_snow_mountain_handdrawn_v1_middle.png" id="24"]
+[ext_resource type="Texture2D" path="res://assets/backgrounds/stage_02_snow_mountain_handdrawn_v1_bottom.png" id="25"]
+[ext_resource type="Texture2D" path="res://assets/effects/generated/status_ice_simple.png" id="26"]
+
+[sub_resource type="Resource" id="Slime"]
+script = ExtResource("9")
+character = ExtResource("13")
+health = 108
+attack = 4
+
+[sub_resource type="Resource" id="SmallSlime"]
+script = ExtResource("9")
+character = ExtResource("13")
+health = 42
+attack = 4
+size_multiplier = 0.75
+
+[sub_resource type="Resource" id="SmallSlimeSecond"]
+script = ExtResource("9")
+character = ExtResource("13")
+health = 48
+attack = 4
+size_multiplier = 0.75
+
+[sub_resource type="Resource" id="KnightRear"]
+script = ExtResource("9")
+character = ExtResource("14")
+column = 1
+health = 90
+attack = 12
+initial_attack_counter = 7
+repeat_attack_counter = 6
+lunge_width_ratio = 0.30
+lunge_seconds = 0.10
+return_seconds = 0.15
+windup_seconds = 0.10
+windup_degrees = 10.0
+strike_degrees = 20.0
+attack_pivot_ratio = Vector2(0.05, 0.47)
+
+[sub_resource type="Resource" id="KnightRearWave3"]
+script = ExtResource("9")
+character = ExtResource("14")
+column = 1
+health = 120
+attack = 13
+initial_attack_counter = 6
+repeat_attack_counter = 6
+lunge_width_ratio = 0.30
+lunge_seconds = 0.10
+return_seconds = 0.15
+windup_seconds = 0.10
+windup_degrees = 10.0
+strike_degrees = 20.0
+attack_pivot_ratio = Vector2(0.05, 0.47)
+
+[sub_resource type="Resource" id="KnightFront"]
+script = ExtResource("9")
+character = ExtResource("14")
+health = 150
+attack = 14
+initial_attack_counter = 6
+repeat_attack_counter = 6
+lunge_width_ratio = 0.30
+lunge_seconds = 0.10
+return_seconds = 0.15
+windup_seconds = 0.10
+windup_degrees = 10.0
+strike_degrees = 20.0
+attack_pivot_ratio = Vector2(0.05, 0.47)
+
+[sub_resource type="Resource" id="Healer"]
+script = ExtResource("10")
+character = ExtResource("15")
+sizing_reference = ExtResource("13")
+column = 1
+health = 78
+attack = 0
+initial_attack_counter = 4
+repeat_attack_counter = 4
+heal_amount = 8
+
+[sub_resource type="Resource" id="HealerWave4"]
+script = ExtResource("10")
+character = ExtResource("15")
+sizing_reference = ExtResource("13")
+column = 1
+health = 90
+attack = 0
+initial_attack_counter = 4
+repeat_attack_counter = 4
+heal_amount = 8
+
+[sub_resource type="Resource" id="GuardFixed"]
+script = ExtResource("11")
+character = ExtResource("16")
+health = 150
+attack = 3
+shield_counter = 2
+shield_duration = 3
+lunge_seconds = 0.15
+return_seconds = 0.20
+protection_order = PackedInt32Array(3, 2)
+
+[sub_resource type="Resource" id="GuardRotating"]
+script = ExtResource("11")
+character = ExtResource("16")
+health = 174
+attack = 4
+shield_counter = 2
+shield_duration = 3
+lunge_seconds = 0.15
+return_seconds = 0.20
+protection_order = PackedInt32Array(3, 2)
+rotate_protection_order = true
+
+[sub_resource type="Resource" id="Spirit"]
+script = ExtResource("12")
+character = ExtResource("17")
+column = 1
+health = 90
+attack = 0
+initial_attack_counter = 5
+repeat_attack_counter = 6
+
+[sub_resource type="Resource" id="Yeti"]
+script = ExtResource("7")
+character = ExtResource("18")
+health = 840
+attack = 6
+
+[sub_resource type="Resource" id="Wave1"]
+script = ExtResource("8")
+slots = Array[ExtResource("7")]([SubResource("Slime")])
+
+[sub_resource type="Resource" id="Wave2"]
+script = ExtResource("8")
+slots = Array[ExtResource("7")]([SubResource("SmallSlime"), SubResource("SmallSlimeSecond"), SubResource("KnightRear")])
+
+[sub_resource type="Resource" id="Wave3"]
+script = ExtResource("8")
+slots = Array[ExtResource("7")]([SubResource("GuardFixed"), SubResource("KnightRearWave3"), SubResource("Healer")])
+
+[sub_resource type="Resource" id="Wave4"]
+script = ExtResource("8")
+slots = Array[ExtResource("7")]([SubResource("GuardRotating"), SubResource("KnightFront"), SubResource("HealerWave4"), SubResource("Spirit")])
+
+[sub_resource type="Resource" id="Wave5"]
+script = ExtResource("8")
+slots = Array[ExtResource("7")]([SubResource("Yeti")])
+
+[sub_resource type="Resource" id="Cave"]
+script = ExtResource("6")
+formation_source = ExtResource("19")
+formation_presets = PackedInt32Array(1, 4, 3, 6, 1)
+ice_boss_source = ExtResource("20")
+allow_boss_freeze_at_any_ball_level = true
+wave_clear_heal = 5
+waves = Array[ExtResource("8")]([SubResource("Wave1"), SubResource("Wave2"), SubResource("Wave3"), SubResource("Wave4"), SubResource("Wave5")])
+rendering_settings = ExtResource("21")
+
+[sub_resource type="Resource" id="Gimmick"]
+script = ExtResource("4")
+display_name = "얼음 동굴 웨이브"
+preserve_board_between_enemies = true
+handler_script = ExtResource("5")
+tuning = SubResource("Cave")
+
+[resource]
+script = ExtResource("1")
+level_name = "69. 얼음 동굴 (로그라이크)"
+image_placeholder = "ICE CAVE"
+battle_background = ExtResource("22")
+battle_background_top = ExtResource("23")
+battle_background_middle = ExtResource("24")
+battle_background_bottom = ExtResource("25")
+show_battle_status_label = false
+show_gimmick_status_labels = false
+recommended_ball_level = 6
+stage_gimmick_icon = ExtResource("26")
+stage_gimmick_name = "진형 · 빙결"
+reward_name = ""
+clear_gold_reward = 0
+player_character = ExtResource("2")
+enemies = Array[ExtResource("3")]([ExtResource("13"), ExtResource("14"), ExtResource("16"), ExtResource("16"), ExtResource("18")])
+is_gimmick_test_level = false
+test_gimmick = SubResource("Gimmick")
+ball_drop_time_limit = -1.0
+merge_push_force = 110.0
+merge_hit_stop_time_scale = 0.18
+merge_hit_stop_duration = 0.2

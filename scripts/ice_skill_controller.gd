@@ -1,6 +1,8 @@
 class_name IceSkillController
 extends Node
 
+signal ball_frozen(ball: MergeBall)
+
 const IceSkillDataClass = preload("res://scripts/ice_skill_data.gd")
 const IceCastEffectScene = preload("res://scenes/ice_cast_effect.tscn")
 const MERGE_RESULT_GRACE_MSEC := 500
@@ -59,12 +61,17 @@ func execute_telegraphed() -> int:
 			if telegraphed_target_ids.is_empty():
 				break
 		attempts += 1
+		if not skill.durability_by_target.is_empty():
+			telegraphed_target_ids.sort_custom(_lower_target_first)
 		var target_id: int = telegraphed_target_ids.pop_front()
 		var target := instance_from_id(target_id) as MergeBall
 		if not _is_valid_freeze_target(target):
 			continue
 		target.set_ice_cast_reserved(true)
-		var froze_target: bool = await _cast_freeze_at(target)
+		var durability := action_durability
+		if frozen_count < skill.durability_by_target.size():
+			durability = skill.durability_by_target[frozen_count]
+		var froze_target: bool = await _cast_freeze_at(target, durability)
 		if froze_target:
 			frozen_count += 1
 		elif is_instance_valid(target):
@@ -75,6 +82,18 @@ func execute_telegraphed() -> int:
 	await get_tree().create_timer(finish_delay).timeout
 	print("[ICE FREEZE] count=%d | durability=%d" % [frozen_count, action_durability])
 	return frozen_count
+
+
+func _lower_target_first(a_id: int, b_id: int) -> bool:
+	var a := instance_from_id(a_id) as MergeBall
+	var b := instance_from_id(b_id) as MergeBall
+	if not is_instance_valid(a):
+		return false
+	if not is_instance_valid(b):
+		return true
+	if a.merge_level == b.merge_level:
+		return a_id < b_id
+	return a.merge_level < b.merge_level
 
 
 func cancel_telegraph() -> void:
@@ -93,8 +112,9 @@ func _cancel_pending_targets(keep_active_cast: bool) -> void:
 			ball.set_ice_targeted(false)
 			ball.set_ice_cast_reserved(false)
 	telegraphed_target_ids.clear()
-	var preserved_active_id := active_cast_target_id if keep_active_cast else 0
-	if not keep_active_cast:
+	var preserve_cast := keep_active_cast and (skill == null or not skill.hold_broken_ice)
+	var preserved_active_id := active_cast_target_id if preserve_cast else 0
+	if not preserve_cast:
 		var active_target := _get_active_cast_target()
 		if is_instance_valid(active_target):
 			active_target.set_ice_targeted(false)
@@ -111,10 +131,10 @@ func _cancel_pending_targets(keep_active_cast: bool) -> void:
 					child.set_ice_cast_reserved(false)
 
 
-func _cast_freeze_at(ball: MergeBall) -> bool:
+func _cast_freeze_at(ball: MergeBall, cast_durability: int) -> bool:
 	if not is_instance_valid(ball) or not is_instance_valid(caster):
 		return false
-	var cast_durability := skill.ice_durability
+	var hold_broken_ice := skill.hold_broken_ice
 	active_cast_target_id = ball.get_instance_id()
 	ball.set_ice_targeted(true)
 	var effect := IceCastEffectScene.instantiate() as IceCastEffect
@@ -131,7 +151,8 @@ func _cast_freeze_at(ball: MergeBall) -> bool:
 	var applied_durability := cast_durability
 	if final_target.is_ice_frozen:
 		applied_durability += final_target.ice_durability
-	final_target.freeze_in_ice(applied_durability)
+	final_target.freeze_in_ice(applied_durability, hold_broken_ice)
+	ball_frozen.emit(final_target)
 	return true
 
 
@@ -144,7 +165,7 @@ func _get_active_cast_target() -> MergeBall:
 func _is_valid_freeze_target(ball: MergeBall) -> bool:
 	if not is_instance_valid(ball) or ball.merge_locked or ball.is_queued_for_deletion():
 		return false
-	return true
+	return skill == null or not skill.unfrozen_targets_only or not ball.is_ice_frozen
 
 
 func clear_all_ice() -> void:
@@ -165,12 +186,24 @@ func _select_targets(count: int) -> Array[MergeBall]:
 		var ball := child as MergeBall
 		if ball.merge_locked or ball.is_queued_for_deletion() or ball.ice_targeted or ball.ice_cast_reserved:
 			continue
+		if skill.limit_target_levels and (ball.merge_level + 1 < skill.target_min_level
+			or ball.merge_level + 1 > skill.target_max_level):
+			continue
 		if not ball.is_ice_frozen:
 			unfrozen.append(ball)
+		elif skill.unfrozen_targets_only:
+			continue
 		elif ball.ice_durability < skill.ice_durability:
 			damaged_frozen.append(ball)
 		else:
 			full_frozen.append(ball)
+	if skill.prefer_highest_level:
+		var candidates := unfrozen + damaged_frozen + full_frozen
+		candidates.shuffle()
+		candidates.sort_custom(func(a: MergeBall, b: MergeBall) -> bool:
+			return a.merge_level > b.merge_level
+		)
+		return candidates.slice(0, count)
 	var priority_result: Array[MergeBall] = []
 	_append_stage_pool(priority_result, unfrozen, count, false)
 	_append_stage_pool(priority_result, damaged_frozen, count, false)

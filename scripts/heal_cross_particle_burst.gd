@@ -9,7 +9,7 @@ var _particles: Array[Dictionary] = []
 var _elapsed := 0.0
 
 
-func play(at_global_position: Vector2) -> void:
+func play(at_global_position: Vector2, play_chime := true) -> void:
 	global_position = at_global_position
 	z_index = 220
 	for index in PARTICLE_COUNT:
@@ -20,7 +20,8 @@ func play(at_global_position: Vector2) -> void:
 			"delay": randf_range(0.0, 0.28),
 			"color": Color("#dfff73") if index % 2 == 0 else Color("#62b83e"),
 		})
-	_play_heal_chime()
+	if play_chime:
+		_play_heal_chime()
 	queue_redraw()
 
 

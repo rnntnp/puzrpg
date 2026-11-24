@@ -27,7 +27,8 @@ func play(
 	data: Resource,
 	damage: int,
 	combo_count: int = 1,
-	effect_color_override: Color = Color.TRANSPARENT
+	effect_color_override: Color = Color.TRANSPARENT,
+	visual_scale: float = 1.0
 ) -> void:
 	global_position = from_global
 	_target_position = to_global - from_global
@@ -45,14 +46,14 @@ func play(
 	else:
 		projectile.modulate = data.sprite_modulate
 	var texture_size: Vector2 = projectile.texture.get_size() if projectile.texture != null else Vector2.ONE
-	var projectile_size := clampf(32.0 + data.get_radius() * 0.32 + _power * 9.0, 42.0, 120.0)
+	var projectile_size := clampf(32.0 + data.get_radius() * 0.32 + _power * 9.0, 42.0, 120.0) * visual_scale
 	projectile.scale = Vector2(projectile_size / texture_size.x, projectile_size / texture_size.y)
 	trail.default_color = effect_color
 	trail_glow.default_color = effect_color
 	trail.width = 7.0 + _stage_strength * 3.0 + _power * 3.0
 	trail_glow.width = trail.width * (2.5 + _power * 0.15)
 	projectile_glow.modulate.a = minf(0.5, 0.2 + _power * 0.06)
-	_impact_target_radius = 40.0 + data.get_radius() * 0.4 + _power * 18.0
+	_impact_target_radius = (40.0 + data.get_radius() * 0.4 + _power * 18.0) * visual_scale
 	damage_label.add_theme_font_size_override("font_size", 26 + roundi(_power * 3.0))
 	damage_label.add_theme_color_override(
 		"font_color",

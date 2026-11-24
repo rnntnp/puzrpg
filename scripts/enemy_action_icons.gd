@@ -1,10 +1,11 @@
 extends RefCounted
 
-enum Kind { ATTACK, SKILL, HEAL, UNKNOWN }
+enum Kind { ATTACK, SKILL, HEAL, UNKNOWN, SHIELD }
 
 const ATTACK_ICON = preload("res://assets/effects/generated/status_attack.png")
-const LABELS := ["일반 공격", "스킬", "회복", "불명"]
+const LABELS := ["일반 공격", "스킬", "회복", "불명", "실드"]
 const SYMBOLS := {
+	Kind.SHIELD: ["#83cefa", '<path d="M32 6 55 14V30C55 43 46 53 32 59 18 53 9 43 9 30V14Z" stroke="#d1f4ff" stroke-width="4"/><path d="M32 14v36c9-5 15-12 15-20V20Z" fill="#397fbd"/>'],
 	Kind.HEAL: ["#6DE698", '<path d="M24 9H40V24H55V40H40V55H24V40H9V24H24Z"/>'],
 	Kind.SKILL: ["#F6C969", '<path d="M32 5 39 24 59 32 39 40 32 59 25 40 5 32 25 24Z"/>'],
 	Kind.UNKNOWN: ["#E3E5EB", '<path d="M20 20Q21 9 32 9Q45 9 45 21Q45 28 36 32Q31 35 31 41" fill="none" stroke="currentColor" stroke-width="8" stroke-linecap="round"/><circle cx="31" cy="54" r="4.5"/>'],

@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="CharacterData" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/character_data.gd" id="1"]
+[ext_resource type="Texture2D" path="res://assets/characters/generated/healer_slime_idle.png" id="2"]
+
+[sub_resource type="AtlasTexture" id="Idle"]
+atlas = ExtResource("2")
+region = Rect2(356, 150, 792, 740)
+filter_clip = true
+
+[resource]
+script = ExtResource("1")
+display_name = "힐러 슬라임"
+health_bar_color = Color(0.36, 0.83, 0.60, 1)
+sprite = SubResource("Idle")
+sprite_size = Vector2(242, 226)
+max_health = 40
+attack_power = 0
+enemy_attack_drop_interval = 4

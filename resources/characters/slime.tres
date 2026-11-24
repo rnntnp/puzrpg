@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="CharacterData" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/character_data.gd" id="1"]
+[ext_resource type="Texture2D" path="res://assets/characters/generated/slime_idle.png" id="2"]
+
+[sub_resource type="AtlasTexture" id="Idle"]
+atlas = ExtResource("2")
+region = Rect2(348, 170, 792, 690)
+filter_clip = true
+
+[resource]
+script = ExtResource("1")
+display_name = "슬라임"
+health_bar_color = Color(0.25, 0.72, 0.93, 1)
+sprite = SubResource("Idle")
+sprite_size = Vector2(235, 205)
+max_health = 60
+attack_power = 3
+enemy_attack_drop_interval = 3

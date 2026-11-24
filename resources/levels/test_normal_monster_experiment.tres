@@ -1,0 +1,183 @@
+[gd_resource type="Resource" script_class="LevelData" load_steps=42 format=3]
+
+[ext_resource type="Script" path="res://scripts/level_data.gd" id="1"]
+[ext_resource type="Resource" path="res://resources/characters/blue_fighter.tres" id="2"]
+[ext_resource type="Resource" path="res://resources/characters/slime.tres" id="3"]
+[ext_resource type="Script" path="res://scripts/character_data.gd" id="4"]
+[ext_resource type="Script" path="res://scripts/test_gimmick_data.gd" id="5"]
+[ext_resource type="Script" path="res://scripts/gimmicks/handlers/normal_monster_experiment_handler.gd" id="6"]
+[ext_resource type="Script" path="res://scripts/gimmicks/configs/pond_formation_config.gd" id="7"]
+[ext_resource type="Script" path="res://scripts/gimmicks/configs/formation_slot.gd" id="8"]
+[ext_resource type="Script" path="res://scripts/gimmicks/configs/normal_monster_slot.gd" id="9"]
+[ext_resource type="Script" path="res://scripts/gimmicks/configs/formation_wave.gd" id="10"]
+[ext_resource type="Script" path="res://scripts/gimmicks/configs/formation_layout.gd" id="11"]
+[ext_resource type="Resource" path="res://resources/visuals/pond_surface_rendering_settings_62.tres" id="12"]
+[ext_resource type="Texture2D" path="res://assets/backgrounds/stage_03_crystal_dungeon_flat_purple.png" id="13"]
+[ext_resource type="Texture2D" path="res://assets/backgrounds/stage_03_crystal_dungeon_flat_purple_top.png" id="14"]
+[ext_resource type="Texture2D" path="res://assets/backgrounds/stage_03_crystal_dungeon_flat_purple_middle.png" id="15"]
+[ext_resource type="Texture2D" path="res://assets/backgrounds/stage_03_crystal_dungeon_flat_purple_bottom.png" id="16"]
+[ext_resource type="Texture2D" path="res://assets/effects/generated/status_attack.png" id="17"]
+[ext_resource type="Resource" path="res://resources/characters/healer_slime.tres" id="18"]
+[ext_resource type="Script" path="res://scripts/gimmicks/configs/healer_monster_slot.gd" id="19"]
+[ext_resource type="Resource" path="res://resources/characters/ice_guard.tres" id="20"]
+[ext_resource type="Script" path="res://scripts/gimmicks/configs/ice_guard_slot.gd" id="21"]
+[ext_resource type="Resource" path="res://resources/characters/ice_spirit.tres" id="22"]
+[ext_resource type="Script" path="res://scripts/gimmicks/configs/ice_spirit_slot.gd" id="23"]
+[ext_resource type="Resource" path="res://resources/characters/skeleton_knight.tres" id="24"]
+
+[sub_resource type="Resource" id="SlimeSlot"]
+script = ExtResource("9")
+character = ExtResource("3")
+health = 60
+attack = 3
+initial_attack_counter = 3
+repeat_attack_counter = 3
+size_multiplier = 1.0
+
+[sub_resource type="Resource" id="SlimeWave"]
+script = ExtResource("10")
+slots = Array[ExtResource("8")]([SubResource("SlimeSlot")])
+
+[sub_resource type="Resource" id="SlimeLayout"]
+script = ExtResource("11")
+display_name = "슬라임"
+preview_wave = SubResource("SlimeWave")
+use_staggered_line = true
+enemy_height_ratio = 0.62
+slot_offsets = PackedVector2Array(-64, 0)
+show_shadows = true
+
+[sub_resource type="Resource" id="HealerSlot"]
+script = ExtResource("19")
+character = ExtResource("18")
+sizing_reference = ExtResource("3")
+health = 40
+attack = 0
+initial_attack_counter = 4
+repeat_attack_counter = 4
+heal_amount = 8
+
+[sub_resource type="Resource" id="HealerWave"]
+script = ExtResource("10")
+slots = Array[ExtResource("8")]([SubResource("HealerSlot")])
+
+[sub_resource type="Resource" id="HealerLayout"]
+script = ExtResource("11")
+display_name = "힐러 슬라임"
+preview_wave = SubResource("HealerWave")
+use_staggered_line = true
+enemy_height_ratio = 0.62
+slot_offsets = PackedVector2Array(-64, 0)
+show_shadows = true
+
+[sub_resource type="Resource" id="GuardSlot"]
+script = ExtResource("21")
+character = ExtResource("20")
+health = 100
+attack = 2
+initial_attack_counter = 3
+repeat_attack_counter = 3
+shield_counter = 2
+shield_duration = 3
+lunge_seconds = 0.15
+return_seconds = 0.20
+
+[sub_resource type="Resource" id="GuardWave"]
+script = ExtResource("10")
+slots = Array[ExtResource("8")]([SubResource("GuardSlot")])
+
+[sub_resource type="Resource" id="GuardLayout"]
+script = ExtResource("11")
+display_name = "얼음 방패병"
+preview_wave = SubResource("GuardWave")
+use_staggered_line = true
+enemy_height_ratio = 0.78
+slot_offsets = PackedVector2Array(-64, 0)
+show_shadows = true
+
+[sub_resource type="Resource" id="SpiritSlot"]
+script = ExtResource("23")
+character = ExtResource("22")
+health = 40
+attack = 0
+initial_attack_counter = 6
+repeat_attack_counter = 6
+incoming_damage_bonus = 0.5
+weakness_duration = 3
+
+[sub_resource type="Resource" id="SpiritWave"]
+script = ExtResource("10")
+slots = Array[ExtResource("8")]([SubResource("SpiritSlot")])
+
+[sub_resource type="Resource" id="SpiritLayout"]
+script = ExtResource("11")
+display_name = "얼음 정령"
+preview_wave = SubResource("SpiritWave")
+use_staggered_line = true
+enemy_height_ratio = 0.76
+slot_offsets = PackedVector2Array(-64, -10)
+show_shadows = true
+
+[sub_resource type="Resource" id="SkeletonKnightSlot"]
+script = ExtResource("9")
+character = ExtResource("24")
+health = 45
+attack = 12
+initial_attack_counter = 6
+repeat_attack_counter = 6
+lunge_width_ratio = 0.3
+lunge_seconds = 0.10
+return_seconds = 0.15
+windup_seconds = 0.10
+windup_degrees = 10.0
+strike_degrees = 20.0
+attack_pivot_ratio = Vector2(0.05, 0.47)
+
+[sub_resource type="Resource" id="SkeletonKnightWave"]
+script = ExtResource("10")
+slots = Array[ExtResource("8")]([SubResource("SkeletonKnightSlot")])
+
+[sub_resource type="Resource" id="SkeletonKnightLayout"]
+script = ExtResource("11")
+display_name = "해골 기사"
+preview_wave = SubResource("SkeletonKnightWave")
+use_staggered_line = true
+enemy_height_ratio = 0.76
+slot_offsets = PackedVector2Array(-64, 0)
+show_shadows = true
+
+[sub_resource type="Resource" id="Formation"]
+script = ExtResource("7")
+waves = Array[ExtResource("10")]([SubResource("SlimeWave")])
+layouts = Array[ExtResource("11")]([SubResource("SlimeLayout"), SubResource("HealerLayout"), SubResource("GuardLayout"), SubResource("SpiritLayout"), SubResource("SkeletonKnightLayout")])
+rendering_settings = ExtResource("12")
+
+[sub_resource type="Resource" id="Gimmick"]
+script = ExtResource("5")
+display_name = "일반 몬스터 전투"
+handler_script = ExtResource("6")
+tuning = SubResource("Formation")
+
+[resource]
+script = ExtResource("1")
+level_name = "68. 일반 몬스터 전투 실험"
+image_placeholder = "SLIME"
+battle_background = ExtResource("13")
+battle_background_top = ExtResource("14")
+battle_background_middle = ExtResource("15")
+battle_background_bottom = ExtResource("16")
+show_battle_status_label = false
+show_gimmick_status_labels = false
+recommended_ball_level = 5
+stage_gimmick_icon = ExtResource("17")
+stage_gimmick_name = "일반 공격"
+reward_name = ""
+clear_gold_reward = 0
+player_character = ExtResource("2")
+enemies = Array[ExtResource("4")]([ExtResource("3")])
+is_gimmick_test_level = false
+test_gimmick = SubResource("Gimmick")
+ball_drop_time_limit = -1.0
+merge_push_force = 110.0
+merge_hit_stop_time_scale = 0.18
+merge_hit_stop_duration = 0.2

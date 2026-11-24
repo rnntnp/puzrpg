@@ -1,0 +1,8 @@
+[gd_resource type="Resource" script_class="StatusEffectData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/status_effect_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+effect_id = &"ice_guard_protection"
+display_name = "실드 · 얼음 방패병이 피해를 대신 받습니다"

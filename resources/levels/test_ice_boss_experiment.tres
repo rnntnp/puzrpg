@@ -1,0 +1,127 @@
+[gd_resource type="Resource" script_class="LevelData" load_steps=27 format=3]
+
+[ext_resource type="Script" path="res://scripts/level_data.gd" id="1"]
+[ext_resource type="Resource" path="res://resources/characters/blue_fighter.tres" id="2"]
+[ext_resource type="Resource" path="res://resources/characters/ice_monster.tres" id="3"]
+[ext_resource type="Resource" path="res://resources/characters/ice_monster_enhanced.tres" id="4"]
+[ext_resource type="Resource" path="res://resources/characters/ice_monster_boss.tres" id="5"]
+[ext_resource type="Script" path="res://scripts/character_data.gd" id="6"]
+[ext_resource type="Script" path="res://scripts/test_gimmick_data.gd" id="7"]
+[ext_resource type="Script" path="res://scripts/gimmicks/handlers/ice_boss_experiment_handler.gd" id="8"]
+[ext_resource type="Script" path="res://scripts/gimmicks/configs/ice_boss_experiment_config.gd" id="9"]
+[ext_resource type="Script" path="res://scripts/gimmicks/configs/ice_boss_pattern.gd" id="10"]
+[ext_resource type="Resource" path="res://resources/visuals/pond_surface_rendering_settings_62.tres" id="11"]
+[ext_resource type="Texture2D" path="res://assets/backgrounds/stage_02_snow_mountain_handdrawn_v1.png" id="12"]
+[ext_resource type="Texture2D" path="res://assets/backgrounds/stage_02_snow_mountain_handdrawn_v1_top.png" id="13"]
+[ext_resource type="Texture2D" path="res://assets/backgrounds/stage_02_snow_mountain_handdrawn_v1_middle.png" id="14"]
+[ext_resource type="Texture2D" path="res://assets/backgrounds/stage_02_snow_mountain_handdrawn_v1_bottom.png" id="15"]
+[ext_resource type="Texture2D" path="res://assets/effects/ice_burst_icon.svg" id="16"]
+[ext_resource type="Script" path="res://scripts/gimmicks/configs/ice_boss_freeze.gd" id="17"]
+
+[sub_resource type="Resource" id="SmallFreeze"]
+script = ExtResource("17")
+freeze_count = 2
+target_min_level = 1
+target_max_level = 3
+limit_target_levels = true
+unfrozen_targets_only = true
+durability_by_target = PackedInt32Array(1, 2)
+hold_broken_ice = true
+target_highlight_duration = 0.65
+deals_direct_damage = false
+burst_damage = 3
+backlash_damage = 30
+
+[sub_resource type="Resource" id="GiantFreeze"]
+script = ExtResource("17")
+kind = 1
+prefer_highest_level = true
+unfrozen_targets_only = true
+ice_durability = 3
+hold_broken_ice = true
+target_highlight_duration = 0.65
+deals_direct_damage = false
+burst_damage = 10
+backlash_damage = 90
+burst_visual_scale = 1.25
+
+[sub_resource type="Resource" id="BossSmallFreeze"]
+script = ExtResource("17")
+freeze_count = 2
+target_min_level = 1
+target_max_level = 3
+limit_target_levels = true
+unfrozen_targets_only = true
+durability_by_target = PackedInt32Array(1, 2)
+hold_broken_ice = true
+target_highlight_duration = 0.65
+deals_direct_damage = false
+burst_damage = 3
+backlash_damage = 30
+
+[sub_resource type="Resource" id="BossGiantFreeze"]
+script = ExtResource("17")
+kind = 1
+prefer_highest_level = true
+unfrozen_targets_only = true
+ice_durability = 3
+hold_broken_ice = true
+target_highlight_duration = 0.65
+deals_direct_damage = false
+burst_damage = 10
+backlash_damage = 90
+burst_visual_scale = 1.25
+
+[sub_resource type="Resource" id="Basic"]
+script = ExtResource("10")
+character = ExtResource("3")
+first_freeze = SubResource("SmallFreeze")
+
+[sub_resource type="Resource" id="Enhanced"]
+script = ExtResource("10")
+character = ExtResource("4")
+first_freeze = SubResource("GiantFreeze")
+burst_turns = 5
+
+[sub_resource type="Resource" id="Boss"]
+script = ExtResource("10")
+character = ExtResource("5")
+first_freeze = SubResource("BossGiantFreeze")
+second_freeze = SubResource("BossSmallFreeze")
+turns_before_freeze = 4
+burst_turns = 3
+
+[sub_resource type="Resource" id="Experiment"]
+script = ExtResource("9")
+bosses = Array[ExtResource("10")]([SubResource("Basic"), SubResource("Enhanced"), SubResource("Boss")])
+rendering_settings = ExtResource("11")
+
+[sub_resource type="Resource" id="Gimmick"]
+script = ExtResource("7")
+display_name = "빙결 보스"
+handler_script = ExtResource("8")
+tuning = SubResource("Experiment")
+
+[resource]
+script = ExtResource("1")
+level_name = "67. 빙결 보스 전투 실험"
+image_placeholder = "ICE BOSS"
+battle_background = ExtResource("12")
+battle_background_top = ExtResource("13")
+battle_background_middle = ExtResource("14")
+battle_background_bottom = ExtResource("15")
+show_battle_status_label = false
+show_gimmick_status_labels = true
+recommended_ball_level = 6
+stage_gimmick_icon = ExtResource("16")
+stage_gimmick_name = "빙결 · 냉기 폭발"
+reward_name = ""
+clear_gold_reward = 0
+player_character = ExtResource("2")
+enemies = Array[ExtResource("6")]([ExtResource("3")])
+is_gimmick_test_level = false
+test_gimmick = SubResource("Gimmick")
+ball_drop_time_limit = -1.0
+merge_push_force = 110.0
+merge_hit_stop_time_scale = 0.18
+merge_hit_stop_duration = 0.2

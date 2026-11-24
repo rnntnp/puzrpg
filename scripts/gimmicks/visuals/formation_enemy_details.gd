@@ -71,7 +71,7 @@ func _ready() -> void:
 	effects_scroll.add_child(effects_list)
 
 
-func present(enemy: Fighter, kind: int, turns: String, icon: Texture2D, damage: int, demo: bool) -> void:
+func present(enemy: Fighter, kind: int, turns: String, icon: Texture2D, damage: int, demo: bool, heal_amount := 0) -> void:
 	match enemy.character_data.display_name:
 		"RED":
 			title_label.text = "연못 마법사"
@@ -90,7 +90,9 @@ func present(enemy: Fighter, kind: int, turns: String, icon: Texture2D, damage: 
 		ActionIcons.Kind.SKILL:
 			action_description.text = "플레이어를 약화시키거나 다른 몬스터들을 강화하는 스킬 중 하나를 사용하려고 합니다." if demo else "스킬을 사용하려고 합니다."
 		ActionIcons.Kind.HEAL:
-			action_description.text = "자신이나 다른 몬스터의 체력을 회복하려고 합니다."
+			action_description.text = "다른 생존 아군의 체력을 대상당 %d 회복합니다." % heal_amount if heal_amount > 0 else "자신이나 다른 몬스터의 체력을 회복하려고 합니다."
+		ActionIcons.Kind.SHIELD:
+			action_description.text = "아군이 받는 피해를 대신 받고 있습니다." if turns == "–" else "아군 한 마리가 받는 피해를 대신 받습니다."
 		_:
 			action_description.text = "다음 행동을 알 수 없습니다."
 

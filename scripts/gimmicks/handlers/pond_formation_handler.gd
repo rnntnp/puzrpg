@@ -59,7 +59,8 @@ func _on_configured() -> void:
 	original_shadow_scale = battle.left_fighter_shadow.scale
 	original_ally_health_scale = battle.left_bar.scale
 	original_enemy_position = enemy.position
-	enemy_ui = [battle.right_fighter_shadow, battle.right_bar, battle.right_status_effects]
+	enemy_ui = [battle.right_fighter_shadow, battle.right_bar, battle.right_status_effects,
+		battle.right_applied_status_effects]
 	for item in enemy_ui:
 		enemy_ui_visibility.append(item.visible)
 		item.hide()
@@ -121,7 +122,8 @@ func _spawn_wave() -> void:
 	for slot in wave.slots:
 		total_hp += slot.health
 		var column := front if slot.column == 0 else rear
-		column.append(formation_visual.spawn(slot.character, slot.health, slot.attack, slot.position, formation.enemy_scale, _uses_joined_health_ui()))
+		column.append(formation_visual.spawn(slot.character, slot.health, slot.attack, slot.position,
+			formation.enemy_scale * slot.size_multiplier, _uses_joined_health_ui()))
 	if formation.refill_slots:
 		for reserve in wave.reinforcements:
 			total_hp += reserve.health
@@ -179,7 +181,7 @@ func on_turn_completed() -> void:
 	pending_combo = 0
 	_ensure_attack_target()
 	var roster: Array[Fighter] = front + rear
-	var hits := Allocation.allocate(damage, roster.find(attack_target), _get_hp(roster))
+	var hits := _allocate_damage(damage, roster)
 	var spent := 0
 	if not hits.is_empty():
 		var origins := turn_attack_visual.take_origins()
@@ -200,14 +202,12 @@ func on_turn_completed() -> void:
 	if wave_cleared:
 		_log_turn_timing(settlement_seconds, carry_in)
 		return
-	turns_remaining -= 1
-	if turns_remaining <= 0:
-		_counterattack()
-		turns_remaining = maxi(1, enemy.enemy_attack_drop_interval)
-		if formation.counterattack_seconds > 0.0 and player.is_alive():
-			await get_tree().create_timer(formation.counterattack_seconds, false, false, true).timeout
-		if not active or not player.is_alive() or not battle.battle_running:
-			return
+	_apply_followup_damage()
+	if not battle.battle_running:
+		return
+	await _advance_enemy_actions()
+	if not active or not player.is_alive() or not battle.battle_running:
+		return
 	if player.is_alive() and formation.refill_slots:
 		_refill_empty_slots()
 	_ensure_attack_target()
@@ -215,6 +215,19 @@ func on_turn_completed() -> void:
 	_update_status("이번 턴 피해 %d · 적용 %d" % [damage, spent])
 	merge_game.set_input_enabled(true)
 	_log_turn_timing(settlement_seconds, carry_in)
+
+
+func _allocate_damage(damage: int, roster: Array[Fighter]) -> Array[PackedInt32Array]:
+	return Allocation.allocate(damage, roster.find(attack_target), _get_hp(roster), _get_damage_redirects(roster),
+		_shotgun_multiplier())
+
+
+func _shotgun_multiplier() -> float:
+	return 1.0
+
+
+func _apply_followup_damage() -> void:
+	pass
 
 
 func _select_attack_target(fighter: Fighter) -> void:
@@ -262,25 +275,43 @@ func _play_attack_hits(hits: Array[PackedInt32Array], roster: Array[Fighter], or
 		await get_tree().create_timer(beat * TurnAttackVisual.TRAVEL_FRACTION, false, false, true).timeout
 		if not active or not player.is_alive() or not battle.battle_running:
 			break
+		var redirects := _get_damage_redirects(roster)
+		var phase_hp := _get_hp(roster)
 		for slot in range(roster.size()):
 			var amount := hits[phase][slot]
 			if amount <= 0:
 				continue
-			var fighter := roster[slot]
+			var receiver := Allocation.damage_receiver(slot, phase_hp, redirects)
+			var fighter := roster[receiver]
+			if receiver != slot:
+				_on_damage_redirected(roster[slot])
 			var defeated := amount >= fighter.current_health
 			fighter.take_damage(amount, false)
 			turn_attack_visual.show_impact(fighter, amount, defeated)
 			spent += amount
 			if defeated:
+				_on_formation_fighter_defeated(fighter)
 				formation_visual.retire_defeated_fighter(fighter, formation.impact_flash_seconds)
-				if slot < front.size():
-					front[slot] = null
+				if receiver < front.size():
+					front[receiver] = null
 				else:
-					rear[slot - front.size()] = null
+					rear[receiver - front.size()] = null
 		await get_tree().create_timer(beat * (1.0 - TurnAttackVisual.TRAVEL_FRACTION), false, false, true).timeout
 	if is_instance_valid(turn_attack_visual):
 		turn_attack_visual.finish_shots()
 	return spent
+
+
+func _get_damage_redirects(_roster: Array[Fighter]) -> Dictionary[int, int]:
+	return {}
+
+
+func _on_damage_redirected(_target: Fighter) -> void:
+	pass
+
+
+func _on_formation_fighter_defeated(_fighter: Fighter) -> void:
+	pass
 
 
 func _pause_board_for_attack() -> void:
@@ -313,10 +344,23 @@ func _get_hp(column: Array[Fighter]) -> Array[int]:
 	return hp
 
 
+func _advance_enemy_actions() -> void:
+	turns_remaining -= 1
+	if turns_remaining <= 0:
+		_counterattack()
+		turns_remaining = maxi(1, enemy.enemy_attack_drop_interval)
+		if formation.counterattack_seconds > 0.0 and player.is_alive():
+			await get_tree().create_timer(formation.counterattack_seconds, false, false, true).timeout
+
+
+func _draft_guard() -> int:
+	if formation.draft == null:
+		return 0
+	return cards.ranks[5] * formation.draft.guard_per_rank
+
+
 func _counterattack() -> void:
-	var guard := shield
-	if formation.draft != null:
-		guard += cards.ranks[5] * formation.draft.guard_per_rank
+	var guard := shield + _draft_guard()
 	for column in [front, rear]:
 		for fighter: Fighter in column:
 			if not player.is_alive():
@@ -343,7 +387,8 @@ func _refill_empty_slots() -> void:
 			break
 		var reserve := wave.reinforcements[reserve_index]
 		reserve_index += 1
-		column[index] = formation_visual.spawn(reserve.character, reserve.health, reserve.attack, slot.position, formation.enemy_scale, _uses_joined_health_ui())
+		column[index] = formation_visual.spawn(reserve.character, reserve.health, reserve.attack, slot.position,
+			formation.enemy_scale * slot.size_multiplier, _uses_joined_health_ui())
 	_apply_layout()
 
 
@@ -392,7 +437,7 @@ func _apply_layout() -> void:
 			continue
 		var at: Vector2 = slot.position
 		var info_offset := Vector2.ZERO
-		var fighter_size := size_factor
+		var fighter_size: float = size_factor * slot.size_multiplier
 		var foot_y := at.y
 		var draw_order_offset := 0
 		if layout != null:
@@ -473,8 +518,10 @@ func _line_positions(ordered_slots: Array, size_factor: float, layout: Resource)
 		var character: CharacterData = ordered_slots[index].character
 		var slot_size := size_factor
 		if layout.enemy_height_ratio > 0.0:
-			var bounds := formation_visual.sprite_vertical_span(character)
+			var reference: CharacterData = ordered_slots[index].sizing_reference
+			var bounds := formation_visual.sprite_vertical_span(reference if reference != null else character)
 			slot_size = player_height * layout.enemy_height_ratio / maxf(1.0, bounds.y - bounds.x)
+		slot_size *= ordered_slots[index].size_multiplier
 		if index < layout.slot_scale_multipliers.size():
 			slot_size *= layout.slot_scale_multipliers[index]
 		var span := formation_visual.sprite_span(character, slot_size)
@@ -537,7 +584,7 @@ func _update_action_previews() -> void:
 			var kind: int = ActionIcons.Kind.ATTACK
 			var turns := turns_remaining
 			if demo:
-				kind = (offset + slot_index) % ActionIcons.Kind.size()
+				kind = (offset + slot_index) % ACTION_PREVIEW_OFFSETS.size()
 				turns = preview_turns[slot_index % preview_turns.size()]
 			formation_visual.set_action_preview(fighter, kind, turns, demo)
 		slot_index += 1

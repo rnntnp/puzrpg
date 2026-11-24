@@ -19,6 +19,8 @@ var skill_data: PlayerSkillData
 var gauge_current := 0
 var configured := false
 var tutorial_skill_enabled := false
+var select_skill_target: Callable
+var awaiting_skill_target := false
 var player_hover_tween: Tween
 var player_rest_scale := Vector2.ONE
 var skill_ready_sfx: AudioStreamPlayer
@@ -78,6 +80,7 @@ func set_enemy(enemy_fighter: Fighter) -> void:
 
 
 func on_enemy_defeated() -> void:
+	cancel_skill_target()
 	enemy = null
 
 
@@ -96,6 +99,8 @@ func set_tutorial_skill_enabled(enabled: bool) -> void:
 
 
 func cleanup() -> void:
+	cancel_skill_target()
+	select_skill_target = Callable()
 	if is_instance_valid(merge_game) and merge_game.player_merge_registered.is_connected(_on_player_merge_registered):
 		merge_game.player_merge_registered.disconnect(_on_player_merge_registered)
 	if is_instance_valid(skill_button) and skill_button.skill_pressed.is_connected(_on_skill_pressed):
@@ -124,15 +129,45 @@ func _on_player_merge_registered(base_points: int, _result_level: int) -> void:
 
 
 func _on_skill_pressed() -> void:
+	if awaiting_skill_target:
+		cancel_skill_target()
+		return
 	if not _can_use_skill():
 		skill_button.play_blocked_feedback()
+		return
+	if select_skill_target.is_valid():
+		awaiting_skill_target = true
+		battle.status_label.text = "취약을 적용할 적을 선택하세요"
+		battle.status_label.modulate = Color("#ffe066")
 		return
 	var total_turns: int = weakness_host.add_weakness_turns(
 		skill_data.weakness_duration_turns
 	)
+	_finish_skill(enemy, total_turns)
+
+
+func cancel_skill_target() -> void:
+	if awaiting_skill_target:
+		awaiting_skill_target = false
+		if is_instance_valid(battle):
+			battle.status_label.text = ""
+
+
+func try_use_skill_on(target: Fighter) -> bool:
+	if not awaiting_skill_target or not _can_use_skill() or not select_skill_target.is_valid():
+		return false
+	var total_turns: int = select_skill_target.call(target, skill_data.weakness_duration_turns)
+	if total_turns <= 0:
+		return false
+	awaiting_skill_target = false
+	_finish_skill(target, total_turns)
+	return true
+
+
+func _finish_skill(target: Fighter, total_turns: int) -> void:
 	gauge_current = 0
 	player.play_cast_animation()
-	_play_skill_break_effect()
+	_play_skill_break_effect(target)
 	_update_gauge_ui()
 	battle.status_label.text = "%s +%d턴 · 총 %d턴" % [
 		skill_data.display_name,
@@ -143,14 +178,14 @@ func _on_skill_pressed() -> void:
 	skill_used.emit()
 
 
-func _play_skill_break_effect() -> void:
-	if not is_instance_valid(battle) or not is_instance_valid(enemy):
+func _play_skill_break_effect(target: Fighter) -> void:
+	if not is_instance_valid(battle) or not is_instance_valid(target):
 		return
 	var effect := PlayerSkillBreakEffectClass.new() as PlayerSkillBreakEffect
 	battle.add_child(effect)
-	effect.play(enemy.character_sprite.global_position + Vector2(0.0, -8.0))
-	if enemy.is_alive():
-		enemy.play_hit_animation()
+	effect.play(target.character_sprite.global_position + Vector2(0.0, -8.0))
+	if target.is_alive():
+		target.play_hit_animation()
 	_play_use_sfx()
 
 

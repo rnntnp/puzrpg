@@ -14,7 +14,7 @@ const Draft = preload("res://scripts/gimmicks/configs/dungeon_draft_config.gd")
 @export var draft: Draft
 
 @export_group("Turn Attack Presentation")
-@export_range(0.1, 3.0, 0.05) var settlement_quiet_seconds := 1.0
+@export_range(0.1, 3.0, 0.05) var settlement_quiet_seconds := 0.8
 @export_range(0.1, 1.5, 0.01) var seconds_per_target := 0.36
 @export_range(0.05, 0.35, 0.01) var first_kill_confirmation_seconds := 0.10
 @export_range(0.05, 0.35, 0.01) var chain_kill_confirmation_seconds := 0.08

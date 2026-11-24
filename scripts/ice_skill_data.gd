@@ -5,6 +5,9 @@ extends Resource
 @export_range(1, 3, 1) var freeze_count: int = 1
 @export_range(1, 11, 1) var target_min_level: int = 1
 @export_range(1, 11, 1) var target_max_level: int = 3
+@export var prefer_highest_level := false
+@export var unfrozen_targets_only := false
+@export var limit_target_levels := false
 ## 첫 우선순위 대상 주변에서 단계와 관계없이 추가로 찾을 얼지 않은 공 수다.
 @export_range(0, 2, 1) var nearby_unfrozen_count: int = 0
 
@@ -19,6 +22,8 @@ extends Resource
 @export_range(0, 11, 1) var random_primary_candidate_count: int = 0
 @export_category("얼음")
 @export_range(1, 9, 1) var ice_durability: int = 2
+@export var durability_by_target := PackedInt32Array()
+@export var hold_broken_ice := false
 @export_range(0.0, 2.0, 0.05) var target_highlight_duration: float = 0.25
 @export_range(0.0, 2.0, 0.05) var freeze_effect_duration: float = 0.3
 

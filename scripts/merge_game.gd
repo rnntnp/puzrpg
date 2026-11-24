@@ -4,6 +4,9 @@ extends Node2D
 # Optional, level-owned hooks; ordinary drop levels keep their existing behavior.
 var player_merge_damage_modifier := Callable()
 var player_merge_attack_collector := Callable()
+var player_drop_companion := Callable()
+var random_drop_minimum := 0
+var random_drop_count := 5
 var merge_quiet_settlement_msec := 0
 var attack_presentation_paused := false
 var between_drop_combo := 0
@@ -860,15 +863,17 @@ func launch_player_ball(at: Vector2, velocity: Vector2) -> MergeBall:
 		launched_ball.linear_velocity = velocity
 	ball_dropped.emit()
 	_advance_ball_queue()
-	_finish_drop_sequence(current_sequence_id)
+	_finish_drop_sequence(current_sequence_id, at, velocity)
 	return launched_ball as MergeBall
 
-func _finish_drop_sequence(sequence_id: int) -> void:
+func _finish_drop_sequence(sequence_id: int, launch_position: Vector2, launch_velocity: Vector2) -> void:
 	var sequence_started_msec := Time.get_ticks_msec()
 	var turn_was_emitted := false
 	var landed_msec := -1
+	if player_drop_companion.is_valid():
+		await player_drop_companion.call(sequence_id, launch_position, launch_velocity)
 	await get_tree().physics_frame
-	while is_inside_tree():
+	while is_inside_tree() and sequence_id == drop_sequence_id and not is_game_over:
 		var now := Time.get_ticks_msec()
 		if merge_quiet_settlement_msec > 0:
 			if dropped_ball_has_landed and landed_msec < 0:
@@ -890,7 +895,7 @@ func _finish_drop_sequence(sequence_id: int) -> void:
 		await get_tree().physics_frame
 	if not is_inside_tree():
 		return
-	if sequence_id != drop_sequence_id:
+	if sequence_id != drop_sequence_id or is_game_over:
 		return
 	drop_sequence_active = false
 	if not turn_was_emitted and player_merge_attack_collector.is_valid():
@@ -976,10 +981,17 @@ func _reset_ball_queue() -> void:
 	timer_label.visible = auto_drop_enabled
 	_refresh_preview()
 
+func set_random_drop_window(minimum: int, count: int) -> void:
+	random_drop_minimum = clampi(minimum, 0, max_level_index)
+	random_drop_count = maxi(1, count)
+	_reset_ball_queue()
+	_refresh_preview()
+
+
 func _random_drop_level() -> int:
 	if fixed_drop_level_index >= 0:
 		return fixed_drop_level_index
-	return randi_range(0, mini(4, max_level_index))
+	return randi_range(random_drop_minimum, mini(random_drop_minimum + random_drop_count - 1, max_level_index))
 
 func _refresh_preview() -> void:
 	if is_instance_valid(preview_ball):
@@ -1243,7 +1255,7 @@ func _get_overflow_balls() -> Array[MergeBall]:
 		if not child is MergeBall:
 			continue
 		var ball := child as MergeBall
-		if ball.merge_locked or not ball.has_landed():
+		if ball.merge_locked or ball.hold_broken_ice or not ball.has_landed():
 			continue
 		if (ball.position.y - danger_line_y) * danger_height_direction < 0.0:
 			result.append(ball)
@@ -1255,7 +1267,7 @@ func _has_warning_ball() -> bool:
 		if not child is MergeBall:
 			continue
 		var ball := child as MergeBall
-		if ball.merge_locked or not ball.has_landed():
+		if ball.merge_locked or ball.hold_broken_ice or not ball.has_landed():
 			continue
 		if (ball.position.y - danger_line_y) * danger_height_direction <= warning_distance:
 			return true

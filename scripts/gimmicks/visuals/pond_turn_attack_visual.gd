@@ -64,12 +64,13 @@ func _damage_strength(damage: int) -> float:
 		tuning.minimum_effect_strength, maxf(tuning.minimum_effect_strength, tuning.maximum_effect_strength))
 
 
-func show_impact(fighter: Fighter, damage: int, defeated: bool) -> void:
+func show_impact(fighter: Fighter, damage: int, defeated: bool, animate_fighter := true) -> void:
 	var target := fighter.character_sprite.global_position
 	var hit := Impact.new()
 	hit.position = to_local(target)
 	hit.strength = _damage_strength(damage)
-	_flash_and_recoil(fighter, target, hit.strength, defeated)
+	if animate_fighter:
+		_flash_and_recoil(fighter, target, hit.strength, defeated)
 	hit.defeated = defeated
 	var label := Label.new()
 	label.mouse_filter = Control.MOUSE_FILTER_IGNORE

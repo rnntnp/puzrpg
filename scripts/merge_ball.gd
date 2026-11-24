@@ -23,6 +23,8 @@ var _has_contacted := false
 var ingestion_marked := false
 var is_ice_frozen := false
 var ice_durability := 0
+var hold_broken_ice := false
+var ice_cracks: Node2D
 var ice_targeted := false
 var ice_cast_reserved := false
 var split_targeted := false
@@ -432,11 +434,12 @@ func set_split_cast_reserved(reserved: bool) -> void:
 	split_cast_reserved = reserved
 
 
-func freeze_in_ice(durability: int) -> void:
+func freeze_in_ice(durability: int, keep_ice_until_released := false) -> void:
 	if merge_locked:
 		return
 	var was_already_frozen := is_ice_frozen
 	is_ice_frozen = true
+	hold_broken_ice = keep_ice_until_released
 	ice_durability = maxi(1, durability)
 	_set_frozen_visual(true)
 	_update_ice_durability_visual()
@@ -450,13 +453,16 @@ func freeze_in_ice(durability: int) -> void:
 
 
 func damage_ice(amount: int) -> void:
-	if not is_ice_frozen or amount <= 0:
+	if not is_ice_frozen or ice_durability <= 0 or amount <= 0:
 		return
 	ice_durability = maxi(0, ice_durability - amount)
 	_update_ice_durability_visual()
 	print("[ICE DAMAGE] level=%d | remaining=%d" % [merge_level + 1, ice_durability])
 	if ice_durability <= 0:
-		break_ice()
+		if hold_broken_ice:
+			_show_ice_cracks()
+		else:
+			break_ice()
 	else:
 		var original_rotation := visual_container.rotation
 		var tween := create_tween()
@@ -470,18 +476,52 @@ func break_ice(play_effect := true) -> void:
 	if not is_ice_frozen:
 		return
 	is_ice_frozen = false
+	hold_broken_ice = false
 	ice_durability = 0
+	if is_instance_valid(ice_cracks):
+		ice_cracks.hide()
+		ice_cracks.queue_free()
+		ice_cracks = null
 	_set_frozen_visual(false)
 	ice_durability_label.visible = false
 	freeze = custom_physics_enabled
 	queue_redraw()
 	if play_effect:
-		_play_ice_sfx(ICE_BREAK_SFX)
-		_play_ice_break_visual_effect()
+		play_ice_shatter_effect()
 		modulate = Color("#bdefff")
 		var tween := create_tween()
 		tween.tween_property(self, "modulate", Color.WHITE, 0.25)
 	print("[ICE BREAK] level=%d" % (merge_level + 1))
+
+
+func play_ice_shatter_effect() -> void:
+	_play_ice_sfx(ICE_BREAK_SFX)
+	_play_ice_break_visual_effect()
+
+
+func _show_ice_cracks() -> void:
+	ice_cracks = Node2D.new()
+	ice_cracks.z_index = 2
+	add_child(ice_cracks)
+	var radius: float = ball_data.get_radius()
+	var fissures := [
+		PackedVector2Array([Vector2(-0.52, -0.67), Vector2(-0.16, -0.35), Vector2(-0.28, 0.03),
+			Vector2(0.19, 0.36), Vector2(0.13, 0.76)]),
+		PackedVector2Array([Vector2(-0.28, 0.03), Vector2(-0.67, 0.25)]),
+		PackedVector2Array([Vector2(0.19, 0.36), Vector2(0.47, 0.10), Vector2(0.73, 0.18)]),
+	]
+	for color in [Color("#245378"), Color("#e3fbff")]:
+		for fissure in fissures:
+			var line := Line2D.new()
+			line.default_color = color
+			line.width = maxf(1.0, radius * (0.11 if color == Color("#245378") else 0.047))
+			line.antialiased = true
+			for point: Vector2 in fissure:
+				line.add_point(point * radius)
+			ice_cracks.add_child(line)
+	ice_cracks.modulate = Color(1.7, 1.9, 2.0)
+	create_tween().tween_property(ice_cracks, "modulate", Color.WHITE, 0.24)
+	play_ice_shatter_effect()
 
 
 func _play_ice_sfx(stream: AudioStream) -> void:
@@ -525,7 +565,7 @@ func _set_frozen_visual(enabled: bool) -> void:
 
 
 func _update_ice_durability_visual() -> void:
-	if not is_ice_frozen or ice_durability <= 0:
+	if not is_ice_frozen or (ice_durability <= 0 and not hold_broken_ice):
 		ice_durability_label.visible = false
 		return
 	ice_durability_label.text = str(ice_durability)

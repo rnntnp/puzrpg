@@ -6,3 +6,14 @@
 [resource]
 script = ExtResource("1")
 rendering_settings = ExtResource("2")
+interior_warp_gain = 1.0
+center_warp_upper_weight = 0.6
+center_warp_lower_weight = 1.4
+resting_squash = 0.3
+impact_squash = 0.15
+impact_speed = 180.0
+maximum_warp = 0.4
+warp_stiffness = 360.0
+warp_damping = 20.0
+press_filter_time = 0.04
+release_filter_time = 0.08

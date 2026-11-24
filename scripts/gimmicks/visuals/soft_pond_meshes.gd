@@ -93,6 +93,9 @@ func _install_material(source: CanvasItem) -> Dictionary:
 	material.shader = shader_cache[original_shader.code if original_shader != null else "shader_type canvas_item;\nrender_mode unshaded;\n"]
 	return {"material": material, "original_material": original, "original_shader": original_shader}
 
+func _sprite_grid_size(_source: Sprite2D) -> int:
+	return 10
+
 func _install_sprite(source: Sprite2D) -> void:
 	var texture := source.texture
 	var uv_rect := Rect2(Vector2.ZERO, Vector2.ONE)
@@ -101,7 +104,8 @@ func _install_sprite(source: Sprite2D) -> void:
 		texture = atlas_texture.atlas
 		var atlas_size := texture.get_size()
 		uv_rect = Rect2(atlas_texture.region.position / atlas_size, atlas_texture.region.size / atlas_size)
-	var key := [source.get_rect(), uv_rect]
+	var grid := _sprite_grid_size(source)
+	var key := [source.get_rect(), uv_rect, grid]
 	if not mesh_cache.has(key):
 		var arrays := []
 		arrays.resize(Mesh.ARRAY_MAX)
@@ -109,16 +113,15 @@ func _install_sprite(source: Sprite2D) -> void:
 		var uv := PackedVector2Array()
 		var indices := PackedInt32Array()
 		var rect := source.get_rect()
-		const GRID := 10
-		for y in GRID + 1:
-			for x in GRID + 1:
-				var coordinate := Vector2(x, y) / GRID
+		for y in grid + 1:
+			for x in grid + 1:
+				var coordinate := Vector2(x, y) / grid
 				vertices.append(rect.position + rect.size * coordinate)
 				uv.append(uv_rect.position + uv_rect.size * coordinate)
-		for y in GRID:
-			for x in GRID:
-				var a := y * (GRID + 1) + x
-				indices.append_array(PackedInt32Array([a, a + 1, a + GRID + 1, a + 1, a + GRID + 2, a + GRID + 1]))
+		for y in grid:
+			for x in grid:
+				var a := y * (grid + 1) + x
+				indices.append_array(PackedInt32Array([a, a + 1, a + grid + 1, a + 1, a + grid + 2, a + grid + 1]))
 		arrays[Mesh.ARRAY_VERTEX] = vertices
 		arrays[Mesh.ARRAY_TEX_UV] = uv
 		arrays[Mesh.ARRAY_INDEX] = indices

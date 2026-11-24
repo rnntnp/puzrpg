@@ -28,6 +28,7 @@ var _custom_click_hint_right_aligned := false
 var _custom_message_y := -1.0
 var _custom_pointer_arrow_position := Vector2.INF
 var _control_center_x := 360.0
+var _control_message := "좌우로 스와이프해 방울의 위치를 정하고\n클릭해 수조에 떨어뜨리세요."
 var _backdrop: ColorRect
 var _label: Label
 var _story_image: TextureRect
@@ -60,7 +61,7 @@ func play_tutorial(pages: PackedStringArray, control_center_x := 360.0) -> void:
 	_play(pages)
 
 
-func play_control_tutorial(control_center_x := 360.0) -> void:
+func play_control_tutorial(control_center_x := 360.0, control_message := "") -> void:
 	_logo_first = false
 	_enemy_intent_tutorial = true
 	_control_only_tutorial = true
@@ -68,6 +69,7 @@ func play_control_tutorial(control_center_x := 360.0) -> void:
 	_evolution_tutorial = false
 	_combo_tutorial = false
 	_control_center_x = control_center_x
+	if not control_message.is_empty(): _control_message = control_message
 	_play(PackedStringArray(["드롭 조작"]))
 
 
@@ -383,7 +385,7 @@ func _show_drop_control_tutorial() -> void:
 	_guide_label.add_theme_font_size_override("font_size", 25)
 	_guide_label.add_theme_color_override("font_color", Color(1.0, 0.97, 0.82, 1.0))
 	_guide_label.add_theme_constant_override("outline_size", 5)
-	_guide_label.text = "좌우로 스와이프해 방울의 위치를 정하고\n클릭해 수조에 떨어뜨리세요."
+	_guide_label.text = _control_message
 	_guide_label.show()
 	_control_arrow.show()
 	_mouse_cursor.show()

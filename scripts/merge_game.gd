@@ -25,6 +25,9 @@ signal merge_attack_requested(
 	drop_sequence_id: int
 )
 signal ball_dropped
+signal player_ball_launched(ball: MergeBall)
+## Persistent board components can restore their mode after enemy cleanup.
+signal gimmick_state_reset
 signal turn_completed(drop_sequence_id: int)
 signal overflow_triggered(damage: int)
 signal ingestion_target_replaced(ball: MergeBall)
@@ -102,6 +105,10 @@ var fixed_drop_level_index := -1
 var drop_position_locked := false
 var score := 0
 var can_drop := true
+var board_visual_layer: Node
+## Optional entry-position provider installed by a board control component.
+var ball_entry_position_provider := Callable()
+var board_launch_controller: Node
 var is_aiming := false
 var aim_x := 360.0
 var preview_ball
@@ -342,6 +349,12 @@ func get_current_ball_level() -> int:
 
 func get_drop_guide_global_x() -> float:
 	return to_global(Vector2(aim_x, drop_position_y)).x
+
+
+func get_ball_entry_position(level: int, x: float, top_inset := 0.0) -> Vector2:
+	if ball_entry_position_provider.is_valid():
+		return ball_entry_position_provider.call(level, x)
+	return Vector2(x, drop_position_y + top_inset)
 
 
 func set_fixed_drop_level(level_index: int) -> void:
@@ -609,6 +622,7 @@ func reset_gimmick_state() -> void:
 					ball.collision_layer = 1
 					ball.collision_mask = 1
 					ball.freeze = false
+	gimmick_state_reset.emit()
 
 
 func _create_board_gimmick_tween() -> Tween:
@@ -693,7 +707,7 @@ func animate_ball_consumption(ball: MergeBall, target_global_position: Vector2, 
 	return true
 
 
-func return_ingested_ball_to_board(level: int, source_global_position := Vector2.INF) -> MergeBall:
+func get_random_ball_entry_position(level: int) -> Vector2:
 	var safe_level := clampi(level, 0, max_level_index)
 	var ball_data = BallCatalogClass.get_ball(safe_level)
 	var radius := 26.0
@@ -704,7 +718,29 @@ func return_ingested_ball_to_board(level: int, source_global_position := Vector2
 	var spawn_x := (minimum_x + maximum_x) * 0.5
 	if minimum_x < maximum_x:
 		spawn_x = randf_range(minimum_x, maximum_x)
-	var landing_position := Vector2(spawn_x, drop_position_y + radius)
+	return get_ball_entry_position(safe_level, spawn_x, radius)
+
+
+func animate_ball_return_arc(ball: MergeBall, landing_position: Vector2, tween: Tween) -> void:
+	# Shared spit/return presentation. The caller owns collision and completion.
+	var source_position := ball.position
+	ball.z_index = 200
+	ball.scale = Vector2.ONE * 0.18
+	var control_position := (source_position + landing_position) * 0.5 + Vector2(0.0, -105.0)
+	tween.set_parallel(true)
+	tween.tween_method(func(weight: float) -> void:
+		if is_instance_valid(ball):
+			var first_leg := source_position.lerp(control_position, weight)
+			var second_leg := control_position.lerp(landing_position, weight)
+			ball.position = first_leg.lerp(second_leg, weight)
+	, 0.0, 1.0, 0.58).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	tween.tween_property(ball, "scale", Vector2.ONE, 0.58).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	tween.tween_property(ball, "rotation", ball.rotation - TAU * 0.7, 0.58)
+
+
+func return_ingested_ball_to_board(level: int, source_global_position := Vector2.INF) -> MergeBall:
+	var safe_level := clampi(level, 0, max_level_index)
+	var landing_position := get_random_ball_entry_position(safe_level)
 	if not source_global_position.is_finite():
 		return _spawn_ball(landing_position, safe_level) as MergeBall
 	var source_position := to_local(source_global_position)
@@ -715,18 +751,8 @@ func return_ingested_ball_to_board(level: int, source_global_position := Vector2
 	ball.freeze = true
 	ball.collision_layer = 0
 	ball.collision_mask = 0
-	ball.z_index = 200
-	ball.scale = Vector2.ONE * 0.18
-	var control_position := (source_position + landing_position) * 0.5 + Vector2(0.0, -105.0)
-	var tween := create_tween().set_parallel(true)
-	tween.tween_method(func(weight: float) -> void:
-		if is_instance_valid(ball):
-			var first_leg := source_position.lerp(control_position, weight)
-			var second_leg := control_position.lerp(landing_position, weight)
-			ball.position = first_leg.lerp(second_leg, weight)
-	, 0.0, 1.0, 0.58).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
-	tween.tween_property(ball, "scale", Vector2.ONE, 0.58).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-	tween.tween_property(ball, "rotation", ball.rotation - TAU * 0.7, 0.58)
+	var tween := create_tween()
+	animate_ball_return_arc(ball, landing_position, tween)
 	tween.finished.connect(func() -> void:
 		if not is_instance_valid(ball):
 			return
@@ -748,7 +774,8 @@ func configure(
 	hit_stop_time_scale: float = 0.25,
 	hit_stop_duration: float = 0.12,
 	chain_delay: float = 0.1,
-	custom_physics: CustomBoardPhysicsDataClass = null
+	custom_physics: CustomBoardPhysicsDataClass = null,
+	board_visual_scene: PackedScene = null
 ) -> void:
 	auto_drop_enabled = time_limit >= 0.0
 	drop_time_limit = maxf(0.0, time_limit)
@@ -764,6 +791,11 @@ func configure(
 	if custom_physics_solver.is_active():
 		custom_physics_badge.text = "커스텀 물리 · %dHz" % custom_physics.simulation_hz
 	_reset_ball_queue()
+	if is_instance_valid(board_visual_layer):
+		board_visual_layer.free()
+	if board_visual_scene != null:
+		board_visual_layer = board_visual_scene.instantiate()
+		add_child(board_visual_layer)
 
 func _process(delta: float) -> void:
 	if attack_presentation_paused:
@@ -858,6 +890,7 @@ func launch_player_ball(at: Vector2, velocity: Vector2) -> MergeBall:
 	var launched_ball = _spawn_ball(at, current_level, current_sequence_id)
 	if is_instance_valid(launched_ball):
 		launched_ball.linear_velocity = velocity
+		player_ball_launched.emit(launched_ball)
 	ball_dropped.emit()
 	_advance_ball_queue()
 	_finish_drop_sequence(current_sequence_id)

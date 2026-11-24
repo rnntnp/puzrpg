@@ -1,0 +1,21 @@
+extends Node2D
+## Reuse stage 62 presentation without installing its throwing/enemy handler.
+const Reflections = preload("res://scripts/gimmicks/visuals/pond_surface_reflection_layer.gd")
+const Warp = preload("res://scripts/gimmicks/visuals/circle_xpbd_pond_layer.gd")
+const Settings = preload("res://resources/circle_xpbd_pond_physics.tres")
+var reflections: Node2D
+var warp: Node2D
+
+func _ready() -> void:
+	var board := get_parent() as MergeGame
+	reflections = Reflections.new()
+	add_child(reflections)
+	reflections.configure(board, Settings.rendering_settings, true)
+	warp = Warp.new()
+	add_child(warp)
+	warp.configure(board, Settings)
+
+func _exit_tree() -> void:
+	# Reverse installation order: restore warp materials before reflection flags.
+	if is_instance_valid(warp): warp.restore_balls()
+	if is_instance_valid(reflections): reflections.restore_visuals()

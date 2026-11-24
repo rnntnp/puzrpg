@@ -41,6 +41,9 @@ const CustomBoardPhysicsDataClass = preload("res://scripts/custom_physics/custom
 @export var opening_story_images: Array[Texture2D] = []
 ## 스토리 컷씬이 끝나고 전투 화면 위에서 표시하는 조작 안내다.
 @export var tutorial_sequence: PackedStringArray = []
+## Optional control explanation and wording replacements for this level's input mode.
+@export_multiline var tutorial_control_message := ""
+@export var tutorial_prompt_replacements: Dictionary[String, String] = {}
 ## 첫 드롭의 턴 처리 뒤에 표시하는 안내 문구다.
 @export_multiline var tutorial_turn_message: String = ""
 ## 적 공격을 본 뒤, 방울 진화표와 함께 표시하는 안내다.
@@ -56,6 +59,8 @@ const CustomBoardPhysicsDataClass = preload("res://scripts/custom_physics/custom
 @export var test_gimmick: TestGimmickDataClass
 
 @export_category("드롭 앤 머지 설정")
+## Optional board presentation scene; configure and clean up independently of enemy mechanics.
+@export var board_visual_scene: PackedScene
 ## 비어 있으면 기존 Godot RigidBody2D 물리를 사용한다.
 @export var custom_board_physics: CustomBoardPhysicsDataClass
 ## 음수로 설정하면 자동 낙하와 시간제한을 사용하지 않는다.

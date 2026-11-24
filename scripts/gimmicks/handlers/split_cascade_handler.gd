@@ -26,6 +26,8 @@ var lifted_target_collision_mask := 0
 var lifted_target_was_frozen := false
 var lifted_target_original_scale := Vector2.ONE
 var lifted_target_original_modulate := Color.WHITE
+var lifted_target_original_position := Vector2.ZERO
+var returning_split_balls: Dictionary = {}
 var cascade_suspended_balls: Array[MergeBall] = []
 var cascade_launch_velocities: Dictionary = {}
 var fishing_reel_players: Array[AudioStreamPlayer] = []
@@ -146,6 +148,10 @@ func _execute_split_attack() -> void:
 				successful_split_count += 1
 			if target_index + 1 < targets.size() and tuning.enemy_two_inter_split_delay > 0.0:
 				await get_tree().create_timer(tuning.enemy_two_inter_split_delay, true, false, true).timeout
+	while active and not returning_split_balls.is_empty():
+		await get_tree().physics_frame
+	if not active:
+		return
 	if successful_split_count > 0:
 		if not deferred_enemy_configuration and is_instance_valid(enemy) and enemy.is_alive():
 			battle.status_label.text = "CASCADE SPLIT!" if enemy_mode == MODE_CASCADE else "공 분열 발동!"
@@ -417,6 +423,10 @@ func _lift_then_split_airborne(
 	var high_fill := maxf(tuning.enemy_one_stack_low_fill_ratio, tuning.enemy_one_stack_high_fill_ratio)
 	var crowded_blend := smoothstep(low_fill, maxf(low_fill + 0.01, high_fill), stack_fill_ratio)
 	var target_y := lerpf(high_presentation_y, crowded_presentation_y, crowded_blend)
+	if tuning.split_above_board:
+		# Lift clear of the ceiling instead of interpreting the inverted lower
+		# Danger Line as an upper presentation boundary.
+		target_y = merge_game.get_playable_board_bounds().position.y - radius - tuning.outside_top_clearance
 	var presentation_x := lerpf(bounds.position.x, bounds.end.x, tuning.enemy_one_split_x_ratio)
 	var target_position := Vector2(
 		clampf(presentation_x, minimum_x, maximum_x),
@@ -436,6 +446,9 @@ func _lift_then_split_airborne(
 	lifted_target_was_frozen = target.freeze
 	lifted_target_original_scale = target.scale
 	lifted_target_original_modulate = target.modulate
+	lifted_target_original_position = target.position
+	if tuning.split_above_board:
+		target.set_meta(&"suspend_board_warp", true)
 	target.linear_velocity = Vector2.ZERO
 	target.angular_velocity = 0.0
 	target.freeze = true
@@ -527,6 +540,9 @@ func _restore_lifted_target() -> void:
 		lifted_target.freeze = lifted_target_was_frozen
 		lifted_target.scale = lifted_target_original_scale
 		lifted_target.modulate = lifted_target_original_modulate
+		if tuning.split_above_board:
+			lifted_target.position = lifted_target_original_position
+			lifted_target.remove_meta(&"suspend_board_warp")
 		lifted_target.set_split_targeted(false)
 	lifted_target = null
 
@@ -653,6 +669,12 @@ func _split_once_near_parent(
 		_suspend_cascade_ball(left_child, Vector2.ZERO)
 		_suspend_cascade_ball(right_child, Vector2.ZERO)
 		return children
+	if tuning.split_above_board:
+		var destinations := _sibling_return_positions(left_child, right_child)
+		_return_split_ball(left_child, destinations[0])
+		_return_split_ball(right_child, destinations[1])
+		_apply_adaptive_sibling_grace(children)
+		return children
 	left_child.linear_velocity = Vector2(-horizontal_speed, -absf(launch_velocity.y))
 	right_child.linear_velocity = Vector2(horizontal_speed, -absf(launch_velocity.y))
 	_apply_adaptive_sibling_grace(children)
@@ -683,6 +705,8 @@ func _suspend_cascade_ball(ball: MergeBall, launch_velocity: Vector2) -> void:
 	ball.freeze = true
 	ball.collision_layer = 0
 	ball.collision_mask = 0
+	if tuning.split_above_board:
+		ball.set_meta(&"suspend_board_warp", true)
 	if not cascade_suspended_balls.has(ball):
 		cascade_suspended_balls.append(ball)
 	cascade_launch_velocities[ball.get_instance_id()] = launch_velocity
@@ -693,6 +717,9 @@ func _activate_cascade_ball(ball: MergeBall, launch_velocity: Vector2 = Vector2.
 		return
 	cascade_suspended_balls.erase(ball)
 	cascade_launch_velocities.erase(ball.get_instance_id())
+	if tuning.split_above_board:
+		_return_split_ball(ball)
+		return
 	ball.collision_layer = 1
 	ball.collision_mask = 1
 	ball.freeze = false
@@ -710,8 +737,94 @@ func _release_suspended_cascade_balls() -> void:
 		ball.freeze = false
 		ball.sleeping = false
 		ball.linear_velocity = launch_velocity
+		if tuning.split_above_board:
+			ball.position = merge_game.get_random_ball_entry_position(ball.merge_level)
+			ball.remove_meta(&"suspend_board_warp")
+			ball.linear_velocity = Vector2(0.0, 35.0)
 	cascade_suspended_balls.clear()
 	cascade_launch_velocities.clear()
+
+
+func _sibling_return_positions(left: MergeBall, right: MergeBall) -> PackedVector2Array:
+	var bounds := merge_game.get_playable_board_bounds()
+	var left_radius := _return_collision_radius(left)
+	var right_radius := _return_collision_radius(right)
+	var separation := left_radius + right_radius + tuning.return_sibling_clearance
+	var minimum_x := bounds.position.x + left_radius
+	var maximum_x := bounds.end.x - right_radius
+	var available_x := maximum_x - minimum_x
+	var left_position := merge_game.get_random_ball_entry_position(left.merge_level)
+	var right_position := merge_game.get_random_ball_entry_position(right.merge_level)
+	if available_x >= separation:
+		left_position.x = randf_range(minimum_x, maximum_x - separation)
+		right_position.x = randf_range(left_position.x + separation, maximum_x)
+	else:
+		# Large siblings may not fit side by side. Use opposite sides and
+		# stagger their height by the remaining Euclidean separation.
+		left_position.x = minimum_x
+		right_position.x = maximum_x
+		var height := sqrt(maxf(0.0, separation * separation - available_x * available_x))
+		if merge_game.danger_height_direction < 0.0:
+			left_position.y = bounds.end.y - left_radius - 18.0
+			right_position.y = minf(bounds.end.y - right_radius - 18.0, left_position.y - height)
+		else:
+			left_position.y = bounds.position.y + left_radius + 18.0
+			right_position.y = maxf(bounds.position.y + right_radius + 18.0, left_position.y + height)
+	return PackedVector2Array([left_position, right_position])
+
+
+func _return_collision_radius(ball: MergeBall) -> float:
+	var radius := ball.get_radius()
+	for child in ball.get_children():
+		if not child is CollisionShape2D or child.disabled or child.shape == null: continue
+		if child.shape is CircleShape2D:
+			radius = maxf(radius, child.position.length() + child.shape.radius * maxf(absf(child.scale.x), absf(child.scale.y)))
+		else:
+			var rect: Rect2 = child.shape.get_rect()
+			for point in [rect.position, Vector2(rect.end.x, rect.position.y), rect.end, Vector2(rect.position.x, rect.end.y)]:
+				radius = maxf(radius, (child.transform * point).length())
+	return radius
+
+
+func _return_split_ball(ball: MergeBall, planned_destination := Vector2.INF) -> void:
+	var id := ball.get_instance_id()
+	var destination := planned_destination if planned_destination.is_finite() else merge_game.get_random_ball_entry_position(ball.merge_level)
+	returning_split_balls[id] = {"ball": ball, "destination": destination}
+	ball.set_split_cast_reserved(true)
+	ball.set_meta(&"suspend_board_warp", true)
+	ball.freeze = true
+	ball.collision_layer = 0
+	ball.collision_mask = 0
+	ball.linear_velocity = Vector2.ZERO
+	var tween := create_gimmick_tween()
+	# Keep fishing's direct return path; only entry placement and the final
+	# physical handoff match the toad. Do not use the toad's curved trajectory.
+	ball.z_index = 200
+	ball.scale = Vector2.ONE * 0.18
+	tween.set_parallel(true)
+	tween.tween_property(ball, "position", destination, tuning.return_duration).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+	tween.tween_property(ball, "scale", Vector2.ONE, tuning.return_duration).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	tween.tween_property(ball, "rotation", ball.rotation - TAU * 0.7, tuning.return_duration)
+	await tween.finished
+	_finish_return_split_ball(id)
+
+
+func _finish_return_split_ball(id: int) -> void:
+	if not returning_split_balls.has(id): return
+	var record: Dictionary = returning_split_balls[id]
+	returning_split_balls.erase(id)
+	if not is_instance_valid(record.ball): return
+	var ball: MergeBall = record.ball
+	ball.position = record.destination
+	ball.scale = Vector2.ONE
+	ball.z_index = 0
+	ball.remove_meta(&"suspend_board_warp")
+	ball.set_split_cast_reserved(false)
+	ball.collision_layer = 1
+	ball.collision_mask = 1
+	ball.freeze = false
+	ball.sleeping = false
+	ball.linear_velocity = Vector2(0.0, 35.0)
 
 
 func _release_collision_grace(balls: Array[MergeBall], duration: float) -> void:
@@ -935,6 +1048,8 @@ func _on_cleanup() -> void:
 	if is_instance_valid(enemy):
 		enemy.clear_visual_override()
 	_restore_lifted_target()
+	for id: int in returning_split_balls.keys():
+		_finish_return_split_ball(id)
 	_release_suspended_cascade_balls()
 	_release_split_target_reservations()
 	for group: Array in collision_grace_groups:

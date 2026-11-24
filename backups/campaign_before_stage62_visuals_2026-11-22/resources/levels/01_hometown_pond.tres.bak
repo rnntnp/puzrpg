@@ -1,0 +1,38 @@
+[gd_resource type="Resource" script_class="LevelData" format=3]
+
+[ext_resource type="Script" uid="uid://egcuwxnrdhmr" path="res://scripts/level_data.gd" id="1_level"]
+[ext_resource type="Resource" uid="uid://dd8t0hxokj424" path="res://resources/characters/blue_fighter.tres" id="2_player"]
+[ext_resource type="Resource" uid="uid://bwjblomuukh5q" path="res://resources/characters/red_fighter.tres" id="3_enemy"]
+[ext_resource type="Resource" path="res://resources/characters/tutorial_enemy.tres" id="13_tutorial_enemy"]
+[ext_resource type="Script" uid="uid://duu5mev8uwp8d" path="res://scripts/character_data.gd" id="4_character_type"]
+[ext_resource type="Texture2D" path="res://assets/backgrounds/stage_01_moonlit_pond_handdrawn_v4_clear.png" id="5_background"]
+[ext_resource type="Texture2D" uid="uid://diw8e6ahibw5w" path="res://assets/effects/generated/status_attack.png" id="7_gimmick"]
+[ext_resource type="Texture2D" path="res://assets/backgrounds/stage_01_moonlit_pond_handdrawn_v4_clear_top.png" id="8_background_top"]
+[ext_resource type="Texture2D" path="res://assets/backgrounds/stage_01_moonlit_pond_handdrawn_v4_clear_middle.png" id="9_background_middle"]
+[ext_resource type="Texture2D" path="res://assets/backgrounds/stage_01_moonlit_pond_handdrawn_v4_clear_bottom.png" id="10_background_bottom"]
+[ext_resource type="Texture2D" path="res://assets/tutorial/stage_01_story_page_01.png" id="11_story_page_01"]
+[ext_resource type="Texture2D" path="res://assets/tutorial/stage_01_story_page_02.png" id="12_story_page_02"]
+
+[resource]
+script = ExtResource("1_level")
+level_name = "1. 고향 연못"
+image_placeholder = "TUTORIAL TEMP\nLEVEL IMAGE"
+battle_background = ExtResource("5_background")
+battle_background_top = ExtResource("8_background_top")
+battle_background_middle = ExtResource("9_background_middle")
+battle_background_bottom = ExtResource("10_background_bottom")
+stage_gimmick_icon = ExtResource("7_gimmick")
+stage_gimmick_name = "일반 공격"
+reward_name = "연못 보물상자"
+player_character = ExtResource("2_player")
+enemies = Array[ExtResource("4_character_type")]([ExtResource("13_tutorial_enemy")])
+opening_sequence = PackedStringArray("컷씬 1", "컷씬 2")
+opening_story_images = Array[Texture2D]([ExtResource("11_story_page_01"), ExtResource("12_story_page_02")])
+tutorial_sequence = PackedStringArray("드롭 조작")
+tutorial_turn_message = "방울을 한 번 떨어뜨리면\n1턴이 지나갑니다."
+tutorial_evolution_messages = PackedStringArray("같은 종류의 방울끼리 만나도록\n방울을 떨어뜨려 보세요.", "방울 속 우파루파 정령이 더 크게\n성장하고, 적을 공격합니다.")
+fixed_drop_level = 0
+ball_drop_time_limit = -1.0
+merge_hit_stop_time_scale = 0.18
+merge_hit_stop_duration = 0.2
+next_level_path = "res://resources/levels/02_snow_mountain.tres"

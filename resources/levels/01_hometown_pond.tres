@@ -13,6 +13,8 @@
 [ext_resource type="Texture2D" path="res://assets/tutorial/stage_01_story_page_01.png" id="11_story_page_01"]
 [ext_resource type="Texture2D" path="res://assets/tutorial/stage_01_story_page_02.png" id="12_story_page_02"]
 
+[ext_resource type="PackedScene" path="res://scenes/campaign_pond_ball_visuals.tscn" id="62_board_visuals"]
+
 [resource]
 script = ExtResource("1_level")
 level_name = "1. 고향 연못"
@@ -29,9 +31,16 @@ enemies = Array[ExtResource("4_character_type")]([ExtResource("13_tutorial_enemy
 opening_sequence = PackedStringArray("컷씬 1", "컷씬 2")
 opening_story_images = Array[Texture2D]([ExtResource("11_story_page_01"), ExtResource("12_story_page_02")])
 tutorial_sequence = PackedStringArray("드롭 조작")
-tutorial_turn_message = "방울을 한 번 떨어뜨리면\n1턴이 지나갑니다."
-tutorial_evolution_messages = PackedStringArray("같은 종류의 방울끼리 만나도록\n방울을 떨어뜨려 보세요.", "방울 속 우파루파 정령이 더 크게\n성장하고, 적을 공격합니다.")
+tutorial_control_message = "수조 안을 누른 채 방향과 세기를 정하고\n손을 놓으면 아래에서 위로 발사해요."
+tutorial_prompt_replacements = Dictionary[String, String]({
+"클릭해 방울을 떨어뜨려 보세요.": "방향을 정한 뒤 손을 놓아 방울을 발사하세요.",
+"방울을 떨어뜨려보세요": "방울을 위쪽으로 발사해 보세요.",
+"방울 위에 다른 방울을 떨어뜨려 보세요.": "같은 방울을 향해 발사해 보세요."
+})
+tutorial_turn_message = "방울을 한 번 발사하면\n1턴이 지나갑니다."
+tutorial_evolution_messages = PackedStringArray("같은 종류의 방울끼리 만나도록\n방울을 발사해 보세요.", "방울 속 우파루파 정령이 더 크게\n성장하고, 적을 공격합니다.")
 fixed_drop_level = 0
+board_visual_scene = ExtResource("62_board_visuals")
 ball_drop_time_limit = -1.0
 merge_hit_stop_time_scale = 0.18
 merge_hit_stop_duration = 0.2

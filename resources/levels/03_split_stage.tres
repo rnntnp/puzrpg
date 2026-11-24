@@ -16,8 +16,11 @@
 [ext_resource type="Script" uid="uid://dqybmxj3y3ho1" path="res://scripts/gimmicks/handlers/split_cascade_handler.gd" id="12_handler"]
 [ext_resource type="Script" uid="uid://c1mwgwwuycn1p" path="res://scripts/gimmicks/configs/split_cascade_config.gd" id="13_config"]
 
+[ext_resource type="PackedScene" path="res://scenes/campaign_pond_ball_visuals.tscn" id="62_board_visuals"]
+
 [sub_resource type="Resource" id="SplitCascadeConfig"]
 script = ExtResource("13_config")
+split_above_board = true
 action_intervals = Array[int]([4, 4, 4])
 split_damage = Array[int]([6, 8, 8])
 
@@ -48,6 +51,7 @@ reward_name = "대나무 보물상자"
 player_character = ExtResource("2_player")
 enemies = Array[ExtResource("4_character")]([ExtResource("9_enemy_1"), ExtResource("10_enemy_2"), ExtResource("11_boss")])
 test_gimmick = SubResource("Gimmick")
+board_visual_scene = ExtResource("62_board_visuals")
 ball_drop_time_limit = -1.0
 merge_hit_stop_time_scale = 0.18
 merge_hit_stop_duration = 0.2

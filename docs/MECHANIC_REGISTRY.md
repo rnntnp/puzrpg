@@ -42,7 +42,7 @@ Runtime types:
 |---:|---|---|---|---|---|
 | 1 | 공 거대화 | At its action, the enemy enlarges the highest eligible non-enlarged ball, up to the configured target cap. | Legacy · 1 enemy · [level](../resources/levels/test_01_enlarge.tres) | `NEEDS_PLAYTEST` | 2, 3, 4 |
 | 2 | 공 중량화 | At its action, the enemy increases the mass of the highest eligible non-heavy ball. | Legacy · 1 enemy · [level](../resources/levels/test_02_heavy.tres) | `NEEDS_PLAYTEST` | 1, 36, 37, 39 |
-| 3 | 공 분열 | The highest-stage landed ball within the upper board band is split once, Twist selects two, and the Boss cascades one target from one ball to two then four two stages lower. | Modular · 3 enemies · [spec](mechanics/003_ball_split.md) · [level](../resources/levels/03_split_stage.tres) · [handler](../scripts/gimmicks/handlers/split_cascade_handler.gd) | `NEEDS_PLAYTEST` | 1, 4, 19 |
+| 3 | 공 분열 | Highest-stage landed targets lift above the tank, split and return inside. Twist processes two targets; Boss returns one N-1 child and splits the other into two N-2 children. | Modular · 3 enemies · [spec](mechanics/003_ball_split.md) · [level](../resources/levels/03_split_stage.tres) · [handler](../scripts/gimmicks/handlers/split_cascade_handler.gd) | `NEEDS_PLAYTEST` | 1, 4, 19 |
 | 4 | 공 복제 | The selected eligible ball creates another ball of the same stage at the drop area. | Legacy · 1 enemy · [level](../resources/levels/test_04_duplicate.tres) | `NEEDS_PLAYTEST` | 1, 3, 30 |
 | 5 | 좌우 보드 압축 | Repeated actions move both side walls inward in configured steps, reducing board width. | Legacy · 1 enemy · [level](../resources/levels/test_05_compress.tres) | `NEEDS_PLAYTEST` | 6, 7, 25, 34, 42 |
 | 6 | 바닥 상승 | Repeated actions raise the base floor in configured steps, reducing board height. | Legacy · 1 enemy · [level](../resources/levels/test_06_raise_floor.tres) | `NEEDS_PLAYTEST` | 5, 21, 25, 39 |
@@ -118,6 +118,32 @@ Runtime types:
 | Player Weakness skill | Player-owned normal merges charge by result `merge_score`; at 300 the player adds 2 turns to the same ×1.3 Weakness used by ingestion interruption | `NEEDS_PLAYTEST` · [contract](mechanics/player_weakness_skill.md) | Any player gauge, active skill, persistent charge, or generic incoming-damage debuff |
 
 ## Validation history and gaps
+
+- 2026-11-23: Stage 62 splits the axolotl head and facial-feature residual into separate shader layers. Facial strain defaults to 15%, adjustable from 0 to 100%; shell/physics/merge geometry stays unchanged. Scoped script checks and runtime slider/material checks passed without logged errors. Skin reconstruction and animation appearance remain NEEDS_PLAYTEST.
+
+- 2026-11-23: Stage 62 adds a toggleable alpha-silhouette contact anchor correction, capped per ball at 8% radius or 12 board pixels. Existing six-control visual warp and physical colliders remain; stage 63 does not opt in. Five scripts passed scoped syntax validation; a heart/star runtime probe confirmed toggle behavior, capped anchors, and no errors. Appearance in motion remains NEEDS_PLAYTEST.
+
+- 2026-11-23: Stage 62 adds visual-only ball silhouette ownership masking to prevent rear balls showing through front transparent shells while preserving background transparency. Two scripts passed scoped validation; a two-ball overlap render was checked without new shader errors. Performance and boundary quality remain NEEDS_PLAYTEST.
+
+- 2026-11-23: Directional mirror room adds a black reflected-velocity guide and launches its response with the player's recorded `(-vx, vy)`, through the existing directional flight controller. Guide prediction reuses actual-hitbox sweeps, capped around 30Hz while aiming. Five changed scripts, stage-5/62 preloads and four reflection-invariant cases passed scoped checks; `NEEDS_PLAYTEST`.
+
+- 2026-11-23: Stage 62 warped contact now notifies first landing before requesting a merge, matching native contact ordering and preventing an unlanded source from disappearing while the next drop stays locked. Scoped syntax validation only; user replay pending.
+
+- 2026-11-23: Stage 62 adds spatial-grid merge candidate checks within fixed 1.28x ball radii, followed by intersection/containment of warped collision-hull outlines. Existing native merges remain; no final warp cap is added. Stage 63 leaves this opt-in disabled. Three changed/new scripts passed scoped Godot syntax validation; NEEDS_PLAYTEST.
+
+- 2026-11-23: Otter sibling reentry destinations are planned jointly with collision-envelope radii plus a 24px gap, preserving left/right order. Large pairs stagger vertically when needed. Fishing trajectories remain unchanged. Scoped syntax/stage preload checks and 10 analytical placement cases passed; subsequent physical motion and appearance remain `NEEDS_PLAYTEST`.
+
+- 2026-11-23: Otter split-child reentry now shares the toad ingestion-return position selection and animated arc (0.58s, scale recovery, rotation, then 35px/s downward velocity), replacing its separate straight return. Existing handler-owned cleanup/merge reservation retained. Three changed scripts and stage-3 preload passed scoped validation; appearance remains `NEEDS_PLAYTEST`.
+
+- 2026-11-23: User-requested otter split lifts outside the tank above its ceiling, then returns children through a collision-free presentation before restoring normal upward board physics. Includes double/cascade paths and cleanup; board warp pauses only for marked presentation balls. Three changed scripts and stage-3 Resource preload passed scoped validation. `NEEDS_PLAYTEST`.
+
+- 2026-11-23: User-requested campaign 1–5 migration now includes stage 62's directional upward launch, gravity, side reflections, collision guide, ceiling/lower Danger Line and cutout player. Existing enemy mechanics remain composed independently; mirror/ingestion entry positions and stage-1 instructions follow the migrated board. Six changed scripts and all five level preloads passed scoped validation. Original and visual-only backups retained; `NEEDS_PLAYTEST`.
+
+- 2026-11-22: Stage 62 main highlight width scale raised from 0.75 to 1.0 to remove elliptical compression; secondary already uses circular normal-space alignment. Scoped static check only; NEEDS_PLAYTEST.
+
+- 2026-11-22: Campaign 1–5 opt into stage 62's existing reflection/warp presentation through an optional board scene, independently of enemy handlers. Original level Resources and bridge scripts saved under `backups/campaign_before_stage62_visuals_2026-11-22/`. Existing downward drops and combat rules retained; no alpha-contour merge detector. Four scripts and the scene passed scoped syntax checks; `NEEDS_PLAYTEST`. See `campaign_pond_ball_visuals.md`.
+
+- 2026-11-22: Stage 62 uses a large main surface highlight (2.67 degrees) and a smaller secondary (1.5 degrees, strength 0.75), separated by 30 degrees on the same side, and removes the stage-8-only size reduction. Both normal-space highlights scale with the ball surface. The formation experiment shares this rendering Resource. Scoped Resource/static checks only; appearance remains NEEDS_PLAYTEST.
 
 - 2026-10-05: stage 57 received scoped script/Resource loading and visible/test catalog-reference checks. It reuses stage 55 as a visual comparison; rendered appearance and performance remain `NEEDS_PLAYTEST`.
 - 2026-10-05: stage 57 now uses 11 prebuilt sprite-silhouette meshes with surface normals. Scoped checks confirmed contour containment, unit normals, shared generation cache and script loading; rendered appearance and performance remain untested.

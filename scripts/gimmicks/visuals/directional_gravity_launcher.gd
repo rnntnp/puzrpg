@@ -135,18 +135,33 @@ func _update_preview() -> void:
 	queue_redraw()
 
 
+func get_aim_velocity() -> Vector2:
+	return direction * lerpf(tuning.minimum_throw_speed, tuning.maximum_throw_speed, throw_power)
+
+
 func _update_landing_prediction() -> void:
-	var at := _spawn_position()
-	game.preview_ball.position = at
-	guide_points = PackedVector2Array([at])
-	guide_has_contact = false
-	guide_length = 0.0
-	guide_fade_start = -1.0
+	game.preview_ball.position = _spawn_position()
+	var prediction := predict_trajectory(game.preview_ball, _spawn_position(), get_aim_velocity())
+	guide_points = prediction.points
+	guide_has_contact = prediction.has_contact
+	guide_length = prediction.length
+	guide_fade_start = prediction.fade_start
 	guide_end_alpha = 1.0
-	var speed: float = lerpf(tuning.minimum_throw_speed, tuning.maximum_throw_speed, throw_power)
-	var velocity := direction * speed
+	landing_position = prediction.landing
+	guide_preview_id = game.preview_ball.get_instance_id()
+	_update_guide_fade()
+
+
+func predict_trajectory(query_ball: MergeBall, start: Vector2, initial_velocity: Vector2) -> Dictionary:
+	var at := start
+	var velocity := initial_velocity
+	var path_guide_points := PackedVector2Array([at])
+	var path_guide_has_contact := false
+	var path_guide_length := 0.0
+	var path_guide_fade_start := -1.0
+
 	var gravity: float = float(ProjectSettings.get_setting("physics/2d/default_gravity", 980.0)) * game.physics_speed_multiplier * game.physics_speed_multiplier
-	var acceleration := direction * gravity
+	var acceleration := initial_velocity.normalized() * gravity
 	var damp: float = game.physics_data.ball_linear_damp if game.physics_data != null else 0.0
 	var step: float = maxf(0.001, tuning.guide_step_seconds)
 	var prediction_steps: int = maxi(1,tuning.guide_max_steps)
@@ -159,7 +174,7 @@ func _update_landing_prediction() -> void:
 	var bottom_limit := game.board_inner_bottom
 	# Actual compound hitbox extents; flight rotation is locked. Horizontal
 	# boundaries are explicit because native physics uses an isolated query layer.
-	for child in game.preview_ball.get_children():
+	for child in query_ball.get_children():
 		if not child is CollisionShape2D or child.disabled or child.shape == null:
 			continue
 		var rect: Rect2 = child.shape.get_rect()
@@ -188,8 +203,8 @@ func _update_landing_prediction() -> void:
 				wall_fraction = clampf((right_limit - at.x) / motion.x, 0.0, 1.0)
 				reaches_wall = true
 			var segment := motion * wall_fraction
-			if guide_fade_start >= 0.0:
-				var fade_remaining := maxf(0.0, tuning.guide_fade_distance - (guide_length - guide_fade_start))
+			if path_guide_fade_start >= 0.0:
+				var fade_remaining := maxf(0.0, tuning.guide_fade_distance - (path_guide_length - path_guide_fade_start))
 				if segment.length() > fade_remaining:
 					segment = segment.normalized() * fade_remaining
 					reaches_wall = false
@@ -201,12 +216,12 @@ func _update_landing_prediction() -> void:
 			elif segment.y < 0.0 and at.y + segment.y <= top_limit:
 				horizontal_fraction = clampf((top_limit-at.y)/segment.y,0.0,1.0)
 				reaches_horizontal = true
-			var fraction := minf(_cast_board_segment(at, segment),horizontal_fraction)
+			var fraction := minf(_cast_board_segment(at, segment, query_ball),horizontal_fraction)
 			at += segment * fraction
-			guide_length += segment.length() * fraction
-			guide_points.append(at)
+			path_guide_length += segment.length() * fraction
+			path_guide_points.append(at)
 			if fraction < 1.0 or reaches_horizontal:
-				guide_has_contact = true
+				path_guide_has_contact = true
 				break
 			if not reaches_wall:
 				break
@@ -214,16 +229,14 @@ func _update_landing_prediction() -> void:
 			acceleration.x = -acceleration.x
 			reflections += 1
 			if reflections == 2:
-				guide_fade_start = guide_length
+				path_guide_fade_start = path_guide_length
 			remaining *= 1.0 - wall_fraction
 			at.x = clampf(at.x, left_limit + 0.01, right_limit - 0.01)
 			if reflections >= tuning.guide_max_reflections or remaining <= 0.00001:
 				break
-		if guide_has_contact or reflections >= tuning.guide_max_reflections or (guide_fade_start >= 0.0 and guide_length - guide_fade_start >= tuning.guide_fade_distance - 0.001):
+		if path_guide_has_contact or reflections >= tuning.guide_max_reflections or (path_guide_fade_start >= 0.0 and path_guide_length - path_guide_fade_start >= tuning.guide_fade_distance - 0.001):
 			break
-	landing_position = at
-	guide_preview_id = game.preview_ball.get_instance_id()
-	_update_guide_fade()
+	return {"points": path_guide_points, "has_contact": path_guide_has_contact, "length": path_guide_length, "fade_start": path_guide_fade_start, "landing": at}
 
 
 func _update_guide_fade() -> void:
@@ -241,12 +254,13 @@ func _update_guide_fade() -> void:
 	game.guide_line.gradient = gradient
 
 
-func _cast_board_segment(start: Vector2, motion: Vector2) -> float:
+func _cast_board_segment(start: Vector2, motion: Vector2, query_ball: MergeBall = null) -> float:
+	if query_ball == null: query_ball = game.preview_ball
 	var world_motion := game.to_global(start + motion) - game.to_global(start)
-	var world_offset := game.to_global(start) - game.to_global(_spawn_position())
+	var world_offset := game.to_global(start) - query_ball.global_position
 	var space := game.get_world_2d().direct_space_state
 	var fraction := 1.0
-	for child in game.preview_ball.get_children():
+	for child in query_ball.get_children():
 		if not child is CollisionShape2D:
 			continue
 		var collision := child as CollisionShape2D
@@ -257,7 +271,7 @@ func _cast_board_segment(start: Vector2, motion: Vector2) -> float:
 		query.transform = collision.global_transform
 		query.transform.origin += world_offset
 		query.collision_mask = prediction_collision_mask
-		query.exclude = [game.preview_ball.get_rid(), game.left_wall.get_rid(), game.right_wall.get_rid()]
+		query.exclude = [query_ball.get_rid(), game.preview_ball.get_rid(), game.left_wall.get_rid(), game.right_wall.get_rid()]
 		query.margin = tuning.guide_collision_margin
 		if not space.intersect_shape(query, 1).is_empty():
 			return 0.0
@@ -370,15 +384,20 @@ func _fire_ball() -> void:
 	var ball := game.launch_player_ball(_spawn_position(), direction * speed)
 	if not is_instance_valid(ball):
 		return
+	launch_external_ball(ball, direction * speed)
+	_update_preview()
+
+
+func launch_external_ball(ball: MergeBall, velocity: Vector2) -> void:
 	configure_active_balls()
+	ball.linear_velocity = velocity
 	var callback := _on_flight_contact.bind(ball)
-	var flight := {"ball": ball, "direction": direction, "force": ball.constant_force, "callback": callback, "lock_rotation": ball.lock_rotation}
+	var flight := {"ball": ball, "direction": velocity.normalized(), "force": ball.constant_force, "callback": callback, "lock_rotation": ball.lock_rotation}
 	ball.lock_rotation = true
 	ball.set_meta("directional_flight",true)
 	flying_balls[ball.get_instance_id()] = flight
 	ball.body_entered.connect(callback)
 	_apply_flight_gravity(ball, flight)
-	_update_preview()
 
 
 func _on_flight_contact(body: Node, ball: MergeBall) -> void:

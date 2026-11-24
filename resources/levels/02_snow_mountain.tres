@@ -12,6 +12,8 @@
 [ext_resource type="Texture2D" uid="uid://cttm1ykgcaigh" path="res://assets/backgrounds/stage_02_snow_mountain_handdrawn_v1_middle.png" id="12_background_middle"]
 [ext_resource type="Texture2D" uid="uid://dov8n81jvn133" path="res://assets/backgrounds/stage_02_snow_mountain_handdrawn_v1_bottom.png" id="13_background_bottom"]
 
+[ext_resource type="PackedScene" path="res://scenes/campaign_pond_ball_visuals.tscn" id="62_board_visuals"]
+
 [resource]
 script = ExtResource("1_level")
 level_name = "2. 추운 설산"
@@ -27,6 +29,7 @@ stage_gimmick_name = "빙결"
 reward_name = "설원 보물상자"
 player_character = ExtResource("2_player")
 enemies = Array[ExtResource("5_character_type")]([ExtResource("3_enemy"), ExtResource("9_enhanced_enemy"), ExtResource("10_boss_enemy")])
+board_visual_scene = ExtResource("62_board_visuals")
 ball_drop_time_limit = -1.0
 merge_hit_stop_time_scale = 0.18
 merge_hit_stop_duration = 0.2
